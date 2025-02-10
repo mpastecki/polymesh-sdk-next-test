@@ -1288,6 +1288,7 @@ export class Context {
    * Retrieve POLYX transactions for a given identity or list of accounts
    *
    * @note uses the middleware V2
+   * @note supports pagination
    */
   public async getPolyxTransactions(args: {
     identity?: string | Identity;
