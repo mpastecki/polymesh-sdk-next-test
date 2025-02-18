@@ -21,6 +21,7 @@ import {
   StatClaimIssuer,
   StatType,
   TransferRestriction,
+  TrustedFor,
   Venue,
 } from '~/types';
 
@@ -483,7 +484,7 @@ export interface AssetStat {
 export interface TransferExemptKey {
   assetId: string;
   opType: StatType;
-  claimType: ClaimType | null;
+  claimType: TrustedFor | null;
 }
 
 /**
