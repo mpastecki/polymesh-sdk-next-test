@@ -6,7 +6,7 @@ on:
     branches: [develop]
 
 jobs:
-  check:
+  check-commit-messages:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
