@@ -1,10 +1,12 @@
 import {
   PalletCorporateActionsBallotBallotMeta,
   PalletCorporateActionsCaId,
+  PalletCorporateActionsInitiateCorporateActionArgs,
 } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { CorporateBallotDetails } from '~/api/entities/CorporateBallot/types';
 import {
   assertEndDateChange,
   assertMetaChanged,
@@ -17,7 +19,14 @@ import {
 import { Context, CorporateBallot, Procedure } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
-import { CorporateBallotParams, FungibleAsset, TxTags } from '~/types';
+import {
+  CorporateActionKind,
+  CorporateActionParams,
+  CorporateBallotWithDetails,
+  FungibleAsset,
+  TargetTreatment,
+  TxTags,
+} from '~/types';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
 
@@ -30,20 +39,37 @@ jest.mock(
   require('~/testUtils/mocks/entities').mockFungibleAssetModule('~/api/entities/Asset/Fungible')
 );
 
-describe('removeBallot procedure', () => {
+describe('modifyBallot procedure', () => {
   const assetId = '12341234-1234-1234-1234-123412341234';
   const ballotId = new BigNumber(1);
 
   let asset: FungibleAsset;
   let ballot: CorporateBallot;
-  let ballotDetails: CorporateBallotParams;
+  let ballotDetails: CorporateBallotDetails;
 
-  let proc: Procedure<Params, CorporateBallot>;
+  let proc: Procedure<Params, CorporateBallotWithDetails>;
 
   let rawCaId: PalletCorporateActionsCaId;
   let mockContext: Mocked<Context>;
+  let rawCorporateActionArgs: PalletCorporateActionsInitiateCorporateActionArgs;
+  const declarationDate = new Date();
+  const description = 'description';
 
   let corporateActionIdentifierToCaIdSpy: jest.SpyInstance;
+  let getCorporateActionWithDescriptionSpy: jest.SpyInstance;
+  let meshCorporateActionToCorporateActionParamsSpy: jest.SpyInstance;
+  const mockCorporateActionParam: CorporateActionParams = {
+    kind: CorporateActionKind.IssuerNotice,
+    declarationDate,
+    description,
+    targets: {
+      identities: [],
+      treatment: TargetTreatment.Include,
+    },
+    defaultTaxWithholding: new BigNumber(0),
+    taxWithholdings: [],
+  };
+  const mockDescription = dsMockUtils.createMockBytes(description);
 
   beforeAll(() => {
     entityMockUtils.initMocks();
@@ -54,19 +80,36 @@ describe('removeBallot procedure', () => {
       utilsConversionModule,
       'corporateActionIdentifierToCaId'
     );
+    getCorporateActionWithDescriptionSpy = jest.spyOn(
+      utilsInternalModule,
+      'getCorporateActionWithDescription'
+    );
+    meshCorporateActionToCorporateActionParamsSpy = jest.spyOn(
+      utilsConversionModule,
+      'meshCorporateActionToCorporateActionParams'
+    );
+
+    rawCorporateActionArgs = dsMockUtils.createMockInitiateCorporateActionArgs({
+      assetId,
+      kind: CorporateActionKind.IssuerNotice,
+      declDate: dsMockUtils.createMockMoment(new BigNumber(declarationDate.getTime())),
+      recordDate: dsMockUtils.createMockOption(),
+      details: description,
+      targets: dsMockUtils.createMockOption(),
+      defaultWithholdingTax: dsMockUtils.createMockOption(),
+      withholdingTax: [],
+    });
 
     asset = entityMockUtils.getFungibleAssetInstance({ assetId });
 
     ballotDetails = {
       startDate: new Date(new Date().getTime() + 500000),
       endDate: new Date(new Date().getTime() + 1000000),
-      description: 'description',
       meta: {
         title: 'title',
         motions: [],
       },
       rcv: true,
-      declarationDate: new Date(new Date().getTime() + 500000),
     };
 
     ballot = entityMockUtils.getCorporateBallotInstance({
@@ -77,7 +120,7 @@ describe('removeBallot procedure', () => {
 
   beforeEach(() => {
     mockContext = dsMockUtils.getContextInstance();
-    proc = procedureMockUtils.getInstance<Params, CorporateBallot>(mockContext);
+    proc = procedureMockUtils.getInstance<Params, CorporateBallotWithDetails>(mockContext);
     rawCaId = dsMockUtils.createMockCAId({
       assetId,
       localId: ballotId,
@@ -95,6 +138,17 @@ describe('removeBallot procedure', () => {
     jest
       .spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow')
       .mockResolvedValue(ballotDetails);
+
+    when(getCorporateActionWithDescriptionSpy)
+      .calledWith(asset, ballotId, mockContext)
+      .mockResolvedValue({
+        corporateAction: rawCorporateActionArgs,
+        description: mockDescription,
+      });
+
+    when(meshCorporateActionToCorporateActionParamsSpy)
+      .calledWith(rawCorporateActionArgs, mockDescription, mockContext)
+      .mockReturnValue(mockCorporateActionParam);
   });
 
   afterEach(() => {
@@ -182,7 +236,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockRawMeta] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
 
       result = await prepareModifyBallot.call(proc, {
@@ -193,7 +250,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockRawMeta] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
     });
 
@@ -213,7 +273,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockMoment] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
 
       result = await prepareModifyBallot.call(proc, {
@@ -224,7 +287,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockMoment] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
     });
 
@@ -245,7 +311,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockBool] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
 
       result = await prepareModifyBallot.call(proc, {
@@ -256,7 +325,10 @@ describe('removeBallot procedure', () => {
 
       expect(result).toEqual({
         transactions: [{ transaction, args: [rawCaId, mockBool] }],
-        resolver: expect.objectContaining({ id: ballotId }),
+        resolver: {
+          ballot: expect.any(CorporateBallot),
+          details: expect.any(Object),
+        },
       });
     });
   });

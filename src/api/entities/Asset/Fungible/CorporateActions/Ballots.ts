@@ -3,8 +3,16 @@ import BigNumber from 'bignumber.js';
 import { createBallot } from '~/api/procedures/createBallot';
 import { Context, CorporateBallot, FungibleAsset, Namespace } from '~/internal';
 import { CorporateBallotWithDetails, CreateBallotParams, ProcedureMethod } from '~/types';
-import { assetToMeshAssetId, u32ToBigNumber } from '~/utils/conversion';
-import { createProcedureMethod, getCorporateBallotDetailsOrThrow } from '~/utils/internal';
+import {
+  assetToMeshAssetId,
+  meshCorporateActionToCorporateActionParams,
+  u32ToBigNumber,
+} from '~/utils/conversion';
+import {
+  createProcedureMethod,
+  getCorporateActionWithDescription,
+  getCorporateBallotDetailsOrThrow,
+} from '~/utils/internal';
 
 /**
  * Handles all Asset Ballots related functionality
@@ -12,7 +20,6 @@ import { createProcedureMethod, getCorporateBallotDetailsOrThrow } from '~/utils
 export class Ballots extends Namespace<FungibleAsset> {
   /**
    * Create a Ballot for an Asset
-   *
    */
   public create: ProcedureMethod<CreateBallotParams, CorporateBallotWithDetails>;
 
@@ -38,17 +45,24 @@ export class Ballots extends Namespace<FungibleAsset> {
     const { parent, context } = this;
     const { id } = args;
 
-    const ballotDetails = await getCorporateBallotDetailsOrThrow(parent, id, context);
-
-    const ballot = new CorporateBallot(
-      {
-        id,
-        assetId: parent.id,
-      },
+    const details = await getCorporateBallotDetailsOrThrow(parent, id, context);
+    const { corporateAction, description } = await getCorporateActionWithDescription(
+      parent,
+      id,
       context
     );
 
-    return { ballot, details: ballotDetails };
+    return {
+      ballot: new CorporateBallot(
+        {
+          id,
+          assetId: parent.id,
+          ...meshCorporateActionToCorporateActionParams(corporateAction, description, context),
+        },
+        context
+      ),
+      details,
+    };
   }
 
   /**

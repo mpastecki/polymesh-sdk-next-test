@@ -279,6 +279,7 @@ import {
   legToOffChainLeg,
   mediatorAffirmationStatusToStatus,
   meshAffirmationStatusToAffirmationStatus,
+  meshBallotDetailsToCorporateBallotDetails,
   meshClaimToClaim,
   meshClaimToInputStatClaim,
   meshClaimTypeToClaimType,
@@ -12108,5 +12109,38 @@ describe('ballotVoteToMeshBallotVote', () => {
     const result = ballotVoteToMeshBallotVote(power, undefined, mockContext);
 
     expect(result).toBe(mockMeshVote);
+  });
+});
+
+describe('meshBallotDetailsToCorporateBallotDetails', () => {
+  it('should convert a mesh ballot details to a corporate ballot details', () => {
+    const start = new BigNumber(1);
+    const end = new BigNumber(2);
+    const mockRawStartDate = dsMockUtils.createMockMoment(start);
+    const mockRawEndDate = dsMockUtils.createMockMoment(end);
+
+    const rawTimeRange = {
+      start: mockRawStartDate,
+      end: mockRawEndDate,
+    } as unknown as PalletCorporateActionsBallotBallotTimeRange;
+    const mockBallotMeta = {
+      title: 'Test Ballot',
+      motions: [],
+    };
+
+    const startDate = new Date(start.toNumber());
+    const endDate = new Date(end.toNumber());
+
+    const rawMeta = createMockCorporateBallotMeta(mockBallotMeta);
+    const rawRcv = dsMockUtils.createMockBool(true);
+
+    const result = meshBallotDetailsToCorporateBallotDetails(rawTimeRange, rawMeta, rawRcv);
+
+    expect(result).toEqual({
+      startDate,
+      endDate,
+      meta: mockBallotMeta,
+      rcv: true,
+    });
   });
 });

@@ -122,6 +122,8 @@ import {
 } from 'lodash';
 
 import {
+  BallotMeta,
+  BallotMotion,
   CorporateBallotDetails,
   CorporateBallotStatus,
 } from '~/api/entities/CorporateBallot/types';
@@ -187,8 +189,6 @@ import {
   AssetDocument,
   Authorization,
   AuthorizationType,
-  BallotMeta,
-  BallotMotion,
   ChildKeyWithAuth,
   Claim,
   ClaimCountRestrictionValue,
@@ -5947,7 +5947,7 @@ export function corporateBallotMetaToMeshCorporateBallotMeta(
  * @hidden
  */
 export function ballotDetailsToBallotStatus(
-  details: CorporateBallotDetails
+  details: Pick<CorporateBallotDetails, 'startDate' | 'endDate'>
 ): CorporateBallotStatus {
   const { startDate, endDate } = details;
 
@@ -5982,15 +5982,11 @@ export function ballotVoteToMeshBallotVote(
  * @hidden
  */
 export function meshBallotDetailsToCorporateBallotDetails(
-  rawCorporateAction: PalletCorporateActionsCorporateAction,
-  rawDetails: Bytes,
   rawTimeRange: PalletCorporateActionsBallotBallotTimeRange,
   rawMeta: PalletCorporateActionsBallotBallotMeta,
   rawRcv: bool
 ): CorporateBallotDetails {
   return {
-    description: bytesToString(rawDetails),
-    declarationDate: momentToDate(rawCorporateAction.declDate),
     startDate: momentToDate(rawTimeRange.start),
     endDate: momentToDate(rawTimeRange.end),
     meta: meshCorporateBallotMetaToCorporateBallotMeta(rawMeta),

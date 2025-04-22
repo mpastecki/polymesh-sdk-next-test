@@ -16,9 +16,14 @@ import {
   corporateBallotMetaToMeshCorporateBallotMeta,
   corporateBallotTimeRangeToMeshCorporateBallotTimeRange,
   meshBallotDetailsToCorporateBallotDetails,
+  meshCorporateActionToCorporateActionParams,
   u32ToBigNumber,
 } from '~/utils/conversion';
-import { assertDeclarationDate, filterEventRecords } from '~/utils/internal';
+import {
+  assertDeclarationDate,
+  filterEventRecords,
+  getCorporateActionWithDescription,
+} from '~/utils/internal';
 
 /**
  * @hidden
@@ -38,36 +43,30 @@ export interface Storage {
  * @hidden
  */
 export const createBallotResolver =
-  (context: Context) =>
+  (asset: FungibleAsset, context: Context) =>
   async (receipt: ISubmittableResult): Promise<CorporateBallotWithDetails> => {
     const [{ data }] = filterEventRecords(receipt, 'corporateBallot', 'Created');
     const [, caId, timeRange, meta, rcv] = data;
-    const { localId, assetId } = caId;
 
-    const rawCorporateAction = await context.polymeshApi.query.corporateAction.corporateActions(
-      assetId,
-      localId
-    );
-    const [rawDetails, ballot] = await Promise.all([
-      context.polymeshApi.query.corporateAction.details(caId),
-      Promise.resolve(
-        new CorporateBallot(
-          {
-            assetId: assetIdToString(assetId),
-            id: u32ToBigNumber(localId),
-          },
-          context
-        )
-      ),
-    ]);
+    const id = u32ToBigNumber(caId.localId);
+    const assetId = assetIdToString(caId.assetId);
 
-    const details = meshBallotDetailsToCorporateBallotDetails(
-      rawCorporateAction.unwrap(),
-      rawDetails,
-      timeRange,
-      meta,
-      rcv
+    const { corporateAction, description } = await getCorporateActionWithDescription(
+      asset,
+      id,
+      context
     );
+
+    const ballot = new CorporateBallot(
+      {
+        assetId,
+        id,
+        ...meshCorporateActionToCorporateActionParams(corporateAction, description, context),
+      },
+      context
+    );
+
+    const details = meshBallotDetailsToCorporateBallotDetails(timeRange, meta, rcv);
 
     return { ballot, details };
   };
@@ -146,7 +145,7 @@ export async function prepareCreateBallot(
       corporateBallotMetaToMeshCorporateBallotMeta(meta, context),
       booleanToBool(rcv, context),
     ],
-    resolver: createBallotResolver(context),
+    resolver: createBallotResolver(asset, context),
   };
 }
 

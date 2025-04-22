@@ -12,6 +12,7 @@ import { EventRecord, RewardDestination } from '@polkadot/types/interfaces';
 import { BlockHash } from '@polkadot/types/interfaces/chain';
 import {
   PalletAssetAssetDetails,
+  PalletCorporateActionsCorporateAction,
   PolymeshPrimitivesIdentityId,
   PolymeshPrimitivesSecondaryKeyKeyRecord,
   PolymeshPrimitivesStatisticsStatClaim,
@@ -63,7 +64,6 @@ import {
   ClaimType,
   Condition,
   ConditionType,
-  CorporateBallotParams,
   CountryCode,
   DefaultPortfolio,
   ErrorCode,
@@ -124,7 +124,6 @@ import {
   assetToMeshAssetId,
   bigNumberToU32,
   boolToBoolean,
-  bytesToString,
   claimIssuerToMeshClaimIssuer,
   corporateActionIdentifierToCaId,
   identitiesToBtreeSet,
@@ -2359,13 +2358,11 @@ export async function getCorporateBallotDetailsOrNull(
   id: BigNumber,
   context: Context
 ): Promise<CorporateBallotDetails | null> {
-  const rawAssetId = assetToMeshAssetId(asset, context);
-  const rawLocalId = bigNumberToU32(id, context);
   const rawCaId = corporateActionIdentifierToCaId({ asset, localId: id }, context);
 
   const {
     polymeshApi: {
-      query: { corporateBallot, corporateAction },
+      query: { corporateBallot },
     },
   } = context;
 
@@ -2375,16 +2372,9 @@ export async function getCorporateBallotDetailsOrNull(
     return null;
   }
 
-  const [rawCorporateAction, rawDescription, rawRcv, rawTimeRange] = await requestMulti<
-    [
-      typeof corporateAction.corporateActions,
-      typeof corporateAction.details,
-      typeof corporateBallot.rcv,
-      typeof corporateBallot.timeRanges
-    ]
+  const [rawRcv, rawTimeRange] = await requestMulti<
+    [typeof corporateBallot.rcv, typeof corporateBallot.timeRanges]
   >(context, [
-    [corporateAction.corporateActions, [rawAssetId, rawLocalId]],
-    [corporateAction.details, rawCaId],
     [corporateBallot.rcv, rawCaId],
     [corporateBallot.timeRanges, rawCaId],
   ]);
@@ -2392,8 +2382,6 @@ export async function getCorporateBallotDetailsOrNull(
   const timeRange = rawTimeRange.unwrap();
 
   return {
-    declarationDate: momentToDate(rawCorporateAction.unwrap().declDate),
-    description: bytesToString(rawDescription),
     meta: meshCorporateBallotMetaToCorporateBallotMeta(rawMetas.unwrap()),
     startDate: momentToDate(timeRange.start),
     endDate: momentToDate(timeRange.end),
@@ -2409,9 +2397,9 @@ export async function getCorporateBallotDetailsOrThrow(
   id: BigNumber,
   context: Context
 ): Promise<CorporateBallotDetails> {
-  const details = await getCorporateBallotDetailsOrNull(asset, id, context);
+  const corporateBallotWithDetails = await getCorporateBallotDetailsOrNull(asset, id, context);
 
-  if (!details) {
+  if (!corporateBallotWithDetails) {
     throw new PolymeshError({
       code: ErrorCode.DataUnavailable,
       message: 'The CorporateBallot does not exist',
@@ -2419,13 +2407,15 @@ export async function getCorporateBallotDetailsOrThrow(
     });
   }
 
-  return details;
+  return corporateBallotWithDetails;
 }
 
 /**
  * @hidden
  */
-export function assertBallotNotStarted({ startDate }: CorporateBallotParams): void {
+export function assertBallotNotStarted({
+  startDate,
+}: Pick<CorporateBallotDetails, 'startDate'>): void {
   if (startDate <= new Date()) {
     throw new PolymeshError({
       code: ErrorCode.ValidationError,
@@ -2433,4 +2423,38 @@ export function assertBallotNotStarted({ startDate }: CorporateBallotParams): vo
       data: { startDate },
     });
   }
+}
+
+/**
+ * @hidden
+ */
+export async function getCorporateActionWithDescription(
+  asset: FungibleAsset,
+  id: BigNumber,
+  context: Context
+): Promise<{ corporateAction: PalletCorporateActionsCorporateAction; description: Bytes }> {
+  const {
+    polymeshApi: { query },
+  } = context;
+
+  const rawAssetId = assetToMeshAssetId(asset, context);
+  const rawLocalId = bigNumberToU32(id, context);
+  const rawCaId = corporateActionIdentifierToCaId({ asset, localId: id }, context);
+
+  const [ca, description] = await requestMulti<
+    [typeof query.corporateAction.corporateActions, typeof query.corporateAction.details]
+  >(context, [
+    [query.corporateAction.corporateActions, [rawAssetId, rawLocalId]],
+    [query.corporateAction.details, rawCaId],
+  ]);
+
+  if (ca.isNone) {
+    throw new PolymeshError({
+      code: ErrorCode.DataUnavailable,
+      message: 'The CorporateAction does not exist',
+      data: { id },
+    });
+  }
+
+  return { corporateAction: ca.unwrap(), description };
 }

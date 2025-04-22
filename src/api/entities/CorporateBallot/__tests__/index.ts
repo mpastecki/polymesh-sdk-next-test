@@ -4,7 +4,8 @@ import { when } from 'jest-when';
 import { CorporateBallotStatus } from '~/api/entities/CorporateBallot/types';
 import { Context, CorporateBallot, PolymeshError, PolymeshTransaction } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
-import { ErrorCode } from '~/types';
+import { createMockCorporateBallotMeta } from '~/testUtils/mocks/dataSources';
+import { ErrorCode, TargetTreatment, TaxWithholding } from '~/types';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
 jest.mock(
@@ -23,10 +24,17 @@ describe('CorporateBallot class', () => {
   let assetId: string;
   let corporateBallot: CorporateBallot;
   let getAssetIdForMiddlewareSpy: jest.SpyInstance;
-  const declarationDate = new Date();
+
   const startDate = new Date();
   const endDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 30);
+  const declarationDate = new Date();
   const description = 'Test Description';
+  const targets = {
+    identities: [],
+    treatment: TargetTreatment.Include,
+  };
+  const defaultTaxWithholding = new BigNumber(0);
+  const taxWithholdings: TaxWithholding[] = [];
 
   const mockBallotMeta = {
     title: 'Test Ballot',
@@ -56,6 +64,11 @@ describe('CorporateBallot class', () => {
       {
         id,
         assetId,
+        declarationDate,
+        description,
+        targets,
+        defaultTaxWithholding,
+        taxWithholdings,
       },
       context
     );
@@ -118,6 +131,11 @@ describe('CorporateBallot class', () => {
       expect(corporateBallot.toHuman()).toEqual({
         id: '1',
         assetId: '12341234-1234-1234-1234-123412341234',
+        declarationDate: declarationDate.toISOString(),
+        description,
+        targets,
+        defaultTaxWithholding: defaultTaxWithholding.toString(),
+        taxWithholdings,
       });
     });
   });
@@ -139,8 +157,6 @@ describe('CorporateBallot class', () => {
   describe('method: details', () => {
     it('should return the details of the CorporateBallot', async () => {
       jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
         meta: mockBallotMeta,
         startDate,
         endDate,
@@ -150,8 +166,6 @@ describe('CorporateBallot class', () => {
       const details = await corporateBallot.details();
 
       expect(details).toEqual({
-        declarationDate,
-        description,
         meta: mockBallotMeta,
         rcv: false,
         startDate,
@@ -172,39 +186,60 @@ describe('CorporateBallot class', () => {
 
   describe('method: status', () => {
     it('should return the status of the CorporateBallot', async () => {
-      jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
-        meta: mockBallotMeta,
-        startDate: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 30),
-        endDate: new Date(new Date().getTime() + 2000 * 60 * 60 * 24 * 30),
-        rcv: false,
+      dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+        returnValue: dsMockUtils.createMockOption(
+          dsMockUtils.createMockCodec(
+            {
+              start: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 30).getTime())
+              ),
+              end: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() + 2000 * 60 * 60 * 24 * 30).getTime())
+              ),
+            },
+            false
+          )
+        ),
       });
 
       let status = await corporateBallot.status();
 
       expect(status).toEqual(CorporateBallotStatus.Pending);
 
-      jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
-        meta: mockBallotMeta,
-        startDate: new Date(new Date().getTime() - 2000 * 60 * 60 * 24 * 30),
-        endDate: new Date(new Date().getTime() + 2000 * 60 * 60 * 24 * 30),
-        rcv: false,
+      dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+        returnValue: dsMockUtils.createMockOption(
+          dsMockUtils.createMockCodec(
+            {
+              start: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() - 2000 * 60 * 60 * 24 * 30).getTime())
+              ),
+              end: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() + 2000 * 60 * 60 * 24 * 30).getTime())
+              ),
+            },
+            false
+          )
+        ),
       });
 
       status = await corporateBallot.status();
 
       expect(status).toEqual(CorporateBallotStatus.Active);
 
-      jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
-        meta: mockBallotMeta,
-        startDate: new Date(new Date().getTime() - 2000 * 60 * 60 * 24 * 30),
-        endDate: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30),
-        rcv: false,
+      dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+        returnValue: dsMockUtils.createMockOption(
+          dsMockUtils.createMockCodec(
+            {
+              start: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() - 2000 * 60 * 60 * 24 * 30).getTime())
+              ),
+              end: dsMockUtils.createMockMoment(
+                new BigNumber(new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30).getTime())
+              ),
+            },
+            false
+          )
+        ),
       });
 
       status = await corporateBallot.status();
@@ -214,18 +249,30 @@ describe('CorporateBallot class', () => {
   });
 
   describe('method: results', () => {
-    it('should return the results of the CorporateBallot', async () => {
-      jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
-        meta: mockBallotMeta,
-        startDate,
-        endDate,
-        rcv: false,
+    it('should throw an error if the CorporateBallot does not exist', async () => {
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(),
       });
+      dsMockUtils.createQueryMock('corporateBallot', 'results');
 
+      await expect(corporateBallot.results()).rejects.toThrow('The CorporateBallot does not exist');
+    });
+
+    it('should return the results of the CorporateBallot', async () => {
       const mockResults = ['100', '200', '300'];
+      const mockRawMeta = createMockCorporateBallotMeta(mockBallotMeta);
+      const meshCorporateBallotMetaToCorporateBallotMetaSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateBallotMetaToCorporateBallotMeta'
+      );
 
+      when(meshCorporateBallotMetaToCorporateBallotMetaSpy)
+        .calledWith(mockRawMeta)
+        .mockReturnValue(mockBallotMeta);
+
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(dsMockUtils.createMockCodec(mockRawMeta, false)),
+      });
       dsMockUtils.createQueryMock('corporateBallot', 'results', {
         returnValue: dsMockUtils.createMockVec(
           mockResults.map(result => dsMockUtils.createMockU128(new BigNumber(result)))
@@ -264,15 +311,30 @@ describe('CorporateBallot class', () => {
   });
 
   describe('method: votesByIdentity', () => {
-    it('should return the votes of the CorporateBallot by identity', async () => {
-      jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockResolvedValue({
-        declarationDate,
-        description,
-        meta: mockBallotMeta,
-        startDate,
-        endDate,
-        rcv: false,
+    it('should throw an error if the CorporateBallot does not exist', async () => {
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(),
       });
+      dsMockUtils.createQueryMock('corporateBallot', 'votes');
+      await expect(
+        corporateBallot.votesByIdentity('12341234-1234-1234-1234-123412341234')
+      ).rejects.toThrow('The CorporateBallot does not exist');
+    });
+
+    it('should return the votes of the CorporateBallot by identity', async () => {
+      const mockRawMeta = createMockCorporateBallotMeta(mockBallotMeta);
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(dsMockUtils.createMockCodec(mockRawMeta, false)),
+      });
+
+      const meshCorporateBallotMetaToCorporateBallotMetaSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateBallotMetaToCorporateBallotMeta'
+      );
+
+      when(meshCorporateBallotMetaToCorporateBallotMetaSpy)
+        .calledWith(mockRawMeta)
+        .mockReturnValue(mockBallotMeta);
 
       const u16ToBigNumberSpy = jest.spyOn(utilsConversionModule, 'u16ToBigNumber');
       const u128ToBigNumberSpy = jest.spyOn(utilsConversionModule, 'u128ToBigNumber');
@@ -317,7 +379,7 @@ describe('CorporateBallot class', () => {
               {
                 choice: mockBallotMeta.motions[0].choices[0],
                 power: new BigNumber(100),
-                fallback: mockBallotMeta.motions[0].choices[1],
+                fallback: new BigNumber(1),
               },
               {
                 choice: mockBallotMeta.motions[0].choices[1],
@@ -351,6 +413,30 @@ describe('CorporateBallot class', () => {
       };
 
       const tx = await corporateBallot.vote({ votes: [[mockVote]] });
+
+      expect(tx).toBe(expectedTransaction);
+    });
+  });
+
+  describe('method: modifyCheckpoint', () => {
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should prepare the procedure with the correct arguments and context, and return the resulting transaction', async () => {
+      const args = { checkpoint: new Date() };
+
+      const expectedTransaction = 'someTransaction' as unknown as PolymeshTransaction<void>;
+
+      when(procedureMockUtils.getPrepareMock())
+        .calledWith(
+          { args: { corporateAction: corporateBallot, ...args }, transformer: undefined },
+          context,
+          {}
+        )
+        .mockResolvedValue(expectedTransaction);
+
+      const tx = await corporateBallot.modifyCheckpoint(args);
 
       expect(tx).toBe(expectedTransaction);
     });

@@ -716,3 +716,28 @@ export async function addManualFees(
 
   return fees.reduce((prev, { fees: nextFees }) => prev.plus(nextFees), currentFee);
 }
+
+/**
+ * @hidden
+ */
+export async function assertBallotRecordDateValid(
+  checkpoint: CheckpointSchedule | Date,
+  startDate: Date
+): Promise<void> {
+  let checkpointDate: Date;
+
+  await assertCaCheckpointValid(checkpoint);
+
+  if (checkpoint instanceof Date) {
+    checkpointDate = checkpoint;
+  } else {
+    ({ nextCheckpointDate: checkpointDate } = await checkpoint.details());
+  }
+
+  if (startDate <= checkpointDate) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'The record date cannot be after the ballot start date',
+    });
+  }
+}

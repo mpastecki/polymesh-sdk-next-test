@@ -2,11 +2,12 @@ import { PalletCorporateActionsBallotBallotVote } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
 import {
+  BallotMotion,
   CorporateBallotDetails,
   CorporateBallotStatus,
 } from '~/api/entities/CorporateBallot/types';
 import { CorporateBallot, FungibleAsset, PolymeshError, Procedure } from '~/internal';
-import { BallotMotion, BallotVote, CastBallotVoteParams, ErrorCode, TxTags } from '~/types';
+import { BallotVote, CastBallotVoteParams, ErrorCode, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
 import {
   ballotDetailsToBallotStatus,
@@ -98,7 +99,9 @@ export function assertMotionVotes(motionVotes: BallotVote[], motion: BallotMotio
 
   if (
     motionVotes.some(
-      vote => BigNumber.isBigNumber(vote.fallback) && vote.fallback.gte(motion.choices.length)
+      vote =>
+        BigNumber.isBigNumber(vote.fallback) &&
+        (vote.fallback.lt(new BigNumber(0)) || vote.fallback.gte(motion.choices.length))
     )
   ) {
     throw new PolymeshError({
@@ -165,7 +168,7 @@ export async function prepareCastBallotVote(
       rawVotes.push(
         ballotVoteToMeshBallotVote(
           power,
-          BigNumber.isBigNumber(fallback) ? fallback.plus(motionIndex) : undefined,
+          BigNumber.isBigNumber(fallback) ? fallback : undefined,
           context
         )
       );

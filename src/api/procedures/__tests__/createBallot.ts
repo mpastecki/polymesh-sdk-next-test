@@ -1,14 +1,15 @@
-import { bool } from '@polkadot/types';
+import { bool, Bytes } from '@polkadot/types';
 import {
   PalletCorporateActionsBallotBallotMeta,
   PalletCorporateActionsBallotBallotTimeRange,
-  PalletCorporateActionsCorporateAction,
+  PalletCorporateActionsCaId,
   PalletCorporateActionsInitiateCorporateActionArgs,
 } from '@polkadot/types/lookup';
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { BallotMeta, CorporateBallotDetails } from '~/api/entities/CorporateBallot/types';
 import {
   createBallot,
   createBallotResolver,
@@ -20,10 +21,11 @@ import { Context, Procedure } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
 import {
-  BallotMeta,
   CorporateActionKind,
+  CorporateActionParams,
   CorporateBallotWithDetails,
   FungibleAsset,
+  TargetTreatment,
   TxTags,
 } from '~/types';
 import { PolymeshTx } from '~/types/internal';
@@ -274,54 +276,86 @@ describe('createBallot procedure', () => {
   });
 
   describe('createBallotResolver', () => {
-    const filterEventRecordsSpy = jest.spyOn(utilsInternalModule, 'filterEventRecords');
-    const id = new BigNumber(1);
+    let filterEventRecordsSpy: jest.SpyInstance;
+    let getCorporateActionWithDescriptionSpy: jest.SpyInstance;
+    let meshCorporateActionToCorporateActionParamsSpy: jest.SpyInstance;
+    let assetIdToStringSpy: jest.SpyInstance;
+    let u32ToBigNumberSpy: jest.SpyInstance;
 
-    let rawCorporateAction: PalletCorporateActionsCorporateAction;
+    let mockCaId: PalletCorporateActionsCaId;
+    let mockBallotId: BigNumber;
+    let mockCorporateActionParams: CorporateActionParams;
+    let mockDescription: Bytes;
+    let meshBallotDetailsToCorporateBallotDetailsSpy: jest.SpyInstance;
+    let mockCorporateBallotDetails: CorporateBallotDetails;
 
     beforeAll(() => {
       entityMockUtils.initMocks();
 
-      /* eslint-disable @typescript-eslint/naming-convention */
-      rawCorporateAction = dsMockUtils.createMockCorporateAction({
-        kind: 'IssuerNotice',
-        decl_date: new BigNumber(declarationDate.getTime()),
-        record_date: dsMockUtils.createMockRecordDate({
-          date: new BigNumber(new Date('10/14/2021').getTime()),
-          checkpoint: {
-            Scheduled: [
-              dsMockUtils.createMockU64(new BigNumber(1)),
-              dsMockUtils.createMockU64(new BigNumber(2)),
-            ],
-          },
-        }),
-        targets: undefined,
-        default_withholding_tax: undefined,
-        withholding_tax: [],
-      });
-      /* eslint-enable @typescript-eslint/naming-convention */
-
-      dsMockUtils.createQueryMock('corporateAction', 'corporateActions', {
-        returnValue: dsMockUtils.createMockOption(rawCorporateAction),
-      });
-      dsMockUtils.createQueryMock('corporateAction', 'details', {
-        returnValue: dsMockUtils.createMockBytes(description),
-      });
+      filterEventRecordsSpy = jest.spyOn(utilsInternalModule, 'filterEventRecords');
+      getCorporateActionWithDescriptionSpy = jest.spyOn(
+        utilsInternalModule,
+        'getCorporateActionWithDescription'
+      );
+      meshCorporateActionToCorporateActionParamsSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateActionToCorporateActionParams'
+      );
+      meshBallotDetailsToCorporateBallotDetailsSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshBallotDetailsToCorporateBallotDetails'
+      );
+      assetIdToStringSpy = jest.spyOn(utilsConversionModule, 'assetIdToString');
+      u32ToBigNumberSpy = jest.spyOn(utilsConversionModule, 'u32ToBigNumber');
+      mockCaId = dsMockUtils.createMockCAId();
+      mockBallotId = new BigNumber(1);
+      mockDescription = dsMockUtils.createMockBytes(description);
+      mockCorporateActionParams = {
+        kind: CorporateActionKind.IssuerNotice,
+        declarationDate,
+        description,
+        targets: {
+          identities: [],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(0),
+        taxWithholdings: [],
+      };
+      mockCorporateBallotDetails = {
+        startDate,
+        endDate,
+        meta,
+        rcv,
+      };
     });
 
     beforeEach(() => {
       filterEventRecordsSpy.mockReturnValue([
         dsMockUtils.createMockIEvent([
           'data',
-          dsMockUtils.createMockCAId({
-            assetId,
-            localId: id,
-          }),
+          mockCaId,
           rawCorporateBallotTimeRange,
           rawCorporateBallotMeta,
           rawRcv,
         ]),
       ]);
+
+      when(assetIdToStringSpy).calledWith(mockCaId.assetId).mockReturnValue(assetId);
+      when(u32ToBigNumberSpy).calledWith(mockCaId.localId).mockReturnValue(mockBallotId);
+      when(getCorporateActionWithDescriptionSpy)
+        .calledWith(asset, mockBallotId, mockContext)
+        .mockResolvedValue({
+          corporateAction: rawCorporateActionArgs,
+          description: mockDescription,
+        });
+
+      when(meshCorporateActionToCorporateActionParamsSpy)
+        .calledWith(rawCorporateActionArgs, mockDescription, mockContext)
+        .mockReturnValue(mockCorporateActionParams);
+
+      when(meshBallotDetailsToCorporateBallotDetailsSpy)
+        .calledWith(rawCorporateBallotTimeRange, rawCorporateBallotMeta, rawRcv)
+        .mockReturnValue(mockCorporateBallotDetails);
     });
 
     afterEach(() => {
@@ -329,9 +363,10 @@ describe('createBallot procedure', () => {
     });
 
     it('should return the new CorporateBallot', async () => {
-      const result = await createBallotResolver(mockContext)({} as ISubmittableResult);
+      const result = await createBallotResolver(asset, mockContext)({} as ISubmittableResult);
 
-      expect(result.ballot.id).toEqual(id);
+      expect(result.ballot.id).toEqual(mockBallotId);
+      expect(result.details).toEqual(mockCorporateBallotDetails);
     });
   });
 

@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 
 import {
+  ChoiceWithParticipation,
   CorporateBallotDetails,
   CorporateBallotMetaWithResults,
   CorporateBallotMotionWithParticipation,
@@ -10,11 +11,29 @@ import {
 } from '~/api/entities/CorporateBallot/types';
 import { castBallotVote } from '~/api/procedures/castBallotVote';
 import { removeBallot } from '~/api/procedures/removeBallot';
-import { Context, Entity, FungibleAsset } from '~/internal';
-import { CastBallotVoteParams, Identity, NoArgsProcedureMethod, ProcedureMethod } from '~/types';
+import {
+  Context,
+  CorporateActionBase,
+  FungibleAsset,
+  modifyCaCheckpoint,
+  PolymeshError,
+} from '~/internal';
+import {
+  CastBallotVoteParams,
+  CorporateActionKind,
+  CorporateActionTargets,
+  ErrorCode,
+  Identity,
+  InputCaCheckpoint,
+  NoArgsProcedureMethod,
+  ProcedureMethod,
+  TaxWithholding,
+} from '~/types';
 import {
   ballotDetailsToBallotStatus,
   corporateActionIdentifierToCaId,
+  meshCorporateBallotMetaToCorporateBallotMeta,
+  momentToDate,
   stringToIdentityId,
   u16ToBigNumber,
   u128ToBigNumber,
@@ -23,7 +42,6 @@ import {
   asIdentity,
   createProcedureMethod,
   getCorporateBallotDetailsOrThrow,
-  toHumanReadable,
 } from '~/utils/internal';
 
 export interface UniqueIdentifiers {
@@ -35,36 +53,29 @@ export interface HumanReadable {
   id: string;
   assetId: string;
 }
+export interface Params {
+  kind: CorporateActionKind;
+  declarationDate: Date;
+  description: string;
+  targets: CorporateActionTargets;
+  defaultTaxWithholding: BigNumber;
+  taxWithholdings: TaxWithholding[];
+}
 
 /**
  * Represents a Ballot
  */
-export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
-  /**
-   * @hidden
-   * Check if a value is of type {@link UniqueIdentifiers}
-   */
-  public static override isUniqueIdentifiers(identifier: unknown): identifier is UniqueIdentifiers {
-    const { id, assetId } = identifier as UniqueIdentifiers;
-
-    return id instanceof BigNumber && typeof assetId === 'string';
-  }
-
-  /**
-   * internal Corporate Action ID to which this Ballot is attached
-   */
-  public id: BigNumber;
-
-  /**
-   * Asset affected by this Ballot
-   */
-  private readonly asset: FungibleAsset;
-
+export class CorporateBallot extends CorporateActionBase {
   /**
    * @hidden
    */
-  public constructor(args: UniqueIdentifiers, context: Context) {
-    super(args, context);
+  public constructor(args: UniqueIdentifiers & Omit<Params, 'kind'>, context: Context) {
+    const argsWithDefaultParams: UniqueIdentifiers & Params = {
+      ...args,
+      kind: CorporateActionKind.IssuerNotice,
+    };
+
+    super(argsWithDefaultParams, context);
 
     const { id, assetId } = args;
 
@@ -88,12 +99,19 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
       },
       context
     );
+
+    this.modifyCheckpoint = createProcedureMethod(
+      {
+        getProcedureAndArgs: params => [modifyCaCheckpoint, { corporateAction: this, ...params }],
+      },
+      context
+    );
   }
 
   /**
    * Determine whether this Ballot exists on chain
    */
-  public async exists(): Promise<boolean> {
+  public override async exists(): Promise<boolean> {
     const {
       id,
       asset,
@@ -117,21 +135,7 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
   public async details(): Promise<CorporateBallotDetails> {
     const { id, asset, context } = this;
 
-    const details = await getCorporateBallotDetailsOrThrow(asset, id, context);
-
-    return details;
-  }
-
-  /**
-   * Return the Corporate Ballot's static data
-   */
-  public override toHuman(): HumanReadable {
-    const { id, asset } = this;
-
-    return toHumanReadable({
-      id,
-      assetId: asset.id,
-    });
+    return await getCorporateBallotDetailsOrThrow(asset, id, context);
   }
 
   /**
@@ -140,9 +144,24 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
    * @throws if the Ballot does not exist
    */
   public async status(): Promise<CorporateBallotStatus> {
-    const details = await this.details();
+    const {
+      id,
+      asset,
+      context,
+      context: {
+        polymeshApi: { query },
+      },
+    } = this;
+    const caId = corporateActionIdentifierToCaId({ localId: id, asset }, context);
 
-    return ballotDetailsToBallotStatus(details);
+    const rawTimeRanges = await query.corporateBallot.timeRanges(caId);
+
+    const timeRange = rawTimeRanges.unwrap();
+
+    const startDate = momentToDate(timeRange.start);
+    const endDate = momentToDate(timeRange.end);
+
+    return ballotDetailsToBallotStatus({ startDate, endDate });
   }
 
   /**
@@ -159,44 +178,47 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
         polymeshApi: { query },
       },
     } = this;
-
-    const {
-      meta: { title: ballotTitle, motions },
-    } = await this.details();
-
     const caId = corporateActionIdentifierToCaId({ localId: id, asset }, context);
+    const [rawMetas, rawResults] = await Promise.all([
+      query.corporateBallot.metas(caId),
+      query.corporateBallot.results(caId),
+    ]);
 
-    const rawResults = await query.corporateBallot.results(caId);
-    const results = rawResults.map(result => u128ToBigNumber(result));
+    if (rawMetas.isNone) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'The CorporateBallot does not exist',
+      });
+    }
 
-    const metaWithResults: CorporateBallotMetaWithResults = {
-      title: ballotTitle,
-      motions: [],
-    };
+    const { motions, title: ballotTitle } = meshCorporateBallotMetaToCorporateBallotMeta(
+      rawMetas.unwrap()
+    );
 
     let resultIndex = 0;
 
-    motions.forEach(({ title, infoLink, choices }) => {
+    const motionsWithResults = motions.map(({ title, infoLink, choices }) => {
       const motionWithResults: CorporateBallotMotionWithResults = {
         title,
         infoLink,
         choices: [],
         total: new BigNumber(0),
       };
-
       choices.forEach(choice => {
+        const choiceVoteTally = u128ToBigNumber(rawResults[resultIndex]);
         motionWithResults.choices.push({
           choice,
-          votes: results[resultIndex],
+          votes: choiceVoteTally,
         });
-        motionWithResults.total = motionWithResults.total.plus(results[resultIndex]);
+        motionWithResults.total = motionWithResults.total.plus(choiceVoteTally);
         resultIndex += 1;
       });
-
-      metaWithResults.motions.push(motionWithResults);
+      return motionWithResults;
     });
-
-    return metaWithResults;
+    return {
+      title: ballotTitle,
+      motions: motionsWithResults,
+    };
   }
 
   /**
@@ -213,65 +235,57 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
         polymeshApi: { query },
       },
     } = this;
-
-    const {
-      meta: { title: ballotTitle, motions },
-    } = await this.details();
-
     const caId = corporateActionIdentifierToCaId({ localId: id, asset }, context);
     const identityId = stringToIdentityId(asIdentity(did, context).did, context);
+    const [rawMetas, rawDidVotes] = await Promise.all([
+      query.corporateBallot.metas(caId),
+      query.corporateBallot.votes(caId, identityId),
+    ]);
 
-    const rawDidVotes = await query.corporateBallot.votes(caId, identityId);
-
-    const voteMap = new Map<number, BigNumber>();
-    const fallbackMap = new Map<number, string | undefined>();
-    const choicesMap = new Map<number, string>();
-
-    let choiceIndex = 0;
-
-    motions.forEach(({ choices }) => {
-      choices.forEach(choice => {
-        choicesMap.set(choiceIndex, choice);
-        choiceIndex += 1;
+    if (rawMetas.isNone) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'The CorporateBallot does not exist',
       });
-    });
+    }
 
-    rawDidVotes.forEach(({ power, fallback }, index) => {
-      voteMap.set(index, u128ToBigNumber(power));
+    const { motions, title: ballotTitle } = meshCorporateBallotMetaToCorporateBallotMeta(
+      rawMetas.unwrap()
+    );
 
-      fallbackMap.set(
-        index,
-        fallback.isSome ? choicesMap.get(u16ToBigNumber(fallback.unwrap()).toNumber()) : undefined
-      );
-    });
+    let index = 0;
 
-    const metaWithParticipation: CorporateBallotWithParticipation = {
+    const motionsWithParticipation: CorporateBallotMotionWithParticipation[] = motions.map(
+      ({ title, infoLink, choices }) => {
+        return {
+          title,
+          infoLink,
+          choices: choices.map(choice => {
+            const { power: rawPower, fallback: rawFallback } = rawDidVotes[index];
+
+            let fallback: BigNumber | undefined;
+
+            if (rawFallback.isSome) {
+              fallback = u16ToBigNumber(rawFallback.unwrap());
+            }
+
+            const choiceWithParticipation: ChoiceWithParticipation = {
+              choice,
+              power: u128ToBigNumber(rawPower),
+              fallback,
+            };
+
+            index++;
+
+            return choiceWithParticipation;
+          }),
+        };
+      }
+    );
+    return {
       title: ballotTitle,
-      motions: [],
+      motions: motionsWithParticipation,
     };
-
-    let motionIndex = 0;
-
-    motions.forEach(({ title, infoLink, choices }) => {
-      const motionWithParticipation: CorporateBallotMotionWithParticipation = {
-        title,
-        infoLink,
-        choices: [],
-      };
-
-      choices.forEach(choice => {
-        motionWithParticipation.choices.push({
-          choice,
-          power: voteMap.get(motionIndex) as BigNumber,
-          fallback: fallbackMap.get(motionIndex),
-        });
-        motionIndex += 1;
-      });
-
-      metaWithParticipation.motions.push(motionWithParticipation);
-    });
-
-    return metaWithParticipation;
   }
 
   /**
@@ -295,4 +309,9 @@ export class CorporateBallot extends Entity<UniqueIdentifiers, HumanReadable> {
    * @throws if the fallback vote is not pointing to a choice in the motion
    */
   public vote: ProcedureMethod<CastBallotVoteParams, void>;
+
+  /**
+   * Modify the Corporate Ballot's Record Date
+   */
+  public modifyCheckpoint: ProcedureMethod<{ checkpoint: InputCaCheckpoint }, void>;
 }

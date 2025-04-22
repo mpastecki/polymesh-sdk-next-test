@@ -6,12 +6,16 @@ import { Namespace, PolymeshError } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { MockCorporateBallot } from '~/testUtils/mocks/entities';
 import {
+  CorporateActionKind,
+  CorporateActionParams,
   CorporateBallotWithDetails,
   CreateBallotParams,
   ErrorCode,
   PolymeshTransaction,
+  TargetTreatment,
 } from '~/types';
 import * as utilsConversionModule from '~/utils/conversion';
+import * as utilsInternalModule from '~/utils/internal';
 
 jest.mock(
   '~/base/Procedure',
@@ -44,9 +48,19 @@ describe('Ballots class', () => {
   });
 
   describe('method: getOne', () => {
+    let getCorporateActionWithDescriptionSpy: jest.SpyInstance;
+    let meshCorporateActionToCorporateActionParamsSpy: jest.SpyInstance;
     beforeAll(() => {
       jest.spyOn(utilsConversionModule, 'stringToAssetId').mockImplementation();
       jest.spyOn(utilsConversionModule, 'bigNumberToU32').mockImplementation();
+      getCorporateActionWithDescriptionSpy = jest.spyOn(
+        utilsInternalModule,
+        'getCorporateActionWithDescription'
+      );
+      meshCorporateActionToCorporateActionParamsSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateActionToCorporateActionParams'
+      );
     });
 
     afterAll(() => {
@@ -57,31 +71,36 @@ describe('Ballots class', () => {
       const context = dsMockUtils.getContextInstance();
       const assetId = '12341234-1234-1234-1234-123412341234';
       const id = new BigNumber(1);
-
+      const asset = entityMockUtils.getFungibleAssetInstance({ assetId });
       const queryMultiMock = dsMockUtils.getQueryMultiMock();
 
-      dsMockUtils.createQueryMock('corporateAction', 'corporateActions');
-      dsMockUtils.createQueryMock('corporateAction', 'details');
+      const mockDescription = dsMockUtils.createMockBytes('ballot details');
+      const mockDeclarationDate = new Date();
+      const mockCorporateActionParams: CorporateActionParams = {
+        kind: CorporateActionKind.IssuerNotice,
+        declarationDate: mockDeclarationDate,
+        description: 'ballot details',
+        targets: {
+          identities: [],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(0),
+        taxWithholdings: [],
+      };
+
+      when(getCorporateActionWithDescriptionSpy).calledWith(asset, id, context).mockResolvedValue({
+        corporateAction: mockCorporateActionParams,
+        description: mockDescription,
+      });
+
+      when(meshCorporateActionToCorporateActionParamsSpy)
+        .calledWith(mockCorporateActionParams, mockDescription, context)
+        .mockReturnValue(mockCorporateActionParams);
+
       dsMockUtils.createQueryMock('corporateBallot', 'rcv');
       dsMockUtils.createQueryMock('corporateBallot', 'timeRanges');
 
       queryMultiMock.mockResolvedValue([
-        dsMockUtils.createMockOption(
-          dsMockUtils.createMockCorporateAction({
-            kind: 'IssuerNotice',
-            targets: {
-              identities: ['someDid'],
-              treatment: 'Include',
-            },
-            /* eslint-disable @typescript-eslint/naming-convention */
-            decl_date: new BigNumber(start.getTime()),
-            record_date: null,
-            default_withholding_tax: new BigNumber(0),
-            withholding_tax: [],
-            /* eslint-enable @typescript-eslint/naming-convention */
-          })
-        ),
-        dsMockUtils.createMockBytes('ballot details'),
         dsMockUtils.createMockBool(false),
         dsMockUtils.createMockOption(
           dsMockUtils.createMockCodec(
@@ -116,16 +135,13 @@ describe('Ballots class', () => {
         ),
       });
 
-      const asset = entityMockUtils.getFungibleAssetInstance({ assetId });
       const target = new Ballots(asset, context);
 
       const ballot = await target.getOne({ id });
 
       expect(ballot.ballot.id).toEqual(id);
-      expect(ballot.details.declarationDate).toEqual(start);
       expect(ballot.details.startDate).toEqual(start);
       expect(ballot.details.endDate).toEqual(end);
-      expect(ballot.details.description).toEqual('ballot details');
       expect(ballot.details.rcv).toEqual(false);
       expect(ballot.details.meta).toEqual({
         title: 'Test Ballot',

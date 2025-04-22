@@ -46,7 +46,6 @@ import {
   AssetWithGroup,
   Authorization,
   AuthorizationType,
-  BallotMeta,
   CheckPermissionsResult,
   CheckRolesResult,
   CollectionKey,
@@ -377,9 +376,14 @@ interface DividendDistributionOptions extends EntityOptions {
 
 interface CorporateBallotOptions extends EntityOptions {
   id?: BigNumber;
-  asset?: FungibleAsset;
   assetId?: string;
-  details?: CorporateBallotDetails;
+  kind?: CorporateActionKind.IssuerNotice;
+  declarationDate?: Date;
+  description?: string;
+  targets?: CorporateActionTargets;
+  defaultTaxWithholding?: BigNumber;
+  taxWithholdings?: TaxWithholding[];
+  details?: EntityGetter<CorporateBallotDetails>;
 }
 
 interface MultiSigOptions extends AccountOptions {
@@ -2052,48 +2056,64 @@ const MockCorporateBallotClass = createMockEntityClass<CorporateBallotOptions>(
     uuid!: string;
     id!: BigNumber;
     asset!: FungibleAsset;
-    meta!: BallotMeta;
+    kind!: CorporateActionKind.IssuerNotice;
     declarationDate!: Date;
-    rcv!: boolean;
-    startDate!: Date;
-    endDate!: Date;
     description!: string;
+    targets!: CorporateActionTargets;
+    defaultTaxWithholding!: BigNumber;
+    taxWithholdings!: TaxWithholding[];
     details!: jest.Mock;
 
     /**
      * @hidden
      */
     public argsToOpts(...args: ConstructorParameters<typeof CorporateBallot>) {
-      return extractFromArgs(args, ['id', 'assetId']) as Partial<CorporateBallotOptions>;
+      return extractFromArgs(args, [
+        'id',
+        'assetId',
+        'declarationDate',
+        'targets',
+        'description',
+        'defaultTaxWithholding',
+        'taxWithholdings',
+      ]) as Partial<CorporateBallotOptions>;
     }
 
     /**
      * @hidden
      */
     public configure(opts: Required<CorporateBallotOptions>) {
-      this.uuid = 'corporateBallot';
+      this.uuid = 'dividendDistribution';
       this.id = opts.id;
-      this.asset = opts.asset ?? getFungibleAssetInstance({ assetId: opts.assetId });
+      this.asset = getFungibleAssetInstance({ assetId: opts.assetId });
+      this.declarationDate = opts.declarationDate;
+      this.description = opts.description;
+      this.targets = opts.targets;
+      this.defaultTaxWithholding = opts.defaultTaxWithholding;
+      this.taxWithholdings = opts.taxWithholdings;
       this.details = createEntityGetterMock(opts.details);
     }
   },
   () => ({
     id: new BigNumber(1),
     assetId: '12341234-1234-1234-1234-123412341234',
-    asset: getFungibleAssetInstance({ assetId: '12341234-1234-1234-1234-123412341234' }),
-    details: {
-      meta: {
-        title: 'title',
-        motions: [],
-      },
-      description: 'description',
-      declarationDate: new Date('10/14/1987'),
-      startDate: new Date('10/14/1987'),
-      endDate: new Date('10/14/1987'),
-      rcv: false,
+    kind: CorporateActionKind.IssuerNotice,
+    declarationDate: new Date('10/14/1987'),
+    description: 'someDescription',
+    targets: {
+      identities: [getIdentityInstance()],
+      treatment: TargetTreatment.Include,
     },
+    defaultTaxWithholding: new BigNumber(10),
+    taxWithholdings: [
+      {
+        identity: getIdentityInstance(),
+        percentage: new BigNumber(40),
+      },
+    ],
+    details: {},
   }),
-  ['CorporateBallot']
+  ['CorporateActionBase', 'CorporateBallot']
 );
 
 const MockCustomPermissionGroupClass = createMockEntityClass<CustomPermissionGroupOptions>(

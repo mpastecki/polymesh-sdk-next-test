@@ -1,15 +1,24 @@
-import { assertCaCheckpointValid, assertDistributionDatesValid } from '~/api/procedures/utils';
+import {
+  assertBallotRecordDateValid,
+  assertCaCheckpointValid,
+  assertDistributionDatesValid,
+} from '~/api/procedures/utils';
 import {
   Checkpoint,
   CorporateActionBase,
+  CorporateBallot,
   DividendDistribution,
   PolymeshError,
   Procedure,
 } from '~/internal';
 import { ErrorCode, ModifyCaCheckpointParams, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
-import { checkpointToRecordDateSpec, corporateActionIdentifierToCaId } from '~/utils/conversion';
-import { getCheckpointValue, optionize } from '~/utils/internal';
+import {
+  checkpointToRecordDateSpec,
+  corporateActionIdentifierToCaId,
+  momentToDate,
+} from '~/utils/conversion';
+import { assertBallotNotStarted, getCheckpointValue, optionize } from '~/utils/internal';
 
 export type Params = ModifyCaCheckpointParams & {
   corporateAction: CorporateActionBase;
@@ -25,11 +34,11 @@ export async function prepareModifyCaCheckpoint(
   const {
     context: {
       polymeshApi: { tx },
+      polymeshApi: { query },
     },
     context,
   } = this;
   const { checkpoint, corporateAction } = args;
-
   const { id: localId, asset } = corporateAction;
 
   let checkpointValue;
@@ -58,6 +67,27 @@ export async function prepareModifyCaCheckpoint(
   }
 
   const rawCaId = corporateActionIdentifierToCaId({ asset, localId }, context);
+
+  if (corporateAction instanceof CorporateBallot) {
+    const rawTimeRange = await query.corporateBallot.timeRanges(rawCaId);
+
+    if (rawTimeRange.isNone) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'The ballot does not exist',
+      });
+    }
+
+    const timeRange = rawTimeRange.unwrap();
+    const startDate = momentToDate(timeRange.start);
+
+    assertBallotNotStarted({ startDate });
+
+    if (checkpointValue && !(checkpointValue instanceof Checkpoint)) {
+      await assertBallotRecordDateValid(checkpointValue, startDate);
+    }
+  }
+
   const rawRecordDateSpec = optionize(checkpointToRecordDateSpec)(checkpointValue, context);
 
   return {

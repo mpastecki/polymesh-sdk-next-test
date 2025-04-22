@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 
+import { BallotMeta } from '~/api/entities/CorporateBallot/types';
 import {
   Account,
   AuthorizationRequest,
@@ -1841,36 +1842,6 @@ export interface UpdatePolyxBondParams {
 
 export interface NominateValidatorsParams {
   validators: (Account | string)[];
-}
-
-export interface BallotMotion {
-  /**
-   * Title of the motion
-   */
-  title: string;
-
-  /**
-   * Link to more information about the motion
-   */
-  infoLink: string;
-
-  /**
-   * Choices for the motion excluding abstain.
-   * @note Voting power not used is considered abstained.
-   */
-  choices: string[];
-}
-
-export interface BallotMeta {
-  /**
-   * Title of the Ballot
-   */
-  title: string;
-
-  /**
-   * All the motions of the Ballot, with their associated titles, choices, etc
-   */
-  motions: BallotMotion[];
 }
 
 export interface CreateBallotParams {

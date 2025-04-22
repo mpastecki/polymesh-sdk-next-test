@@ -5,10 +5,11 @@ import {
   Params,
   prepareModifyCaCheckpoint,
 } from '~/api/procedures/modifyCaCheckpoint';
-import { Context, PolymeshError } from '~/internal';
+import { Context, CorporateBallot, PolymeshError } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
+import { getIdentityInstance } from '~/testUtils/mocks/entities';
 import { Mocked } from '~/testUtils/types';
-import { ErrorCode, TxTags } from '~/types';
+import { ErrorCode, TargetTreatment, TxTags } from '~/types';
 import { PolymeshTx } from '~/types/internal';
 import * as utilsConversionModule from '~/utils/conversion';
 
@@ -166,6 +167,197 @@ describe('modifyCaCheckpoint procedure', () => {
     }
 
     expect(err.message).toBe('Checkpoint date must be in the future');
+  });
+
+  it('should throw an error if the Corporate Ballot does not exist', async () => {
+    const id = new BigNumber(1);
+
+    const rawCaId = dsMockUtils.createMockCAId({ assetId, localId: id });
+
+    jest.spyOn(utilsConversionModule, 'corporateActionIdentifierToCaId').mockReturnValue(rawCaId);
+
+    const mockCorporateBallot = new CorporateBallot(
+      {
+        id,
+        assetId,
+        declarationDate: new Date(),
+        description: 'mock description',
+        targets: {
+          identities: [getIdentityInstance()],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(10),
+        taxWithholdings: [],
+      },
+      mockContext
+    );
+
+    const args = {
+      corporateAction: mockCorporateBallot,
+      checkpoint: new Date(new Date().getTime() + 100),
+    };
+
+    dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+      returnValue: dsMockUtils.createMockOption(),
+    });
+
+    const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
+
+    let err;
+
+    try {
+      await prepareModifyCaCheckpoint.call(proc, args);
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err.message).toBe('The ballot does not exist');
+  });
+
+  it('should throw an error if the Corporate Ballot has already started', async () => {
+    const id = new BigNumber(1);
+    const mockCorporateBallot = new CorporateBallot(
+      {
+        id,
+        assetId,
+        declarationDate: new Date(),
+        description: 'mock description',
+        targets: {
+          identities: [getIdentityInstance()],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(10),
+        taxWithholdings: [],
+      },
+      mockContext
+    );
+    const args = {
+      corporateAction: mockCorporateBallot,
+      checkpoint: new Date(new Date().getTime() + 100),
+    };
+
+    dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+      returnValue: dsMockUtils.createMockOption(
+        dsMockUtils.createMockCodec(
+          {
+            start: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() - 100000)),
+            end: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() + 200000)),
+          },
+          false
+        )
+      ),
+    });
+
+    const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
+
+    let err;
+
+    try {
+      await prepareModifyCaCheckpoint.call(proc, args);
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err.message).toBe('The ballot has already started');
+  });
+
+  it('should throw an error if the checkpoint date is after the Corporate Ballot start date', async () => {
+    const id = new BigNumber(1);
+    const mockCorporateBallot = new CorporateBallot(
+      {
+        id,
+        assetId,
+        declarationDate: new Date(),
+        description: 'mock description',
+        targets: {
+          identities: [getIdentityInstance()],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(10),
+        taxWithholdings: [],
+      },
+      mockContext
+    );
+    const args = {
+      corporateAction: mockCorporateBallot,
+      checkpoint: new Date(new Date().getTime() + 20000),
+    };
+
+    dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+      returnValue: dsMockUtils.createMockOption(
+        dsMockUtils.createMockCodec(
+          {
+            start: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() + 10000)),
+            end: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() + 300000)),
+          },
+          false
+        )
+      ),
+    });
+
+    const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
+
+    let err;
+
+    try {
+      await prepareModifyCaCheckpoint.call(proc, args);
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err.message).toBe('The record date cannot be after the ballot start date');
+  });
+
+  it('should throw an error if the checkpoint date is after the Corporate Ballot start date', async () => {
+    const id = new BigNumber(1);
+    const mockCorporateBallot = new CorporateBallot(
+      {
+        id,
+        assetId,
+        declarationDate: new Date(),
+        description: 'mock description',
+        targets: {
+          identities: [getIdentityInstance()],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(10),
+        taxWithholdings: [],
+      },
+      mockContext
+    );
+    const checkpoint = new Date(new Date().getTime() + 20000);
+    const args = {
+      corporateAction: mockCorporateBallot,
+      checkpoint: entityMockUtils.getCheckpointScheduleInstance({
+        details: {
+          nextCheckpointDate: checkpoint,
+        },
+      }),
+    };
+
+    dsMockUtils.createQueryMock('corporateBallot', 'timeRanges', {
+      returnValue: dsMockUtils.createMockOption(
+        dsMockUtils.createMockCodec(
+          {
+            start: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() + 10000)),
+            end: dsMockUtils.createMockMoment(new BigNumber(new Date().getTime() + 300000)),
+          },
+          false
+        )
+      ),
+    });
+
+    const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
+
+    let err;
+
+    try {
+      await prepareModifyCaCheckpoint.call(proc, args);
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err.message).toBe('The record date cannot be after the ballot start date');
   });
 
   it('should return a change record date transaction spec', async () => {

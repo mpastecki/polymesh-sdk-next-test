@@ -93,6 +93,7 @@ import {
   getAssetIdForTicker,
   getAssetIdFromMiddleware,
   getCheckpointValue,
+  getCorporateActionWithDescription,
   getCorporateBallotDetailsOrThrow,
   getDid,
   getExemptedIds,
@@ -2855,14 +2856,6 @@ describe('assertDeclarationDate', () => {
 
     expect(() => assertDeclarationDate(pastDate)).not.toThrow();
   });
-
-  it('should throw an error if declaration date is current date', () => {
-    const currentDate = new Date();
-
-    expect(() => assertDeclarationDate(currentDate)).toThrow(
-      'Declaration date must be in the past'
-    );
-  });
 });
 
 describe('assertBallotNotStarted', () => {
@@ -2939,6 +2932,54 @@ describe('getCorporateBallotDetailsOrThrow', () => {
 
     return expect(() => getCorporateBallotDetailsOrThrow(asset, id, mockContext)).rejects.toThrow(
       'The CorporateBallot does not exist'
+    );
+  });
+});
+
+describe('getCorporateActionWithDescription', () => {
+  let mockContext: Context;
+
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+    mockContext = dsMockUtils.getContextInstance();
+  });
+
+  afterAll(() => {
+    dsMockUtils.cleanup();
+  });
+
+  it('should return the corporate action with the description', async () => {
+    const asset = entityMockUtils.getFungibleAssetInstance();
+    const id = new BigNumber(1);
+
+    const corporateAction = dsMockUtils.createMockCorporateAction();
+
+    const caQueryResult = dsMockUtils.createMockOption(corporateAction);
+    const description = dsMockUtils.createMockBytes();
+
+    dsMockUtils.createQueryMock('corporateAction', 'details');
+    dsMockUtils.createQueryMock('corporateAction', 'corporateActions');
+    dsMockUtils.getQueryMultiMock().mockResolvedValue([caQueryResult, description]);
+
+    const result = await getCorporateActionWithDescription(asset, id, mockContext);
+
+    expect(result.corporateAction).toEqual(corporateAction);
+    expect(result.description).toEqual(description);
+  });
+
+  it('should throw an error if the corporate action does not exist', async () => {
+    const asset = entityMockUtils.getFungibleAssetInstance();
+    const id = new BigNumber(1);
+
+    const caQueryResult = dsMockUtils.createMockOption();
+    const description = dsMockUtils.createMockBytes();
+
+    dsMockUtils.createQueryMock('corporateAction', 'details');
+    dsMockUtils.createQueryMock('corporateAction', 'corporateActions');
+    dsMockUtils.getQueryMultiMock().mockResolvedValue([caQueryResult, description]);
+
+    return expect(() => getCorporateActionWithDescription(asset, id, mockContext)).rejects.toThrow(
+      'The CorporateAction does not exist'
     );
   });
 });

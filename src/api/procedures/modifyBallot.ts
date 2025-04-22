@@ -1,10 +1,10 @@
 import BigNumber from 'bignumber.js';
 import { isEqual } from 'lodash';
 
+import { BallotMeta, CorporateBallotDetails } from '~/api/entities/CorporateBallot/types';
 import { Context, CorporateBallot, FungibleAsset, PolymeshError, Procedure } from '~/internal';
 import {
-  BallotMeta,
-  CorporateBallotParams,
+  CorporateBallotWithDetails,
   ErrorCode,
   ModifyCorporateBallotParams,
   TxTags,
@@ -15,10 +15,12 @@ import {
   corporateActionIdentifierToCaId,
   corporateBallotMetaToMeshCorporateBallotMeta,
   dateToMoment,
+  meshCorporateActionToCorporateActionParams,
 } from '~/utils/conversion';
 import {
   assertBallotNotStarted,
   checkTxType,
+  getCorporateActionWithDescription,
   getCorporateBallotDetailsOrThrow,
 } from '~/utils/internal';
 
@@ -32,8 +34,8 @@ export type Params = ModifyCorporateBallotParams & {
 /**
  * @hidden
  */
-export function assertMetaChanged(meta: BallotMeta, ballotDetails: CorporateBallotParams): void {
-  if (isEqual(meta, ballotDetails.meta)) {
+export function assertMetaChanged(meta: BallotMeta, details: CorporateBallotDetails): void {
+  if (isEqual(meta, details.meta)) {
     throw new PolymeshError({
       code: ErrorCode.NoDataChange,
       message: 'Provided CorporateBallot meta is the same as the current one',
@@ -47,7 +49,7 @@ export function assertMetaChanged(meta: BallotMeta, ballotDetails: CorporateBall
  */
 export function assertEndDateChange(
   newEndDate: Date,
-  { startDate, endDate }: CorporateBallotParams
+  { startDate, endDate }: CorporateBallotDetails
 ): void {
   if (endDate === newEndDate) {
     throw new PolymeshError({
@@ -69,8 +71,8 @@ export function assertEndDateChange(
 /**
  * @hidden
  */
-export function assertRcvChange(rcv: boolean, ballotDetails: CorporateBallotParams): void {
-  if (rcv === ballotDetails.rcv) {
+export function assertRcvChange(rcv: boolean, details: CorporateBallotDetails): void {
+  if (rcv === details.rcv) {
     throw new PolymeshError({
       code: ErrorCode.NoDataChange,
       message: 'Provided CorporateBallot rcv is the same as the current one',
@@ -86,18 +88,36 @@ export async function modifyCorporateBallotResolver(
   asset: FungibleAsset,
   ballotId: BigNumber,
   context: Context
-): Promise<CorporateBallot> {
-  const ballotDetails = await getCorporateBallotDetailsOrThrow(asset, ballotId, context);
+): Promise<CorporateBallotWithDetails> {
+  const details = await getCorporateBallotDetailsOrThrow(asset, ballotId, context);
+  const { corporateAction, description } = await getCorporateActionWithDescription(
+    asset,
+    ballotId,
+    context
+  );
 
-  return new CorporateBallot({ assetId: asset.id, id: ballotId, ...ballotDetails }, context);
+  const ballot = new CorporateBallot(
+    {
+      ...meshCorporateActionToCorporateActionParams(corporateAction, description, context),
+      id: ballotId,
+      assetId: asset.id,
+    },
+    context
+  );
+
+  return {
+    ballot,
+    details,
+  };
 }
+
 /**
  * @hidden
  */
 export async function prepareModifyBallot(
-  this: Procedure<Params, CorporateBallot>,
+  this: Procedure<Params, CorporateBallotWithDetails>,
   args: Params
-): Promise<BatchTransactionSpec<CorporateBallot, unknown[][]>> {
+): Promise<BatchTransactionSpec<CorporateBallotWithDetails, unknown[][]>> {
   const {
     context,
     context: {
@@ -116,14 +136,14 @@ export async function prepareModifyBallot(
 
   const ballotId = BigNumber.isBigNumber(ballot) ? ballot : ballot.id;
 
-  const ballotDetails = await getCorporateBallotDetailsOrThrow(asset, ballotId, context);
+  const details = await getCorporateBallotDetailsOrThrow(asset, ballotId, context);
 
-  assertBallotNotStarted(ballotDetails);
+  assertBallotNotStarted(details);
 
   const rawCaId = corporateActionIdentifierToCaId({ asset, localId: ballotId }, context);
 
   if (meta) {
-    assertMetaChanged(meta, ballotDetails);
+    assertMetaChanged(meta, details);
 
     transactions.push(
       checkTxType({
@@ -134,7 +154,7 @@ export async function prepareModifyBallot(
   }
 
   if (endDate) {
-    assertEndDateChange(endDate, ballotDetails);
+    assertEndDateChange(endDate, details);
 
     transactions.push(
       checkTxType({
@@ -145,7 +165,7 @@ export async function prepareModifyBallot(
   }
 
   if (typeof rcv !== 'undefined') {
-    assertRcvChange(rcv, ballotDetails);
+    assertRcvChange(rcv, details);
 
     transactions.push(
       checkTxType({
@@ -165,7 +185,7 @@ export async function prepareModifyBallot(
  * @hidden
  */
 export function getAuthorization(
-  this: Procedure<Params, CorporateBallot>,
+  this: Procedure<Params, CorporateBallotWithDetails>,
   { asset, meta, endDate, rcv }: Params
 ): ProcedureAuthorization {
   const transactions = [];
@@ -194,5 +214,5 @@ export function getAuthorization(
 /**
  * @hidden
  */
-export const modifyBallot = (): Procedure<Params, CorporateBallot> =>
+export const modifyBallot = (): Procedure<Params, CorporateBallotWithDetails> =>
   new Procedure(prepareModifyBallot, getAuthorization);
