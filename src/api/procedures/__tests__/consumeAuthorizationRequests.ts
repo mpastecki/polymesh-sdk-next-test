@@ -12,11 +12,19 @@ import { Account, AuthorizationRequest, Context, Identity } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
 import { Authorization, AuthorizationType, SignerValue, TxTags } from '~/types';
+import { hexToUuid } from '~/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 
 jest.mock(
   '~/api/entities/Asset/Fungible',
   require('~/testUtils/mocks/entities').mockFungibleAssetModule('~/api/entities/Asset/Fungible')
+);
+
+jest.mock(
+  '~/api/entities/Asset/NonFungible/NftCollection',
+  require('~/testUtils/mocks/entities').mockNftCollectionModule(
+    '~/api/entities/Asset/NonFungible/NftCollection'
+  )
 );
 
 jest.mock(
@@ -84,7 +92,7 @@ describe('consumeAuthorizationRequests procedure', () => {
         issuer: entityMockUtils.getIdentityInstance({ did: 'issuerDid1' }),
         data: {
           type: AuthorizationType.TransferAssetOwnership,
-          value: '0x12347',
+          value: hexToUuid('0x12341234123412341234123412341234'),
         },
       },
       {
@@ -124,7 +132,7 @@ describe('consumeAuthorizationRequests procedure', () => {
         issuer: entityMockUtils.getIdentityInstance({ did: 'issuerDid7' }),
         data: {
           type: AuthorizationType.TransferAssetOwnership,
-          value: '0x12347',
+          value: hexToUuid('0x12341234123412341234123412341234'),
         },
       },
     ];

@@ -11,7 +11,6 @@ import {
   CheckpointSchedule,
   Context,
   CustomPermissionGroup,
-  FungibleAsset,
   Identity,
   Instruction,
   KnownPermissionGroup,
@@ -43,7 +42,7 @@ import {
   TxTag,
 } from '~/types';
 import { assetIdToString, u32ToBigNumber, u64ToBigNumber } from '~/utils/conversion';
-import { asIdentity, filterEventRecords } from '~/utils/internal';
+import { asAsset, asIdentity, filterEventRecords } from '~/utils/internal';
 
 /**
  * @hidden
@@ -413,24 +412,6 @@ export async function assertTransferTickerAuthorizationValid(
 /**
  * @hidden
  *
- * Asserts valid transfer asset ownership authorization
- */
-export async function assertTransferAssetOwnershipAuthorizationValid(
-  data: GenericAuthorizationData,
-  context: Context
-): Promise<void> {
-  const asset = new FungibleAsset({ assetId: data.value }, context);
-  const exists = await asset.exists();
-  if (!exists)
-    throw new PolymeshError({
-      code: ErrorCode.UnmetPrerequisite,
-      message: 'The Asset does not exist',
-    });
-}
-
-/**
- * @hidden
- *
  * Asserts valid add multisig signer authorization
  */
 export async function assertMultiSigSignerAuthorizationValid(
@@ -603,7 +584,8 @@ export async function assertAuthorizationRequestValid(
     case AuthorizationType.TransferTicker:
       return assertTransferTickerAuthorizationValid(data, context);
     case AuthorizationType.TransferAssetOwnership:
-      return assertTransferAssetOwnershipAuthorizationValid(data, context);
+      await asAsset(data.value, context);
+      return;
     case AuthorizationType.BecomeAgent:
       // no additional checks
       return;

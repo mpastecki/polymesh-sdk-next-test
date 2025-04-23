@@ -86,6 +86,13 @@ jest.mock(
 );
 
 jest.mock(
+  '~/api/entities/Asset/NonFungible/NftCollection',
+  require('~/testUtils/mocks/entities').mockNftCollectionModule(
+    '~/api/entities/Asset/NonFungible/NftCollection'
+  )
+);
+
+jest.mock(
   '~/api/entities/TickerReservation',
   require('~/testUtils/mocks/entities').mockTickerReservationModule(
     '~/api/entities/TickerReservation'
@@ -720,6 +727,7 @@ describe('authorization request validations', () => {
     mockContext = dsMockUtils.getContextInstance();
     issuer = entityMockUtils.getIdentityInstance();
     target = entityMockUtils.getIdentityInstance();
+    expiry = new Date(new Date().getTime() + 10000000);
     dsMockUtils.createQueryMock('identity', 'authorizations', {
       returnValue: dsMockUtils.createMockOption(
         dsMockUtils.createMockAuthorization({
@@ -927,8 +935,10 @@ describe('authorization request validations', () => {
   });
 
   describe('assertTransferAssetOwnershipAuthorizationValid', () => {
-    it('should not throw with a valid request', () => {
-      entityMockUtils.configureMocks({ fungibleAssetOptions: { exists: true } });
+    it('should not throw with a valid request', async () => {
+      entityMockUtils.configureMocks({
+        fungibleAssetOptions: { exists: true },
+      });
       const data: Authorization = {
         type: AuthorizationType.TransferAssetOwnership,
         value: '0x12341234123412341234123412341234',
@@ -944,11 +954,35 @@ describe('authorization request validations', () => {
         mockContext
       );
 
-      return expect(assertAuthorizationRequestValid(auth, mockContext)).resolves.not.toThrow();
+      await expect(assertAuthorizationRequestValid(auth, mockContext)).resolves.not.toThrow();
+
+      entityMockUtils.configureMocks({
+        fungibleAssetOptions: { exists: false },
+        nftCollectionOptions: { exists: true },
+      });
+      const nftData: Authorization = {
+        type: AuthorizationType.TransferAssetOwnership,
+        value: '0x12341234123412341234123412341234',
+      };
+      const nftAuth = new AuthorizationRequest(
+        {
+          authId: new BigNumber(1),
+          issuer,
+          target,
+          expiry,
+          data: nftData,
+        },
+        mockContext
+      );
+
+      await expect(assertAuthorizationRequestValid(nftAuth, mockContext)).resolves.not.toThrow();
     });
 
     it('should throw with a Asset that does not exist', () => {
-      entityMockUtils.configureMocks({ fungibleAssetOptions: { exists: false } });
+      entityMockUtils.configureMocks({
+        fungibleAssetOptions: { exists: false },
+        nftCollectionOptions: { exists: false },
+      });
       const data: Authorization = {
         type: AuthorizationType.TransferAssetOwnership,
         value: '0x12341234123412341234123412341234',
@@ -966,7 +1000,7 @@ describe('authorization request validations', () => {
 
       const expectedError = new PolymeshError({
         code: ErrorCode.UnmetPrerequisite,
-        message: 'The Asset does not exist',
+        message: 'No asset exists with asset ID: "0x12341234123412341234123412341234"',
       });
 
       return expect(assertAuthorizationRequestValid(auth, mockContext)).rejects.toThrowError(
