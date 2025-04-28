@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 
-import { BallotMeta } from '~/api/entities/CorporateBallot/types';
+import { BallotMeta, BallotVote } from '~/api/entities/CorporateBallot/types';
 import {
   Account,
   AuthorizationRequest,
@@ -1892,21 +1892,6 @@ export type ModifyCorporateBallotParams = Partial<
   Pick<CreateBallotParams, 'meta' | 'endDate' | 'rcv'>
 > & {
   ballot: CorporateBallot | BigNumber;
-};
-
-export type BallotVote = {
-  /**
-   * The power of the vote.
-   */
-  power: BigNumber;
-
-  /**
-   * The fallback vote to be used if the choice is not found in the ballot.
-   * @note This is only allowed for RCV ballots.
-   * @note Must point to a choice in a motion (index of the choice in the motion choices array)
-   * @note Must not point to the same choice as the `vote` property (index != choiceIndex)
-   */
-  fallback?: BigNumber;
 };
 
 export type CastBallotVoteParams = {

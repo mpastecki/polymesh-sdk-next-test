@@ -3,11 +3,12 @@ import BigNumber from 'bignumber.js';
 
 import {
   BallotMotion,
+  BallotVote,
   CorporateBallotDetails,
   CorporateBallotStatus,
 } from '~/api/entities/CorporateBallot/types';
 import { CorporateBallot, FungibleAsset, PolymeshError, Procedure } from '~/internal';
-import { BallotVote, CastBallotVoteParams, ErrorCode, TxTags } from '~/types';
+import { CastBallotVoteParams, ErrorCode, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
 import {
   ballotDetailsToBallotStatus,

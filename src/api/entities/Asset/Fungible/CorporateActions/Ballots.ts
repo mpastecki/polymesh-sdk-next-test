@@ -80,6 +80,7 @@ export class Ballots extends Namespace<FungibleAsset> {
     const rawNextCaId = await query.corporateAction.caIdSequence(
       assetToMeshAssetId(parent, context)
     );
+
     const nextCaId = u32ToBigNumber(rawNextCaId);
 
     const getBallotWithDetails = async (
