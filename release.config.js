@@ -4,13 +4,11 @@ module.exports = {
     'master',
     {
       name: 'develop',
-      channel: 'beta',
       prerelease: 'beta',
     },
     {
       name: 'next',
-      channel: 'next',
-      prerelease: 'next',
+      prerelease: true,
     },
     {
       name: 'v26',
