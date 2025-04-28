@@ -2,15 +2,13 @@ import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
 import { Ballots } from '~/api/entities/Asset/Fungible/CorporateActions/Ballots';
-import { Namespace, PolymeshError } from '~/internal';
+import { Namespace } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
-import { MockCorporateBallot } from '~/testUtils/mocks/entities';
 import {
   CorporateActionKind,
   CorporateActionParams,
   CorporateBallotWithDetails,
   CreateBallotParams,
-  ErrorCode,
   PolymeshTransaction,
   TargetTreatment,
 } from '~/types';
@@ -157,49 +155,126 @@ describe('Ballots class', () => {
   });
 
   describe('method: get', () => {
-    const assetId = '12341234-1234-1234-1234-123412341234';
-    let target: Ballots;
-    let mockBallot: MockCorporateBallot;
-
-    beforeAll(() => {
-      const context = dsMockUtils.getContextInstance();
-      const asset = entityMockUtils.getFungibleAssetInstance({ assetId });
-      jest.spyOn(utilsConversionModule, 'u32ToBigNumber').mockReturnValue(new BigNumber(2));
-
-      mockBallot = entityMockUtils.getCorporateBallotInstance({ id: new BigNumber(0), assetId });
-      target = new Ballots(asset, context);
-
-      dsMockUtils.createQueryMock('corporateAction', 'caIdSequence', {
-        returnValue: dsMockUtils.createMockU32(new BigNumber(2)),
-      });
-
-      jest.spyOn(target, 'getOne').mockImplementation(({ id }) => {
-        if (id.isEqualTo(0)) {
-          return Promise.resolve({
-            ballot: mockBallot,
-            details: {},
-          } as unknown as CorporateBallotWithDetails);
-        } else if (id.isEqualTo(1)) {
-          return Promise.reject(
-            new PolymeshError({
-              code: ErrorCode.DataUnavailable,
-              message: 'The CorporateBallot does not exist',
-            })
-          );
-        }
-        return Promise.reject(new Error('Unexpected id'));
-      });
-    });
-
     afterAll(() => {
       jest.restoreAllMocks();
     });
 
     it('should return all existing Ballots for the Asset', async () => {
-      const ballots = await target.get();
+      /* eslint-disable @typescript-eslint/naming-convention */
+      const params = {
+        decl_date: new BigNumber(new Date().getTime()),
+        record_date: null,
+        targets: {
+          identities: [],
+          treatment: TargetTreatment.Include,
+        },
+        default_withholding_tax: new BigNumber(0),
+        withholding_tax: [],
+      };
+      /* eslint-enable @typescript-eslint/naming-convention */
+
+      const context = dsMockUtils.getContextInstance();
+      const assetId = '12341234-1234-1234-1234-123412341234';
+      const asset = entityMockUtils.getFungibleAssetInstance({ assetId });
+
+      const ballotId = new BigNumber(2);
+      const ballotWithoutDetailsId = new BigNumber(3);
+      const mockCaId = dsMockUtils.createMockU32(new BigNumber(1));
+      const mockCaIdWithBallot = dsMockUtils.createMockU32(ballotId);
+      const mockCaIdWithEmptyBallot = dsMockUtils.createMockU32(ballotWithoutDetailsId);
+      const mockCorporateAction = dsMockUtils.createMockCorporateAction();
+      const mockCorporateActionWithBallot = dsMockUtils.createMockCorporateAction({
+        ...params,
+        kind: dsMockUtils.createMockCAKind('IssuerNotice'),
+      });
+      const mockCorporateActionWithEmptyBallot = dsMockUtils.createMockCorporateAction({
+        ...params,
+        kind: dsMockUtils.createMockCAKind('IssuerNotice'),
+      });
+      const getCorporateBallotDetailsOrNullSpy = jest.spyOn(
+        utilsInternalModule,
+        'getCorporateBallotDetailsOrNull'
+      );
+      const mockDetails = {
+        startDate: new Date(),
+        endDate: new Date(),
+        meta: {
+          title: 'test',
+          motions: [],
+        },
+        rcv: false,
+      };
+      const mockDescription = dsMockUtils.createMockBytes('ballot details');
+      const mockCorporateActionParams = {
+        kind: CorporateActionKind.IssuerNotice,
+        declarationDate: new Date(),
+        description: 'ballot details',
+        targets: {
+          identities: [],
+          treatment: TargetTreatment.Include,
+        },
+        defaultTaxWithholding: new BigNumber(0),
+        taxWithholdings: [],
+      };
+
+      const meshCorporateActionToCorporateActionParamsSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateActionToCorporateActionParams'
+      );
+      const u32ToBigNumberSpy = jest.spyOn(utilsConversionModule, 'u32ToBigNumber');
+
+      when(u32ToBigNumberSpy).calledWith(mockCaId).mockReturnValue(ballotId);
+      when(u32ToBigNumberSpy).calledWith(mockCaIdWithBallot).mockReturnValue(ballotId);
+      when(u32ToBigNumberSpy)
+        .calledWith(mockCaIdWithEmptyBallot)
+        .mockReturnValue(ballotWithoutDetailsId);
+
+      dsMockUtils.createQueryMock('corporateAction', 'corporateActions', {
+        entries: [
+          [[assetId, mockCaId], dsMockUtils.createMockOption(mockCorporateAction)],
+          [
+            [assetId, mockCaIdWithBallot],
+            dsMockUtils.createMockOption(mockCorporateActionWithBallot),
+          ],
+          [
+            [assetId, mockCaIdWithEmptyBallot],
+            dsMockUtils.createMockOption(mockCorporateActionWithEmptyBallot),
+          ],
+        ],
+      });
+
+      dsMockUtils.createQueryMock('corporateAction', 'details', {
+        returnValue: mockDescription,
+      });
+
+      when(getCorporateBallotDetailsOrNullSpy)
+        .calledWith(asset, ballotId, context)
+        .mockResolvedValue(mockDetails);
+
+      when(getCorporateBallotDetailsOrNullSpy)
+        .calledWith(asset, ballotWithoutDetailsId, context)
+        .mockResolvedValue(null);
+
+      when(meshCorporateActionToCorporateActionParamsSpy)
+        .calledWith(mockCorporateActionWithBallot, mockDescription, context)
+        .mockReturnValue(mockCorporateActionParams);
+
+      const ballots = await new Ballots(asset, context).get();
+
+      expect(getCorporateBallotDetailsOrNullSpy).toHaveBeenCalledWith(asset, ballotId, context);
+      expect(getCorporateBallotDetailsOrNullSpy).toHaveBeenCalledWith(
+        asset,
+        ballotWithoutDetailsId,
+        context
+      );
+      expect(meshCorporateActionToCorporateActionParamsSpy).toHaveBeenCalledWith(
+        mockCorporateActionWithBallot,
+        mockDescription,
+        context
+      );
 
       expect(ballots.length).toBe(1);
-      expect(ballots[0].ballot.id.isEqualTo(new BigNumber(0))).toBe(true);
+      expect(ballots[0].ballot.id.isEqualTo(ballotId)).toBe(true);
     });
   });
 

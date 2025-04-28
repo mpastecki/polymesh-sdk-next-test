@@ -11,6 +11,7 @@ import {
 import {
   createProcedureMethod,
   getCorporateActionWithDescription,
+  getCorporateBallotDetailsOrNull,
   getCorporateBallotDetailsOrThrow,
 } from '~/utils/internal';
 
@@ -77,32 +78,50 @@ export class Ballots extends Namespace<FungibleAsset> {
       context,
     } = this;
 
-    const rawNextCaId = await query.corporateAction.caIdSequence(
+    const rawEntries = await query.corporateAction.corporateActions.entries(
       assetToMeshAssetId(parent, context)
     );
 
-    const nextCaId = u32ToBigNumber(rawNextCaId);
+    const corporateActions = rawEntries
+      .map(([rawCaId, rawCorporateAction]) => ({
+        rawCaId,
+        id: u32ToBigNumber(rawCaId.args[1]),
+        corporateAction: rawCorporateAction.unwrap(),
+      }))
+      .filter(({ corporateAction }) => corporateAction.kind.isIssuerNotice);
 
-    const getBallotWithDetails = async (
-      id: BigNumber
-    ): Promise<CorporateBallotWithDetails | undefined> => {
-      try {
-        const ballot = await this.getOne({ id });
+    const caDetailsPromises = corporateActions.map(ca => query.corporateAction.details(ca.rawCaId));
+    const ballotDetailsPromises = corporateActions.map(ca =>
+      getCorporateBallotDetailsOrNull(parent, ca.id, context)
+    );
 
-        return ballot;
-      } catch {
-        return undefined;
+    const [caDetails, ballotDetails] = await Promise.all([
+      Promise.all(caDetailsPromises),
+      Promise.all(ballotDetailsPromises),
+    ]);
+
+    const result: CorporateBallotWithDetails[] = [];
+
+    ballotDetails.forEach((details, index) => {
+      if (details) {
+        result.push({
+          ballot: new CorporateBallot(
+            {
+              id: corporateActions[index].id,
+              assetId: parent.id,
+              ...meshCorporateActionToCorporateActionParams(
+                corporateActions[index].corporateAction,
+                caDetails[index],
+                context
+              ),
+            },
+            context
+          ),
+          details,
+        });
       }
-    };
+    });
 
-    const ballotsPromises = [];
-
-    for (let i = 0; i < nextCaId.toNumber(); i++) {
-      ballotsPromises.push(getBallotWithDetails(new BigNumber(i)));
-    }
-
-    const ballots = await Promise.all(ballotsPromises);
-
-    return ballots.filter((b): b is CorporateBallotWithDetails => b !== undefined);
+    return result;
   }
 }
