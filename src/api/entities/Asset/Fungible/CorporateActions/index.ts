@@ -1,12 +1,19 @@
+import { initiateCorporateAction } from '~/api/procedures/initiateCorporateAction';
 import {
   Context,
+  CorporateAction,
   FungibleAsset,
   Identity,
   modifyCaDefaultConfig,
   Namespace,
   removeCorporateAction,
 } from '~/internal';
-import { ModifyCaDefaultConfigParams, ProcedureMethod, RemoveCorporateActionParams } from '~/types';
+import {
+  InitiateCorporateActionParams,
+  ModifyCaDefaultConfigParams,
+  ProcedureMethod,
+  RemoveCorporateActionParams,
+} from '~/types';
 import {
   assetToMeshAssetId,
   identityIdToString,
@@ -42,6 +49,11 @@ export class CorporateActions extends Namespace<FungibleAsset> {
 
     this.remove = createProcedureMethod(
       { getProcedureAndArgs: args => [removeCorporateAction, { asset: parent, ...args }] },
+      context
+    );
+
+    this.initiate = createProcedureMethod(
+      { getProcedureAndArgs: args => [initiateCorporateAction, { asset: parent, ...args }] },
       context
     );
   }
@@ -133,4 +145,6 @@ export class CorporateActions extends Namespace<FungibleAsset> {
       })),
     };
   }
+
+  public initiate: ProcedureMethod<InitiateCorporateActionParams, CorporateAction>;
 }

@@ -30,6 +30,7 @@ import {
   ClaimCountTransferRestriction,
   ClaimPercentageTransferRestriction,
   ClaimTarget,
+  CorporateActionKind,
   CorporateActionTargets,
   CountTransferRestriction,
   InputCaCheckpoint,
@@ -1900,4 +1901,41 @@ export type CastBallotVoteParams = {
    * @note Votes for all motion choices must be provided.
    */
   votes: BallotVote[][];
+};
+
+export type InitiateCorporateActionParams = {
+  /**
+   * The kind of Corporate Action to initiate
+   */
+  kind: CorporateActionKind;
+
+  /**
+   * The date on which the Corporate Action is declared
+   */
+  declarationDate: Date;
+
+  /**
+   * The description of the Corporate Action
+   */
+  description: string;
+
+  /**
+   * The checkpoint of the Corporate Action (the record date on which the Corporate Action is applied)
+   */
+  checkpoint: InputCaCheckpoint | null;
+
+  /**
+   * The tax withholdings to be applied to the Corporate Action
+   */
+  taxWithholdings: InputTaxWithholding[];
+
+  /**
+   * The targets of the Corporate Action
+   */
+  targets: InputCorporateActionTargets | null;
+
+  /**
+   * The default tax withholding to be applied to the Corporate Action
+   */
+  defaultTaxWithholding: BigNumber | null;
 };

@@ -2,9 +2,15 @@ import { PolymeshPrimitivesAssetAssetId } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
-import { Context, FungibleAsset, Namespace, PolymeshTransaction } from '~/internal';
+import {
+  Context,
+  CorporateAction,
+  FungibleAsset,
+  Namespace,
+  PolymeshTransaction,
+} from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
-import { TargetTreatment } from '~/types';
+import { InitiateCorporateActionParams, TargetTreatment } from '~/types';
 import { tuple } from '~/types/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 
@@ -179,6 +185,27 @@ describe('CorporateActions class', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('method: initiate', () => {
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should prepare the procedure with the correct arguments and context, and return the resulting transaction', async () => {
+      const args = { id: 'bar' } as unknown as InitiateCorporateActionParams;
+
+      const expectedTransaction =
+        'someTransaction' as unknown as PolymeshTransaction<CorporateAction>;
+
+      when(procedureMockUtils.getPrepareMock())
+        .calledWith({ args: { asset, ...args }, transformer: undefined }, context, {})
+        .mockResolvedValue(expectedTransaction);
+
+      const tx = await corporateActions.initiate(args);
+
+      expect(tx).toBe(expectedTransaction);
     });
   });
 });

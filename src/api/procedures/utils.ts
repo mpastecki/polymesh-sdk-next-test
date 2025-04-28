@@ -228,6 +228,24 @@ export function assertCaTaxWithholdingsValid(
       },
     });
   }
+
+  const didSet = new Set();
+
+  for (const { identity } of taxWithholdings) {
+    const did = asIdentity(identity, context).did;
+
+    if (didSet.has(did)) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'Identity included more than once in the tax withholding list',
+        data: {
+          identity,
+        },
+      });
+    }
+
+    didSet.add(did);
+  }
 }
 
 /**

@@ -426,7 +426,7 @@ describe('assertCaTaxWithholdingsValid', () => {
   beforeEach(() => {
     mockContext = dsMockUtils.getContextInstance();
     dsMockUtils.setConstMock('corporateAction', 'maxDidWhts', {
-      returnValue: dsMockUtils.createMockU32(new BigNumber(1)),
+      returnValue: dsMockUtils.createMockU32(new BigNumber(2)),
     });
   });
 
@@ -444,16 +444,32 @@ describe('assertCaTaxWithholdingsValid', () => {
         [
           { identity: 'someDid', percentage: new BigNumber(15) },
           { identity: 'otherDid', percentage: new BigNumber(16) },
+          { identity: 'thirdDid', percentage: new BigNumber(17) },
         ],
         mockContext
       )
     ).toThrow('Too many tax withholding entries');
   });
 
+  it('should throw an error if the identity has already been added to the tax withholding list', async () => {
+    expect(() =>
+      assertCaTaxWithholdingsValid(
+        [
+          { identity: 'someDid', percentage: new BigNumber(15) },
+          { identity: 'someDid', percentage: new BigNumber(16) },
+        ],
+        mockContext
+      )
+    ).toThrow('Identity included more than once in the tax withholding list');
+  });
+
   it('should not throw an error if the number of target Identities is appropriate', async () => {
     expect(() =>
       assertCaTaxWithholdingsValid(
-        [{ identity: 'someDid', percentage: new BigNumber(15) }],
+        [
+          { identity: 'someDid', percentage: new BigNumber(15) },
+          { identity: 'otherDid', percentage: new BigNumber(16) },
+        ],
         mockContext
       )
     ).not.toThrow();
