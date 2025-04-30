@@ -68,12 +68,12 @@ function camelCaseParamNames(field) {
 }
 
 function writeDefinitions(schemaObj) {
-  const { types, rpc: rpcModules } = schemaObj;
+  const { rpc: rpcModules } = schemaObj;
 
   fs.writeFileSync(
     path.resolve(typesDir, 'definitions.ts'),
     `/* eslint-disable @typescript-eslint/naming-convention */\nexport default ${util.inspect(
-      { rpc: {}, types },
+      { ...schemaObj, rpc: {} },
       {
         compact: false,
         depth: null,
