@@ -41,6 +41,11 @@ export function assertBallotIsActive(ballotDetails: CorporateBallotDetails): voi
     throw new PolymeshError({
       code: ErrorCode.ValidationError,
       message: 'Ballot is not active',
+      data: {
+        status,
+        startDate: ballotDetails.startDate,
+        endDate: ballotDetails.endDate,
+      },
     });
   }
 }

@@ -198,7 +198,7 @@ export function getAuthorization(
     transactions.push(TxTags.corporateBallot.ChangeEnd);
   }
 
-  if (rcv) {
+  if (typeof rcv !== 'undefined') {
     transactions.push(TxTags.corporateBallot.ChangeRcv);
   }
 

@@ -738,6 +738,10 @@ export async function assertBallotRecordDateValid(
     throw new PolymeshError({
       code: ErrorCode.ValidationError,
       message: 'The record date cannot be after the ballot start date',
+      data: {
+        checkpointDate,
+        startDate,
+      },
     });
   }
 }

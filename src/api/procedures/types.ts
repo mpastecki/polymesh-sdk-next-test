@@ -1878,7 +1878,7 @@ export interface CreateBallotParams {
   declarationDate: Date;
 
   /**
-   * Specifies whether RCV is enabled for this ballot.
+   * Specifies whether Ranked Choice Voting (RCV) is enabled for this ballot.
    */
   rcv: boolean;
 }

@@ -258,6 +258,52 @@ describe('CorporateBallot class', () => {
       await expect(corporateBallot.results()).rejects.toThrow('The CorporateBallot does not exist');
     });
 
+    it('should return 0 if no votes have been cast', async () => {
+      const mockRawMeta = createMockCorporateBallotMeta(mockBallotMeta);
+      const meshCorporateBallotMetaToCorporateBallotMetaSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateBallotMetaToCorporateBallotMeta'
+      );
+
+      when(meshCorporateBallotMetaToCorporateBallotMetaSpy)
+        .calledWith(mockRawMeta)
+        .mockReturnValue(mockBallotMeta);
+
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(dsMockUtils.createMockCodec(mockRawMeta, false)),
+      });
+      dsMockUtils.createQueryMock('corporateBallot', 'results', {
+        returnValue: dsMockUtils.createMockVec(),
+      });
+
+      const results = await corporateBallot.results();
+
+      expect(results).toEqual({
+        title: mockBallotMeta.title,
+        motions: [
+          {
+            title: mockBallotMeta.motions[0].title,
+            infoLink: mockBallotMeta.motions[0].infoLink,
+            choices: [
+              {
+                choice: mockBallotMeta.motions[0].choices[0],
+                votes: new BigNumber(0),
+              },
+              {
+                choice: mockBallotMeta.motions[0].choices[1],
+                votes: new BigNumber(0),
+              },
+              {
+                choice: mockBallotMeta.motions[0].choices[2],
+                votes: new BigNumber(0),
+              },
+            ],
+            total: new BigNumber(0),
+          },
+        ],
+      });
+    });
+
     it('should return the results of the CorporateBallot', async () => {
       const mockResults = ['100', '200', '300'];
       const mockRawMeta = createMockCorporateBallotMeta(mockBallotMeta);
@@ -359,7 +405,6 @@ describe('CorporateBallot class', () => {
         },
         {
           power: mockVotePower2,
-          fallback: dsMockUtils.createMockOption(),
         },
       ];
 
@@ -380,6 +425,55 @@ describe('CorporateBallot class', () => {
                 choice: mockBallotMeta.motions[0].choices[0],
                 power: new BigNumber(100),
                 fallback: new BigNumber(1),
+              },
+              {
+                choice: mockBallotMeta.motions[0].choices[1],
+                power: new BigNumber(0),
+                fallback: undefined,
+              },
+              {
+                choice: mockBallotMeta.motions[0].choices[2],
+                power: new BigNumber(0),
+                fallback: undefined,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('should return the votes of the CorporateBallot by identity', async () => {
+      const mockRawMeta = createMockCorporateBallotMeta(mockBallotMeta);
+      dsMockUtils.createQueryMock('corporateBallot', 'metas', {
+        returnValue: dsMockUtils.createMockOption(dsMockUtils.createMockCodec(mockRawMeta, false)),
+      });
+
+      const meshCorporateBallotMetaToCorporateBallotMetaSpy = jest.spyOn(
+        utilsConversionModule,
+        'meshCorporateBallotMetaToCorporateBallotMeta'
+      );
+
+      when(meshCorporateBallotMetaToCorporateBallotMetaSpy)
+        .calledWith(mockRawMeta)
+        .mockReturnValue(mockBallotMeta);
+
+      dsMockUtils.createQueryMock('corporateBallot', 'votes', {
+        returnValue: dsMockUtils.createMockVec(),
+      });
+
+      const votes = await corporateBallot.votesByIdentity('12341234-1234-1234-1234-123412341234');
+
+      expect(votes).toEqual({
+        title: mockBallotMeta.title,
+        motions: [
+          {
+            title: mockBallotMeta.motions[0].title,
+            infoLink: mockBallotMeta.motions[0].infoLink,
+            choices: [
+              {
+                choice: mockBallotMeta.motions[0].choices[0],
+                power: new BigNumber(0),
+                fallback: undefined,
               },
               {
                 choice: mockBallotMeta.motions[0].choices[1],

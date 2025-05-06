@@ -205,7 +205,10 @@ export class CorporateBallot extends CorporateActionBase {
         total: new BigNumber(0),
       };
       choices.forEach(choice => {
-        const choiceVoteTally = u128ToBigNumber(rawResults[resultIndex]);
+        // when no votes have been cast the rawResults[resultIndex] is undefined
+        const choiceVoteTally = rawResults[resultIndex]
+          ? u128ToBigNumber(rawResults[resultIndex])
+          : new BigNumber(0);
         motionWithResults.choices.push({
           choice,
           votes: choiceVoteTally,
@@ -261,11 +264,14 @@ export class CorporateBallot extends CorporateActionBase {
           title,
           infoLink,
           choices: choices.map(choice => {
-            const { power: rawPower, fallback: rawFallback } = rawDidVotes[index];
+            const { power: rawPower, fallback: rawFallback } = rawDidVotes[index] ?? {
+              power: new BigNumber(0),
+              fallback: undefined,
+            };
 
             let fallback: BigNumber | undefined;
 
-            if (rawFallback.isSome) {
+            if (rawFallback?.isSome) {
               fallback = u16ToBigNumber(rawFallback.unwrap());
             }
 
