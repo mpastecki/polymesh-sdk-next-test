@@ -78,15 +78,15 @@ import {
 import { BTreeSet, Result } from '@polkadot/types-codec';
 import type { ITuple } from '@polkadot/types-codec/types';
 import { hexToU8a, stringToHex } from '@polkadot/util';
-import BigNumber from 'bignumber.js';
-import { when } from 'jest-when';
 import {
   AuthorizationType as MeshAuthorizationType,
   ComplianceReport,
   ExtrinsicPermissions,
   Permissions as MeshPermissions,
   TransferCondition,
-} from 'polymesh-types/polymesh';
+} from '@polymeshassociation/polymesh-types/generated-types/polymesh';
+import BigNumber from 'bignumber.js';
+import { when } from 'jest-when';
 
 import { UnreachableCaseError } from '~/api/procedures/utils';
 import {
@@ -3838,22 +3838,22 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
     let result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
         /* eslint-disable @typescript-eslint/naming-convention */
-        invalid_granularity: true,
-        self_transfer: true,
-        invalid_receiver_cdd: true,
-        invalid_sender_cdd: true,
-        receiver_custodian_error: true,
-        sender_custodian_error: true,
-        sender_insufficient_balance: true,
-        portfolio_validity_result: {
-          receiver_is_same_portfolio: true,
-          sender_portfolio_does_not_exist: true,
-          receiver_portfolio_does_not_exist: true,
-          sender_insufficient_balance: true,
+        invalidGranularity: true,
+        selfTransfer: true,
+        invalidReceiverCdd: true,
+        invalidSenderCdd: true,
+        receiverCustodianError: true,
+        senderCustodianError: true,
+        senderInsufficientBalance: true,
+        portfolioValidityResult: {
+          receiverIsSamePortfolio: true,
+          senderPortfolioDoesNotExist: true,
+          receiverPortfolioDoesNotExist: true,
+          senderInsufficientBalance: true,
           result: false,
         },
-        asset_frozen: true,
-        transfer_condition_result: [
+        assetFrozen: true,
+        transferConditionResult: [
           {
             condition: {
               MaxInvestorCount: createMockU64(new BigNumber(100)),
@@ -3861,7 +3861,7 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
             result: false,
           },
         ],
-        compliance_result: dsMockUtils.createMockAssetComplianceResult({
+        complianceResult: dsMockUtils.createMockAssetComplianceResult({
           paused: false,
           requirements: [],
           result: false,
@@ -3904,22 +3904,22 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
     result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
         /* eslint-disable @typescript-eslint/naming-convention */
-        invalid_granularity: false,
-        self_transfer: false,
-        invalid_receiver_cdd: false,
-        invalid_sender_cdd: false,
-        receiver_custodian_error: false,
-        sender_custodian_error: false,
-        sender_insufficient_balance: false,
-        portfolio_validity_result: {
-          receiver_is_same_portfolio: false,
-          sender_portfolio_does_not_exist: false,
-          receiver_portfolio_does_not_exist: false,
-          sender_insufficient_balance: false,
+        invalidGranularity: false,
+        selfTransfer: false,
+        invalidReceiverCdd: false,
+        invalidSenderCdd: false,
+        receiverCustodianError: false,
+        senderCustodianError: false,
+        senderInsufficientBalance: false,
+        portfolioValidityResult: {
+          receiverIsSamePortfolio: false,
+          senderPortfolioDoesNotExist: false,
+          receiverPortfolioDoesNotExist: false,
+          senderInsufficientBalance: false,
           result: false,
         },
-        asset_frozen: false,
-        transfer_condition_result: [
+        assetFrozen: false,
+        transferConditionResult: [
           {
             condition: {
               MaxInvestorCount: dsMockUtils.createMockU64(new BigNumber(100)),
@@ -3927,7 +3927,7 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
             result: false,
           },
         ],
-        compliance_result: dsMockUtils.createMockAssetComplianceResult({
+        complianceResult: dsMockUtils.createMockAssetComplianceResult({
           paused: false,
           requirements: [],
           result: false,
@@ -3976,22 +3976,22 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
     const result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
         /* eslint-disable @typescript-eslint/naming-convention */
-        invalid_granularity: false,
-        self_transfer: false,
-        invalid_receiver_cdd: false,
-        invalid_sender_cdd: false,
-        receiver_custodian_error: false,
-        sender_custodian_error: false,
-        sender_insufficient_balance: false,
-        portfolio_validity_result: {
-          receiver_is_same_portfolio: false,
-          sender_portfolio_does_not_exist: false,
-          receiver_portfolio_does_not_exist: false,
-          sender_insufficient_balance: false,
+        invalidGranularity: false,
+        selfTransfer: false,
+        invalidReceiverCdd: false,
+        invalidSenderCdd: false,
+        receiverCustodianError: false,
+        senderCustodianError: false,
+        senderInsufficientBalance: false,
+        portfolioValidityResult: {
+          receiverIsSamePortfolio: false,
+          senderPortfolioDoesNotExist: false,
+          receiverPortfolioDoesNotExist: false,
+          senderInsufficientBalance: false,
           result: false,
         },
-        asset_frozen: false,
-        transfer_condition_result: [
+        assetFrozen: false,
+        transferConditionResult: [
           {
             condition: {
               MaxInvestorCount: dsMockUtils.createMockU64(new BigNumber(100)),
@@ -3999,7 +3999,7 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
             result: false,
           },
         ],
-        compliance_result: dsMockUtils.createMockAssetComplianceResult({
+        complianceResult: dsMockUtils.createMockAssetComplianceResult({
           paused: false,
           requirements: [],
           result: false,
@@ -5468,7 +5468,7 @@ describe('toIdentityWithClaimsArray', () => {
       lastUpdateDate: date,
       cddId,
     };
-    const fakemiddlewareClaims = [
+    const fakeMiddlewareClaims = [
       {
         ...commonClaimData,
         expiry: date,
@@ -5482,7 +5482,7 @@ describe('toIdentityWithClaimsArray', () => {
     ] as MiddlewareClaim[];
     /* eslint-enable @typescript-eslint/naming-convention */
 
-    const result = toIdentityWithClaimsArray(fakemiddlewareClaims, context, 'targetId');
+    const result = toIdentityWithClaimsArray(fakeMiddlewareClaims, context, 'targetId');
 
     expect(result).toEqual(fakeResult);
   });
@@ -7484,7 +7484,7 @@ describe('middlewarePortfolioToPortfolio', () => {
       number: 0,
     } as MiddlewarePortfolio;
 
-    let result = await middlewarePortfolioToPortfolio(middlewarePortfolio, context);
+    let result = middlewarePortfolioToPortfolio(middlewarePortfolio, context);
     expect(result instanceof DefaultPortfolio).toBe(true);
 
     middlewarePortfolio = {
@@ -7492,7 +7492,7 @@ describe('middlewarePortfolioToPortfolio', () => {
       number: 10,
     } as MiddlewarePortfolio;
 
-    result = await middlewarePortfolioToPortfolio(middlewarePortfolio, context);
+    result = middlewarePortfolioToPortfolio(middlewarePortfolio, context);
     expect(result instanceof NumberedPortfolio).toBe(true);
   });
 });
@@ -10275,7 +10275,7 @@ describe('middlewarePortfolioDataToPortfolio', () => {
       kind: { default: null },
     };
 
-    let result = await middlewarePortfolioDataToPortfolio(defaultPortfolioData, context);
+    let result = middlewarePortfolioDataToPortfolio(defaultPortfolioData, context);
     expect(result instanceof DefaultPortfolio).toBe(true);
 
     const numberedPortfolioData = {
@@ -10283,7 +10283,7 @@ describe('middlewarePortfolioDataToPortfolio', () => {
       kind: { user: 10 },
     };
 
-    result = await middlewarePortfolioDataToPortfolio(numberedPortfolioData, context);
+    result = middlewarePortfolioDataToPortfolio(numberedPortfolioData, context);
     expect(result instanceof NumberedPortfolio).toBe(true);
   });
 });

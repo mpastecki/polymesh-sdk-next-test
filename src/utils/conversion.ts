@@ -121,6 +121,17 @@ import {
   uniqWith,
   values,
 } from 'lodash';
+import {
+  AssetComplianceResult,
+  AuthorizationType as MeshAuthorizationType,
+  CddStatus,
+  ComplianceReport,
+  ComplianceRequirementResult,
+  GranularCanTransferResult,
+  PolymeshMoment as Moment,
+  RequirementReport,
+  TransferCondition,
+} from 'polymesh-types/polymesh';
 
 import {
   BallotMeta,
@@ -172,17 +183,6 @@ import {
   MultiSigProposalStatusEnum,
   SettlementDirectionEnum,
 } from '~/middleware/typesV1';
-import {
-  AssetComplianceResult,
-  AuthorizationType as MeshAuthorizationType,
-  CddStatus,
-  ComplianceReport,
-  ComplianceRequirementResult,
-  GranularCanTransferResult,
-  Moment,
-  RequirementReport,
-  TransferCondition,
-} from '~/polkadot/polymesh';
 import {
   AccountWithSignature,
   ActiveEraInfo,
@@ -1023,9 +1023,7 @@ function initExtrinsicDict(
               transactions: [dispatchableName],
             },
           });
-        } else if (pallet === undefined) {
-          pallet = extrinsicDict[palletName] = { tx: [] };
-        }
+        } else pallet ??= extrinsicDict[palletName] = { tx: [] };
 
         pallet.tx.push(dispatchableName);
       } else {
@@ -2459,7 +2457,9 @@ export async function claimToMeshClaim(
     }
   }
 
-  return context.createType('PolymeshPrimitivesIdentityClaimClaim', { [claim.type]: value });
+  return context.createType('PolymeshPrimitivesIdentityClaimClaim', {
+    [claim.type]: value,
+  }) as unknown as PolymeshPrimitivesIdentityClaimClaim;
 }
 
 /**
@@ -2798,7 +2798,7 @@ export async function requirementToComplianceRequirement(
     senderConditions,
     receiverConditions,
     id: bigNumberToU32(requirement.id, context),
-  });
+  }) as unknown as PolymeshPrimitivesComplianceManagerComplianceRequirement;
 }
 
 /**
@@ -3429,7 +3429,7 @@ export async function fungibleMovementToPortfolioFund(
       },
     },
     memo: optionize(stringToMemo)(memo, context),
-  });
+  }) as unknown as PolymeshPrimitivesPortfolioFund;
 }
 
 /**
@@ -3451,7 +3451,7 @@ export async function nftMovementToPortfolioFund(
       },
     },
     memo: optionize(stringToMemo)(memo, context),
-  });
+  }) as unknown as PolymeshPrimitivesPortfolioFund;
 }
 
 /**
@@ -3548,7 +3548,10 @@ export function identitiesToBtreeSet(
 ): BTreeSet<PolymeshPrimitivesIdentityId> {
   const rawIds = identities.map(({ did }) => stringToIdentityId(did, context));
 
-  return context.createType('BTreeSet<PolymeshPrimitivesIdentityId>', rawIds);
+  return context.createType(
+    'BTreeSet<PolymeshPrimitivesIdentityId>',
+    rawIds
+  ) as unknown as BTreeSet<PolymeshPrimitivesIdentityId>;
 }
 
 /**
@@ -3561,7 +3564,7 @@ export function portfolioIdsToBtreeSet(
   return context.createType(
     'BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>',
     uniqWith(rawPortfolioIds, isEqual)
-  );
+  ) as unknown as BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>;
 }
 
 /**
@@ -3709,19 +3712,19 @@ export function granularCanTransferResultToTransferBreakdown(
   context: Context
 ): TransferBreakdown {
   const {
-    invalid_granularity: invalidGranularity,
-    self_transfer: selfTransfer,
-    invalid_receiver_cdd: invalidReceiverCdd,
-    invalid_sender_cdd: invalidSenderCdd,
-    sender_insufficient_balance: insufficientBalance,
-    asset_frozen: assetFrozen,
-    portfolio_validity_result: {
-      sender_portfolio_does_not_exist: senderPortfolioNotExists,
-      receiver_portfolio_does_not_exist: receiverPortfolioNotExists,
-      sender_insufficient_balance: senderInsufficientBalance,
+    invalidGranularity,
+    selfTransfer,
+    invalidReceiverCdd,
+    invalidSenderCdd,
+    senderInsufficientBalance: insufficientBalance,
+    assetFrozen,
+    portfolioValidityResult: {
+      senderPortfolioDoesNotExist,
+      receiverPortfolioDoesNotExist,
+      senderInsufficientBalance,
     },
-    transfer_condition_result: transferConditionResult,
-    compliance_result: complianceResult,
+    transferConditionResult,
+    complianceResult,
     result: finalResult,
   } = result;
 
@@ -3751,11 +3754,11 @@ export function granularCanTransferResultToTransferBreakdown(
     general.push(TransferError.TransfersFrozen);
   }
 
-  if (boolToBoolean(senderPortfolioNotExists)) {
+  if (boolToBoolean(senderPortfolioDoesNotExist)) {
     general.push(TransferError.InvalidSenderPortfolio);
   }
 
-  if (boolToBoolean(receiverPortfolioNotExists)) {
+  if (boolToBoolean(receiverPortfolioDoesNotExist)) {
     general.push(TransferError.InvalidReceiverPortfolio);
   }
 
@@ -4336,7 +4339,10 @@ export function statisticStatTypesToBtreeStatType(
   context: Context
 ): BTreeSet<PolymeshPrimitivesStatisticsStatType> {
   const sortedStats = sortStatsByClaimType(stats);
-  return context.createType('BTreeSet<PolymeshPrimitivesStatisticsStatType>', sortedStats);
+  return context.createType(
+    'BTreeSet<PolymeshPrimitivesStatisticsStatType>',
+    sortedStats
+  ) as unknown as BTreeSet<PolymeshPrimitivesStatisticsStatType>;
 }
 
 /**
@@ -4349,7 +4355,7 @@ export function transferConditionsToBtreeTransferConditions(
   return context.createType(
     'BTreeSet<PolymeshPrimitivesTransferComplianceTransferCondition>',
     conditions
-  );
+  ) as unknown as BTreeSet<PolymeshPrimitivesTransferComplianceTransferCondition>;
 }
 
 /**
@@ -4370,7 +4376,10 @@ export function statUpdatesToBtreeStatUpdate(
   statUpdates: PolymeshPrimitivesStatisticsStatUpdate[],
   context: Context
 ): BTreeSet<PolymeshPrimitivesStatisticsStatUpdate> {
-  return context.createType('BTreeSet<PolymeshPrimitivesStatisticsStatUpdate>', statUpdates);
+  return context.createType(
+    'BTreeSet<PolymeshPrimitivesStatisticsStatUpdate>',
+    statUpdates
+  ) as unknown as BTreeSet<PolymeshPrimitivesStatisticsStatUpdate>;
 }
 
 /**
@@ -4515,7 +4524,7 @@ export function complianceConditionsToBtreeSet(
   return context.createType(
     'BTreeSet<PolymeshPrimitivesTransferComplianceTransferCondition>',
     sortedConditions
-  );
+  ) as unknown as BTreeSet<PolymeshPrimitivesTransferComplianceTransferCondition>;
 }
 
 /**
