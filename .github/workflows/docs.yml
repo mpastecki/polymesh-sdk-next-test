@@ -32,7 +32,7 @@ jobs:
       - name: create branch
         uses: peterjgrainger/action-create-branch@v1.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
         with:
           branch: ${{ steps.setBranch.outputs.result }}
         continue-on-error: true
@@ -45,13 +45,13 @@ jobs:
           message: 'docs: autogenerate documentation'
           ref: ${{ steps.setBranch.outputs.result }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
       - name: Upload docs to Wiki
         uses: SwiftDocOrg/github-wiki-publish-action@v1
         with:
           path: 'docs'
         env:
-          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
 
   readme:
     name: Readme
@@ -72,4 +72,4 @@ jobs:
           add: 'README.md'
           message: 'docs: update chain version in readme'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
