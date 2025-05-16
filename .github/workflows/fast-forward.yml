@@ -24,4 +24,62 @@ jobs:
           # never post a comment.  (In all cases the information is
           # still available in the step's summary.)
           comment: on-error
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }} ## This allows to trigger push action from within this workflow. Read more - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }} ## This allows to trigger push action from within this workflow. Read more - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+
+  fast-forward-next-rebase:
+    # Only run if the comment contains the /force-next-ff command.
+    if: ${{ contains(github.event.comment.body, '/force-next-ff')
+      && github.event.issue.pull_request}}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Fast forwarding
+        uses: sequoia-pgp/fast-forward@v1
+        id: fast_forward
+        with:
+          merge: true
+          # To reduce the workflow's verbosity, use 'on-error'
+          # to only post a comment when an error occurs, or 'never' to
+          # never post a comment.  (In all cases the information is
+          # still available in the step's summary.)
+          comment: on-error
+          GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }} ## This allows to trigger push action from within this workflow. Read more - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+        continue-on-error: true
+
+      - name: Check Fast Forward Result
+        if: steps.fast_forward.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }} ## This is needed for gh to work
+        run: |
+          # Extract the PR number
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_NUMBER="${PR_URL##*/}"
+
+          # Get the target branch
+          TARGET_BRANCH=$(gh pr view $PR_NUMBER --json baseRefName -q '.baseRefName')
+          echo "Target branch: $TARGET_BRANCH"
+
+          # Check if the target branch is 'next'
+          if [ "$TARGET_BRANCH" != "next" ]; then
+            echo "This PR does not target the 'next' branch. Exiting."
+            exit 1
+          fi
+
+          # Get the commit SHA
+          PR_SHA=$(gh pr view $PR_NUMBER --json headRefOid -q '.headRefOid')
+          echo "PR SHA: $PR_SHA"
+
+          # Fetch the PR head commit to ensure it is available locally
+          git fetch origin "pull/${{ github.event.issue.number }}/head"
+
+          git checkout --detach
+          # Force update the 'next' branch
+          git branch -f next $PR_SHA
+
+          ## push the changes to the next branch
+          git push -f "https://x-access-token:${{ secrets.ASSOCIATION_RELEASE_TOKEN }}@github.com/${{ github.repository }}.git" next

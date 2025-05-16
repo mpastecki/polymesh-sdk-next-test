@@ -42,12 +42,22 @@ jobs:
 
       - name: Handle merge conflicts (if any)
         run: |
-          while [ -n "$(git status --porcelain)" ]; do
-            # Add all files with conflict markers
-            git add -u
-            GIT_SEQUENCE_EDITOR=true GIT_EDITOR=true git rebase --continue
-            if [ $? -ne 0 ]; then
-              echo "Rebase failed or completed"
+          while true; do
+            if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
+              # Add all files with conflict markers
+              git add .
+              if ! GIT_SEQUENCE_EDITOR=true GIT_EDITOR=true git rebase --continue; then
+                echo "Rebase step completed or failed"
+                if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
+                  echo "Rebase still in progress, continuing..."
+                  continue
+                else
+                  echo "Rebase completed successfully"
+                  break
+                fi
+              fi
+            else
+              echo "No rebase in progress"
               break
             fi
           done
@@ -68,10 +78,4 @@ jobs:
 
             **NOTE:** Merge conflicts are not resolved in this PR and the commits from next needs to be resigned.
 
-            Once all the merge conflicts are resolved and commits from next branch have been signed, you can use the following commands to merge this PR:
-            ```
-            git branch -f next ${{ env.BRANCH_NAME }}
-            git push -f origin next
-            ```
-
-            The above command will forcefully move the `next` branch to top of this PR head and merge the PR.
+            Once all the merge conflicts are resolved and commits from next branch have been signed, you can merge this PR by adding the comment `/force-next-ff` to the PR.
