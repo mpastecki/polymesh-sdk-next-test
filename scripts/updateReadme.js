@@ -10,7 +10,7 @@ const getSupportedNodeVersion = () => {
     encoding: 'utf8',
   });
 
-  const regex = /export const SUPPORTED_NODE_VERSION_RANGE = '([^']+)';/g;
+  const regex = /export const SUPPORTED_SPEC_VERSION_RANGE = '([^']+)';/g;
 
   const match = regex.exec(constantsFile);
 
