@@ -101,7 +101,7 @@ export async function prepareStorage(
   return {
     calledByTarget,
     ownerAuthRequest,
-    cddAuthRequest,
+    ...(cddAuthRequest && { cddAuthRequest }),
   };
 }
 

@@ -183,7 +183,7 @@ export interface BaseTransactionSpec<ReturnValue, TransformedReturnValue = Retur
    *
    * The proposal will be executed on chain after enough signers have approved the transaction
    */
-  multiSig?: MultiSig;
+  multiSig?: MultiSig | null;
 
   /**
    * value that the transaction will return once it has run, or a function that returns that value
@@ -244,7 +244,7 @@ export interface TransactionConstructionData {
   /**
    * object that handles the payload signing logic
    */
-  signer?: PolkadotSigner;
+  signer?: PolkadotSigner | undefined;
   /**
    * how long the transaction should be valid for
    */
@@ -252,7 +252,7 @@ export interface TransactionConstructionData {
   /**
    * options that specify details for MultiSig proposals
    */
-  multiSigOpts?: MultiSigProcedureOpt;
+  multiSigOpts?: MultiSigProcedureOpt | undefined;
 }
 
 export interface AuthTarget {

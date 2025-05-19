@@ -3,7 +3,7 @@ import { flatMap, remove } from 'lodash';
 
 import { assertRequirementsNotTooComplex } from '~/api/procedures/utils';
 import { BaseAsset, PolymeshError, Procedure } from '~/internal';
-import { ErrorCode, ModifyComplianceRequirementParams, TxTags } from '~/types';
+import { ErrorCode, ModifyComplianceRequirementParams, Requirement, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
 import { assetToMeshAssetId, requirementToComplianceRequirement } from '~/utils/conversion';
 import { conditionsAreEqual, hasSameElements } from '~/utils/internal';
@@ -48,7 +48,9 @@ export async function prepareModifyComplianceRequirement(
     });
   }
 
-  const [{ conditions: existingConditions }] = existingRequirements;
+  const [requirement] = existingRequirements;
+
+  const { conditions: existingConditions } = requirement as Requirement;
 
   if (hasSameElements(newConditions, existingConditions, conditionsAreEqual)) {
     throw new PolymeshError({

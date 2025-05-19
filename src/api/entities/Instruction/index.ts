@@ -1075,7 +1075,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
           const status = middlewareAffirmStatusToAffirmationStatus(mediatorAffirmation.status);
           return {
             status,
-            expiry: mediatorAffirmation.expiry ? new Date(mediatorAffirmation.expiry) : undefined,
+            ...(mediatorAffirmation.expiry ? { expiry: new Date(mediatorAffirmation.expiry) } : {}),
           };
         }
         return { status: AffirmationStatus.Pending };
@@ -1103,7 +1103,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
 
       const { status, expiry } = mediatorAffirmationStatusToStatus(affirmStatus);
 
-      return { identity, status, expiry };
+      return { identity, status, ...(expiry ? { expiry } : {}) };
     });
   }
 
@@ -1322,7 +1322,10 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
 
     const rawPayload = hexAddPrefix(payloadStrings.map(e => hexStripPrefix(e)).join(''));
 
-    const signatureValue = await context.getSignature({ rawPayload, signer });
+    const signatureValue = await context.getSignature({
+      rawPayload,
+      ...(signer ? { signer } : {}),
+    });
 
     return {
       uid,
@@ -1332,7 +1335,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
         type: signerKeyRingType,
         value: signatureValue,
       },
-      metadata,
+      ...(metadata ? { metadata } : {}),
     };
   }
 }

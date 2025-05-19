@@ -123,7 +123,7 @@ export class Checkpoint extends Entity<UniqueIdentifiers, HumanReadable> {
     // Get one page of current Asset balances
     const { entries, lastKey: next } = await requestPaginated(asset.balanceOf, {
       arg: rawAssetId,
-      paginationOpts,
+      ...(paginationOpts && { paginationOpts }),
     });
 
     const currentDidBalances: { did: string; balance: BigNumber }[] = [];
@@ -157,7 +157,12 @@ export class Checkpoint extends Entity<UniqueIdentifiers, HumanReadable> {
       const firstUpdatedCheckpoint = rawCheckpointIds.find(checkpointId =>
         u64ToBigNumber(checkpointId).gte(id)
       );
-      const { did, balance } = currentDidBalances[index];
+      const currentBalance = currentDidBalances[index];
+      if (!currentBalance) {
+        return; // Skip if no balance found
+      }
+
+      const { did, balance } = currentBalance;
       if (firstUpdatedCheckpoint) {
         // If a balance update has occurred for the Identity since the desired Checkpoint, then query Checkpoint storage directly
         checkpointBalanceMultiParams.push({
@@ -180,10 +185,19 @@ export class Checkpoint extends Entity<UniqueIdentifiers, HumanReadable> {
 
     return {
       data: [
-        ...checkpointBalanceMultiParams.map(({ did }, index) => ({
-          identity: new Identity({ did }, context),
-          balance: balanceToBigNumber(checkpointBalances[index]),
-        })),
+        ...checkpointBalanceMultiParams
+          .map(({ did }, index) => {
+            const balance = checkpointBalances[index];
+            if (!balance) {
+              return null; // Skip if no balance found
+            }
+
+            return {
+              identity: new Identity({ did }, context),
+              balance: balanceToBigNumber(balance),
+            };
+          })
+          .filter((item): item is IdentityBalance => item !== null),
         ...currentIdentityBalances,
       ],
       next,

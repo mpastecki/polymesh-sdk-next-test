@@ -45,9 +45,18 @@ export async function prepareControllerTransfer(
 
   const fromPortfolio = portfolioIdToPortfolio(originPortfolioId, context);
 
-  const [{ free }] = await fromPortfolio.getAssetBalances({
+  const [balance] = await fromPortfolio.getAssetBalances({
     assets: [asset],
   });
+
+  if (!balance) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Free balance not found',
+    });
+  }
+
+  const { free } = balance;
 
   if (free.lt(amount)) {
     throw new PolymeshError({

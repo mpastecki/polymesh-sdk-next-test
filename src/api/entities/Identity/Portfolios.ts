@@ -106,7 +106,7 @@ export class Portfolios extends Namespace<Identity> {
       portfolio.portfoliosInCustody,
       {
         arg: custodian,
-        paginationOpts,
+        ...(paginationOpts ? { paginationOpts } : {}),
       }
     );
 
@@ -240,16 +240,16 @@ export class Portfolios extends Namespace<Identity> {
     const settlementsPromise = context.queryMiddleware<Ensured<Query, 'legs'>>(
       settlementsForAllPortfoliosQuery(context.isSqIdPadded, {
         identityId,
-        address: account,
-        assetId: middlewareAssetId,
+        ...(account ? { address: account } : {}),
+        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
       })
     );
 
     const portfolioMovementsPromise = context.queryMiddleware<Ensured<Query, 'portfolioMovements'>>(
       portfoliosMovementsQuery(context.isSqIdPadded, {
         identityId,
-        address: account,
-        assetId: middlewareAssetId,
+        ...(account ? { address: account } : {}),
+        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
       })
     );
 

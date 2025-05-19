@@ -720,8 +720,16 @@ export const createAuthorizationResolver =
     context: Context
   ) =>
   (receipt: ISubmittableResult): AuthorizationRequest => {
-    const [{ data }] = filterEventRecords(receipt, 'identity', 'AuthorizationAdded');
+    const [record] = filterEventRecords(receipt, 'identity', 'AuthorizationAdded');
 
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.TransactionAborted,
+        message: 'Transaction was aborted',
+      });
+    }
+
+    const { data } = record;
     const authId = u64ToBigNumber(data[3]);
     return new AuthorizationRequest({ authId, expiry, issuer, target, data: auth }, context);
   };
@@ -732,7 +740,16 @@ export const createAuthorizationResolver =
 export const createCreateGroupResolver =
   (context: Context) =>
   (receipt: ISubmittableResult): CustomPermissionGroup => {
-    const [{ data }] = filterEventRecords(receipt, 'externalAgents', 'GroupCreated');
+    const [record] = filterEventRecords(receipt, 'externalAgents', 'GroupCreated');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.TransactionAborted,
+        message: 'Transaction was aborted',
+      });
+    }
+
+    const { data } = record;
 
     return new CustomPermissionGroup(
       { id: u32ToBigNumber(data[2]), assetId: assetIdToString(data[1]) },

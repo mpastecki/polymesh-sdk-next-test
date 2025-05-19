@@ -187,7 +187,7 @@ export function unserialize<UniqueIdentifiers>(id: string): UniqueIdentifiers {
 
   const errorMsg = 'Wrong ID format';
 
-  if (!matched) {
+  if (!matched || !matched[1]) {
     throw new Error(errorMsg);
   }
 
@@ -464,6 +464,13 @@ export function mergeReceipts(
   receipts: ISubmittableResult[],
   context: Context
 ): ISubmittableResult {
+  if (!receipts.length) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'Cannot merge empty receipts array',
+    });
+  }
+
   const eventsPerTransaction: u32[] = [];
   const allEvents: EventRecord[] = [];
 
@@ -485,6 +492,12 @@ export function mergeReceipts(
    * in the future though. It's also worth considering that this is an extreme edge case, since (hopefully) no one
    * in their right mind would create a batch only to split it back up again
    */
+  if (!lastReceipt) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Last receipt is undefined',
+    });
+  }
   return cloneReceipt(lastReceipt, [
     ...allEvents,
     {
@@ -558,11 +571,12 @@ export async function requestPaginated<F extends AnyFunction, T extends AnyTuple
     entries = await query.entriesPaged({
       args,
       pageSize: pageSize.toNumber(),
-      startKey,
+      ...(startKey && { startKey }),
     });
 
-    if (pageSize.eq(entries.length)) {
-      lastKey = entries[entries.length - 1][0].toHex();
+    const lastEntry = entries[entries.length - 1];
+    if (pageSize.eq(entries.length) && lastEntry) {
+      lastKey = lastEntry[0].toHex();
     }
   } else {
     /*
@@ -855,12 +869,22 @@ export function createProcedureMethod<
   | NoArgsProcedureMethod<ProcedureReturnValue, ReturnValue> {
   const { getProcedureAndArgs, transformer, voidArgs, optionalArgs } = args;
 
+  const prepareArgs = (
+    procArgs: ProcedureArgs
+  ): {
+    transformer?: (value: ProcedureReturnValue) => ReturnValue | Promise<ReturnValue>;
+    args: ProcedureArgs;
+  } => ({
+    args: procArgs,
+    ...(transformer ? { transformer } : {}),
+  });
+
   if (voidArgs) {
     const voidMethod = (
       opts: ProcedureOpts = {}
     ): Promise<GenericPolymeshTransaction<ProcedureReturnValue, ReturnValue>> => {
       const [proc, procArgs] = getProcedureAndArgs();
-      return proc().prepare({ args: procArgs, transformer }, context, opts);
+      return proc().prepare(prepareArgs(procArgs), context, opts);
     };
 
     voidMethod.checkAuthorization = (
@@ -880,7 +904,7 @@ export function createProcedureMethod<
       opts: ProcedureOpts = {}
     ): Promise<GenericPolymeshTransaction<ProcedureReturnValue, ReturnValue>> => {
       const [proc, procArgs] = getProcedureAndArgs(methodArgs);
-      return proc().prepare({ args: procArgs, transformer }, context, opts);
+      return proc().prepare(prepareArgs(procArgs), context, opts);
     };
 
     methodWithOptionalArgs.checkAuthorization = (
@@ -900,7 +924,7 @@ export function createProcedureMethod<
     opts: ProcedureOpts = {}
   ): Promise<GenericPolymeshTransaction<ProcedureReturnValue, ReturnValue>> => {
     const [proc, procArgs] = getProcedureAndArgs(methodArgs);
-    return proc().prepare({ args: procArgs, transformer }, context, opts);
+    return proc().prepare(prepareArgs(procArgs), context, opts);
   };
 
   method.checkAuthorization = (
@@ -1042,9 +1066,16 @@ export async function getAssetIdAndTicker(
   ticker?: string;
   assetId: string;
 }> {
+  const ticker = await getTickerForAsset(assetId, context);
+
+  if (ticker) {
+    return {
+      ticker,
+      assetId,
+    };
+  }
   return {
     assetId,
-    ticker: await getTickerForAsset(assetId, context),
   };
 }
 
@@ -1423,12 +1454,17 @@ export function getExemptedIds(identities: (string | Identity)[], context: Conte
 const getAllowedMajors = (range: string, supportedSpecSemver: string): string[] => {
   const lowMajor = major(supportedSpecSemver).toString();
   const versions = range.split('||');
-  /* istanbul ignore next: should get covered after dual version support is removed */
   if (versions.length === 1) {
     return [lowMajor];
   }
-  const higherAllowedSpec = versions[versions.length - 1].trim();
-  const higherVersion = coerce(higherAllowedSpec)!.version;
+  const higherAllowedSpec = versions[versions.length - 1]?.trim();
+  if (!higherAllowedSpec) {
+    return [lowMajor];
+  }
+  const higherVersion = coerce(higherAllowedSpec)?.version;
+  if (!higherVersion) {
+    return [lowMajor];
+  }
   const highMajor = major(higherVersion).toString();
   return [lowMajor, highMajor];
 };
@@ -1705,7 +1741,13 @@ export function neededStatTypeForRestrictionInput(
   const rawOp = transferRestrictionTypeToStatOpType(type, context);
 
   const rawIssuer = claimIssuer ? claimIssuerToMeshClaimIssuer(claimIssuer, context) : undefined;
-  return statisticsOpTypeToStatType({ operationType: rawOp, claimIssuer: rawIssuer }, context);
+  return statisticsOpTypeToStatType(
+    {
+      operationType: rawOp,
+      ...(rawIssuer ? { claimIssuer: rawIssuer } : {}),
+    },
+    context
+  );
 }
 
 /**
@@ -1786,8 +1828,13 @@ export async function getSecondaryAccountPermissions(
         });
       }
     };
+
     for (const optKeyRecord of optKeyRecords) {
       const account = accounts[index];
+      if (!account) {
+        index++;
+        continue;
+      }
       if (optKeyRecord.isSome) {
         const record = optKeyRecord.unwrap();
 
@@ -1858,6 +1905,13 @@ export function assembleAssetQuery(
 ): Asset[] {
   return assetDetails.map((rawDetails, index) => {
     const assetId = assetIds[index];
+    if (!assetId) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'Missing asset ID',
+        data: { index },
+      });
+    }
     const detail = rawDetails.unwrap();
 
     if (detail.assetType.isNonFungible) {

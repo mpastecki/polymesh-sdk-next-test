@@ -378,7 +378,7 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
         owner,
         totalSupply: balanceToBigNumber(totalSupply),
         fullAgents,
-        ticker,
+        ...(ticker ? { ticker } : {}),
       };
     };
 

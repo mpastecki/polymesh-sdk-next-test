@@ -104,7 +104,7 @@ export interface ResultSet<T> {
   /**
    * @note methods will have `count` defined when middleware is configured, but be undefined otherwise. This happens when the chain node is queried directly
    */
-  count?: BigNumber;
+  count?: BigNumber | undefined;
 }
 
 export enum SignerType {

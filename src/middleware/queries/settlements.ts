@@ -246,7 +246,11 @@ export function instructionAffirmationsQuery(
 
   return {
     query,
-    variables: { ...filters, size: size?.toNumber(), start: start?.toNumber() },
+    variables: {
+      ...filters,
+      ...(size ? { size: size.toNumber() } : {}),
+      ...(start ? { start: start.toNumber() } : {}),
+    },
   };
 }
 
@@ -319,7 +323,11 @@ export function legsQuery(
 
   return {
     query,
-    variables: { ...filters, size: size?.toNumber(), start: start?.toNumber() },
+    variables: {
+      ...filters,
+      ...(size ? { size: size.toNumber() } : {}),
+      ...(start ? { start: start.toNumber() } : {}),
+    },
   };
 }
 

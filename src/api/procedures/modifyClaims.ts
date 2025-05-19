@@ -11,6 +11,7 @@ import { Claim as MiddlewareClaim, Query } from '~/middleware/types';
 import {
   CddClaim,
   Claim,
+  ClaimData,
   ClaimOperation,
   ClaimTarget,
   ClaimType,
@@ -80,7 +81,10 @@ const findInvalidCddClaims = async (
 
       if (issuedClaimsForTarget.length) {
         // we know both claims are CDD claims
-        const { id: currentCddId } = issuedClaimsForTarget[0].claim as CddClaim;
+        const [issuedClaimForTarget] = issuedClaimsForTarget;
+        const { claim: issuedClaim } = issuedClaimForTarget as ClaimData;
+
+        const { id: currentCddId } = issuedClaim as CddClaim;
         const { id: newCddId } = claim as CddClaim;
 
         if (newCddId !== currentCddId && ![currentCddId, newCddId].includes(DEFAULT_CDD_ID)) {

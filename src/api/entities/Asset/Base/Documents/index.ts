@@ -48,7 +48,7 @@ export class Documents extends Namespace<BaseAsset> {
     const rawAssetId = assetToMeshAssetId(parent, context);
     const { entries, lastKey: next } = await requestPaginated(query.asset.assetDocuments, {
       arg: rawAssetId,
-      paginationOpts,
+      ...(paginationOpts ? { paginationOpts } : {}),
     });
 
     const data: AssetDocument[] = entries.map(([, doc]) => documentToAssetDocument(doc.unwrap()));

@@ -1,4 +1,5 @@
 import { ISubmittableResult } from '@polkadot/types/types';
+import BigNumber from 'bignumber.js';
 
 import { Nft } from '~/api/entities/Asset/NonFungible/Nft';
 import { Context, NftCollection, PolymeshError, Procedure } from '~/internal';
@@ -22,11 +23,21 @@ export type Params = IssueNftParams & {
 export const issueNftResolver =
   (context: Context) =>
   (receipt: ISubmittableResult): Nft => {
-    const [{ data }] = filterEventRecords(receipt, 'nft', 'NFTPortfolioUpdated');
+    const [record] = filterEventRecords(receipt, 'nft', 'NFTPortfolioUpdated');
 
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'NFT issuance event not found',
+      });
+    }
+
+    const { data } = record;
     const { assetId, ids } = meshNftToNftId(data[1]);
 
-    return new Nft({ id: ids[0], assetId }, context);
+    const id = ids[0] as BigNumber;
+
+    return new Nft({ id, assetId }, context);
   };
 
 /**

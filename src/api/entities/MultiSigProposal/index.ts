@@ -259,7 +259,8 @@ export class MultiSigProposal extends Entity<UniqueIdentifiers, HumanReadable> {
         proposalId: id.toNumber(),
       })
     );
-    return node;
+
+    return node ?? null;
   }
 
   /**

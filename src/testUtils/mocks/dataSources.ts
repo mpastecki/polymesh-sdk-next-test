@@ -1246,6 +1246,7 @@ export const createMockCodec = <T extends Codec>(
   if (isCodec<T>(codec)) {
     return codec as MockCodec<T>;
   }
+  // @ts-expect-error - this is a mock
   const clone = cloneDeep(codec) as MockCodec<Mutable<T>>;
 
   (clone as any)._isCodec = true;
@@ -1332,6 +1333,7 @@ export function createTxMock<
 
     const unsubCallback = jest.fn();
 
+    // @ts-expect-error - this is a mock
     txMocksData.set(runtimeModule[tx], {
       statusCallback: cb,
       unsubCallback,
@@ -1371,12 +1373,14 @@ export function createTxMock<
   (transaction as any).send = mockSend;
   (transaction as any).hash = createMockHash('0x01');
 
+  // @ts-expect-error - this is a mock
   runtimeModule[tx] = transaction;
 
   updateTx();
 
   const instance = mockInstanceContainer.apiInstance;
 
+  // @ts-expect-error - this is a mock
   return instance.tx[mod][tx] as unknown as PolymeshTx<
     ArgsType<Extrinsics[ModuleName][TransactionName]>
   > &
@@ -1468,6 +1472,7 @@ export function createQueryMock<
 
   let mock: QueryMock;
 
+  // @ts-expect-error - this is a mock
   if (!runtimeModule[query]) {
     mock = jest.fn() as unknown as QueryMock;
     mock.entries = jest.fn();
@@ -1475,11 +1480,13 @@ export function createQueryMock<
     mock.at = jest.fn();
     mock.multi = jest.fn();
     mock.size = jest.fn();
+    // @ts-expect-error - this is a mock
     runtimeModule[query] = mock;
 
     updateQuery();
   } else {
     const instance = mockInstanceContainer.apiInstance;
+    // @ts-expect-error - this is a mock
     mock = instance.query[mod][query] as QueryMock;
   }
 
@@ -1535,13 +1542,16 @@ export function createCallMock<
 
   let mock: CallMock;
 
+  // @ts-expect-error - this is a mock
   if (!runtimeModule[query]) {
     mock = jest.fn() as unknown as CallMock;
+    // @ts-expect-error - this is a mock
     runtimeModule[query] = mock;
 
     updateCall();
   } else {
     const instance = mockInstanceContainer.apiInstance;
+    // @ts-expect-error - this is a mock
     mock = instance.call[mod][query] as CallMock;
   }
 
@@ -1625,12 +1635,15 @@ export function setConstMock<
   }
 
   const returnValue = opts.returnValue as Consts[ModuleName][ConstName];
+  // @ts-expect-error - this is a mock
   if (!runtimeModule[constName]) {
+    // @ts-expect-error - this is a mock
     runtimeModule[constName] = returnValue;
 
     updateConsts();
   } else {
     const instance = mockInstanceContainer.apiInstance;
+    // @ts-expect-error - this is a mock
     instance.consts[mod][constName] = returnValue;
   }
 }
@@ -1664,6 +1677,7 @@ export function setErrorMock(
     updateErrors();
   } else {
     const instance = mockInstanceContainer.apiInstance;
+    // @ts-expect-error - this is a mock
     instance.errors[mod][errorName] = returnValue as any;
   }
 }
@@ -1937,7 +1951,7 @@ const createMockEnum = <T extends Enum>(
     const key = Object.keys(enumValue)[0];
 
     codec[`is${upperFirst(key)}`] = true;
-    codec[`as${upperFirst(key)}`] = enumValue[key];
+    codec[`as${upperFirst(key)}`] = enumValue[key!];
     codec.type = key;
   }
   codec.index = index;
@@ -4046,6 +4060,7 @@ export const createMockExtrinsics = (
         hash: Hash;
       }[]
 ): MockCodec<Vec<GenericExtrinsic>> => {
+  // @ts-expect-error - this is a mock
   const [{ toHex, hash }] = extrinsics ?? [
     {
       toHex: () => createMockStringCodec(),

@@ -136,9 +136,18 @@ export async function prepareInvestInSto(
     raisingCurrency,
   } = await offering.details();
 
-  const [{ free: freeAssetBalance }] = await portfolio.getAssetBalances({
+  const [balanceResult] = await portfolio.getAssetBalances({
     assets: [raisingCurrency],
   });
+
+  if (!balanceResult) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Free balance not found',
+    });
+  }
+
+  const { free: freeAssetBalance } = balanceResult;
 
   if (sale !== OfferingSaleStatus.Live || timing !== OfferingTimingStatus.Started) {
     throw new PolymeshError({

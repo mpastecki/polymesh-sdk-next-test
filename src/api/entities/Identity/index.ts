@@ -615,6 +615,17 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
         const instruction = new Instruction({ id: u64ToBigNumber(id) }, context);
         const status = instructionStatuses[index];
 
+        if (!status) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Instruction status not found',
+            data: {
+              id,
+              status,
+            },
+          });
+        }
+
         if (status.isFailed) {
           failed.push(instruction);
         } else if (affirmationStatus.isAffirmed) {
@@ -651,10 +662,19 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     );
 
     custodies.forEach((custody, index) => {
+      const portfolio = allPortfolios[index];
+
+      if (!portfolio) {
+        throw new PolymeshError({
+          code: ErrorCode.UnexpectedError,
+          message: 'Portfolio not found',
+        });
+      }
+
       if (custody) {
-        ownedCustodiedPortfolios.push(allPortfolios[index]);
+        ownedCustodiedPortfolios.push(portfolio);
       } else {
-        ownedPortfolios.push(allPortfolios[index]);
+        ownedPortfolios.push(portfolio);
       }
     });
 
@@ -743,7 +763,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     while (!allFetched) {
       const { data, next } = await this.getHeldAssets({
         size: MAX_PAGE_SIZE,
-        start,
+        ...(start ? { start } : {}),
       });
       start = next ? new BigNumber(next) : undefined;
       allFetched = !next;
@@ -848,7 +868,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const { entries: keys, lastKey: next } = await requestPaginated(identity.didKeys, {
       arg: did,
-      paginationOpts: opts,
+      ...(opts ? { paginationOpts: opts } : {}),
     });
     const accounts = await Promise.all(keys.map(([key]) => keyToAccount(key)));
 
@@ -988,7 +1008,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const { entries, lastKey: next } = await requestPaginated(asset.preApprovedAsset, {
       arg: rawDid,
-      paginationOpts,
+      ...(paginationOpts ? { paginationOpts } : {}),
     });
 
     const data = await Promise.all(
@@ -1105,7 +1125,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     return multiSigs.map((multiSig, i) => ({
       signerFor: multiSig,
-      signers: signers[i],
+      signers: signers[i] ?? [],
       isAdmin: adminForMultiSigs.some(address => address === multiSig.address),
       isPayer: payerForMultiSigs.some(address => address === multiSig.address),
     }));

@@ -45,7 +45,17 @@ export interface Storage {
 export const createBallotResolver =
   (asset: FungibleAsset, context: Context) =>
   async (receipt: ISubmittableResult): Promise<CorporateBallotWithDetails> => {
-    const [{ data }] = filterEventRecords(receipt, 'corporateBallot', 'Created');
+    const [record] = filterEventRecords(receipt, 'corporateBallot', 'Created');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'Expected at least one corporate ballot',
+      });
+    }
+
+    const { data } = record;
+
     const [, caId, timeRange, meta, rcv] = data;
 
     const id = u32ToBigNumber(caId.localId);

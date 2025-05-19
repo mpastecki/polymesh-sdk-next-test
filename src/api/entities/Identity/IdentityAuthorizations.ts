@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 
-import { AuthorizationRequest, Authorizations, Identity } from '~/internal';
-import { PaginationOptions, ResultSet } from '~/types';
+import { AuthorizationRequest, Authorizations, Identity, PolymeshError } from '~/internal';
+import { ErrorCode, PaginationOptions, ResultSet } from '~/types';
 import { tuple } from '~/types/utils';
 import { bigNumberToU64, signatoryToSignerValue, stringToIdentityId } from '~/utils/conversion';
 import { defusePromise, requestPaginated } from '~/utils/internal';
@@ -30,7 +30,7 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
 
     const { entries, lastKey: next } = await requestPaginated(identity.authorizationsGiven, {
       arg: stringToIdentityId(did, context),
-      paginationOpts,
+      ...(paginationOpts ? { paginationOpts } : {}),
     });
 
     const authQueryParams = entries.map(([storageKey, signatory]) =>
@@ -40,10 +40,29 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
     const authorizations = await identity.authorizations.multi(authQueryParams);
 
     const data = this.createAuthorizationRequests(
-      authorizations.map((auth, index) => ({
-        auth: auth.unwrap(),
-        target: signatoryToSignerValue(authQueryParams[index][0]),
-      }))
+      authorizations.map((auth, index) => {
+        const params = authQueryParams[index];
+
+        if (!params) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Failed to retrieve authorization parameters',
+          });
+        }
+        const [signer] = params;
+
+        if (!signer) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Failed to retrieve signatory',
+          });
+        }
+
+        return {
+          auth: auth.unwrap(),
+          target: signatoryToSignerValue(signer),
+        };
+      })
     );
 
     return {
@@ -92,7 +111,16 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
       const auth = await identity.authorizations(targetSignatory, rawId);
       const target = signatoryToSignerValue(targetSignatory);
 
-      return this.createAuthorizationRequests([{ auth: auth.unwrap(), target }])[0];
+      const request = this.createAuthorizationRequests([{ auth: auth.unwrap(), target }]);
+
+      if (!request[0]) {
+        throw new PolymeshError({
+          code: ErrorCode.UnexpectedError,
+          message: 'Authorization request not found',
+        });
+      }
+
+      return request[0];
     }
 
     return gettingReceivedAuth;

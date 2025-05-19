@@ -166,6 +166,17 @@ export async function prepareCastBallotVote(
   motions.forEach((motion, motionIndex) => {
     const motionVotes = votes[motionIndex];
 
+    if (!motionVotes) {
+      throw new PolymeshError({
+        code: ErrorCode.ValidationError,
+        message: 'Missing votes for motion',
+        data: {
+          motion: motion.title,
+          motionIndex,
+        },
+      });
+    }
+
     assertMotionVotes(motionVotes, motion);
 
     motionVotes.forEach(vote => {

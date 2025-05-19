@@ -103,15 +103,22 @@ export class Ballots extends Namespace<FungibleAsset> {
     const result: CorporateBallotWithDetails[] = [];
 
     ballotDetails.forEach((details, index) => {
+      const corporateActionEntry = corporateActions[index];
+      const caDetailsEntry = caDetails[index];
+
+      if (!corporateActionEntry || !caDetailsEntry) {
+        return;
+      }
+
       if (details) {
         result.push({
           ballot: new CorporateBallot(
             {
-              id: corporateActions[index].id,
+              id: corporateActionEntry.id,
               assetId: parent.id,
               ...meshCorporateActionToCorporateActionParams(
-                corporateActions[index].corporateAction,
-                caDetails[index],
+                corporateActionEntry.corporateAction,
+                caDetailsEntry,
                 context
               ),
             },

@@ -43,17 +43,17 @@ export async function prepareRedeemTokens(
 
   const rawAssetId = assetToMeshAssetId(asset, context);
 
-  const [[{ free }], { isDivisible }] = await Promise.all([
+  const [[portfolioBalance], { isDivisible }] = await Promise.all([
     fromPortfolio.getAssetBalances({ assets: [asset.id] }),
     asset.details(),
   ]);
 
-  if (free.lt(amount)) {
+  if (!portfolioBalance || portfolioBalance.free.lt(amount)) {
     throw new PolymeshError({
       code: ErrorCode.InsufficientBalance,
       message: 'Insufficient free balance',
       data: {
-        free,
+        free: portfolioBalance?.free,
       },
     });
   }

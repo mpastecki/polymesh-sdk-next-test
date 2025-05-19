@@ -688,7 +688,7 @@ describe('TransferRestrictions class', () => {
       });
 
       // Verify that the claim object does NOT have a value property (not tracked on-chain for custom claims)
-      expect(customClaimResult.claim!).not.toHaveProperty('value');
+      expect(customClaimResult!.claim).not.toHaveProperty('value');
 
       // Verify the conversion was called to get the custom claim object
       expect(meshClaimTypeToClaimTypeSpy).toHaveBeenCalled();

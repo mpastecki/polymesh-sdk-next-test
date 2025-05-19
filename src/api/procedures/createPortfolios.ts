@@ -53,10 +53,12 @@ export async function prepareCreatePortfolios(
   const groupedPortfolioNamesByIdentity = portfoliosToCreate.reduce(
     (acc: Record<string, string[]>, { name, ownerDid }) => {
       const owner = ownerDid ?? did;
+
       if (!acc[owner]) {
         acc[owner] = [];
       }
-      acc[owner].push(name);
+
+      acc[owner]!.push(name);
       return acc;
     },
     {}
@@ -65,7 +67,7 @@ export async function prepareCreatePortfolios(
   const dids = Object.keys(groupedPortfolioNamesByIdentity);
 
   const portfolioIdCalls = dids.map(identityId => {
-    const rawNames = groupedPortfolioNamesByIdentity[identityId].map(name =>
+    const rawNames = groupedPortfolioNamesByIdentity[identityId]!.map(name =>
       stringToBytes(name, context)
     );
     const rawIdentityId = stringToIdentityId(identityId, context);
@@ -77,7 +79,12 @@ export async function prepareCreatePortfolios(
   foundPortfoliosByDid.forEach((portfolios, index) => {
     portfolios.forEach(id => {
       if (id) {
-        existingNames.push(groupedPortfolioNamesByIdentity[dids[index]][id.toNumber()]);
+        const portfolioDid = dids[index]!;
+        const portfolioName = groupedPortfolioNamesByIdentity[portfolioDid]![
+          id.toNumber()
+        ] as string;
+
+        existingNames.push(portfolioName);
       }
     });
   });

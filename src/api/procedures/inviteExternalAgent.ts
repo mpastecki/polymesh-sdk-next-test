@@ -35,9 +35,16 @@ import { filterEventRecords, optionize } from '~/utils/internal';
 export const createGroupAndAuthorizationResolver =
   (target: Identity) =>
   (receipt: ISubmittableResult): Promise<AuthorizationRequest> => {
-    const [{ data }] = filterEventRecords(receipt, 'identity', 'AuthorizationAdded');
+    const [record] = filterEventRecords(receipt, 'identity', 'AuthorizationAdded');
 
-    const id = u64ToBigNumber(data[3]);
+    if (!record?.data) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'Authorization addition event not found',
+      });
+    }
+
+    const id = u64ToBigNumber(record.data[3]);
 
     return target.authorizations.getOne({ id });
   };

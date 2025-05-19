@@ -74,7 +74,7 @@ export class CheckpointSchedule extends Entity<UniqueIdentifiers, HumanReadable>
 
     const sortedPoints = [...pendingPoints].sort((a, b) => a.getTime() - b.getTime());
     this.pendingPoints = sortedPoints;
-    this.expiryDate = sortedPoints[sortedPoints.length - 1];
+    this.expiryDate = sortedPoints[sortedPoints.length - 1]!;
     this.id = id;
     this.asset = new FungibleAsset({ assetId }, context);
   }
@@ -111,9 +111,18 @@ export class CheckpointSchedule extends Entity<UniqueIdentifiers, HumanReadable>
     const schedule = scheduleOpt.unwrap();
     const points = [...schedule.pending].map(point => momentToDate(point));
 
+    const nextCheckpointDate = points[0];
+
+    if (!nextCheckpointDate) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'No next checkpoint date found',
+      });
+    }
+
     return {
       remainingCheckpoints: new BigNumber(points.length),
-      nextCheckpointDate: points[0],
+      nextCheckpointDate,
     };
   }
 
@@ -179,13 +188,13 @@ export class CheckpointSchedule extends Entity<UniqueIdentifiers, HumanReadable>
    * Return the Schedule's static data
    */
   public toHuman(): HumanReadable {
-    const { asset, id, pendingPoints } = this;
+    const { asset, id, pendingPoints, expiryDate } = this;
 
     return toHumanReadable({
       assetId: asset,
       id,
       pendingPoints,
-      expiryDate: pendingPoints[pendingPoints.length - 1],
+      expiryDate,
     });
   }
 }

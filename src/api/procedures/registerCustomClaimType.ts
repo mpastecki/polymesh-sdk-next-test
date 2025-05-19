@@ -18,9 +18,16 @@ export type Params = RegisterCustomClaimTypeParams;
 export const createRegisterCustomClaimTypeResolver =
   () =>
   (receipt: ISubmittableResult): BigNumber => {
-    const [{ data }] = filterEventRecords(receipt, 'identity', 'CustomClaimTypeAdded');
+    const [record] = filterEventRecords(receipt, 'identity', 'CustomClaimTypeAdded');
 
-    return u32ToBigNumber(data[1]);
+    if (!record?.data) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'Custom Claim Type registration event not found',
+      });
+    }
+
+    return u32ToBigNumber(record.data[1]);
   };
 
 /**

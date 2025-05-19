@@ -1,7 +1,7 @@
 import { ISubmittableResult } from '@polkadot/types/types';
 
-import { Checkpoint, Context, FungibleAsset, Procedure } from '~/internal';
-import { TxTags } from '~/types';
+import { Checkpoint, Context, FungibleAsset, PolymeshError, Procedure } from '~/internal';
+import { ErrorCode, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
 import { assetToMeshAssetId, u64ToBigNumber } from '~/utils/conversion';
 import { filterEventRecords } from '~/utils/internal';
@@ -19,7 +19,17 @@ export interface Params {
 export const createCheckpointResolver =
   (assetId: string, context: Context) =>
   (receipt: ISubmittableResult): Checkpoint => {
-    const [{ data }] = filterEventRecords(receipt, 'checkpoint', 'CheckpointCreated');
+    const [record] = filterEventRecords(receipt, 'checkpoint', 'CheckpointCreated');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Checkpoint creation event not found',
+      });
+    }
+
+    const { data } = record;
+
     const id = u64ToBigNumber(data[2]);
 
     return new Checkpoint({ id, assetId }, context);

@@ -15,7 +15,7 @@ const defaultMessages: {
 export class PolymeshError extends Error {
   public code: ErrorCode;
 
-  public data?: Record<string, unknown>;
+  public data: Record<string, unknown> | undefined;
 
   /**
    * @hidden
@@ -25,12 +25,14 @@ export class PolymeshError extends Error {
     code,
     data,
     stack,
-  }: {
-    message?: string;
-    code: ErrorCode;
-    data?: Record<string, unknown>;
-    stack?: Error['stack'];
-  }) {
+  }:
+    | {
+        message?: string;
+        code: ErrorCode;
+        data?: Record<string, unknown>;
+        stack?: Error['stack'];
+      }
+    | PolymeshError) {
     super(message || defaultMessages[code] || `Unknown error, code: ${code}`);
 
     this.code = code;

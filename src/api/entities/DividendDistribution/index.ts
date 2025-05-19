@@ -303,7 +303,10 @@ export class DividendDistribution extends CorporateActionBase {
     let start: string | undefined;
 
     while (!allFetched) {
-      const { data, next } = await checkpoint.allBalances({ size: MAX_PAGE_SIZE, start });
+      const { data, next } = await checkpoint.allBalances({
+        size: MAX_PAGE_SIZE,
+        ...(start ? { start } : {}),
+      });
       start = (next as string) || undefined;
       allFetched = !next;
       balances = [...balances, ...data];
@@ -328,7 +331,16 @@ export class DividendDistribution extends CorporateActionBase {
 
     const paidStatuses = await this.getParticipantStatuses(participants);
 
-    return paidStatuses.map((paid, index) => ({ ...participants[index], paid }));
+    return paidStatuses.map((paid, index) => {
+      const participant = participants[index] as DistributionParticipant;
+      return {
+        identity: participant.identity,
+        amount: participant.amount,
+        taxWithholdingPercentage: participant.taxWithholdingPercentage,
+        amountAfterTax: participant.amountAfterTax,
+        paid,
+      };
+    });
   }
 
   /**
@@ -463,7 +475,7 @@ export class DividendDistribution extends CorporateActionBase {
       },
     ] = await Promise.all([this.exists(), taxPromise]);
 
-    if (!exists) {
+    if (!exists || !nodes[0]) {
       throw new PolymeshError({
         code: ErrorCode.DataUnavailable,
         message: notExistsMessage,

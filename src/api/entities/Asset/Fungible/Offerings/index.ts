@@ -106,7 +106,7 @@ export class Offerings extends Namespace<FungibleAsset> {
         fundraiser,
       ]) => {
         const id = u64ToBigNumber(rawFundraiserId);
-        const [[, name]] = remove(
+        const [removed] = remove(
           nameEntries,
           ([
             {
@@ -114,6 +114,21 @@ export class Offerings extends Namespace<FungibleAsset> {
             },
           ]) => u64ToBigNumber(rawId).eq(id)
         );
+
+        if (!removed) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Named entry not found in fundraiserEntries',
+            data: {
+              id,
+              fundraiserEntries,
+              nameEntries,
+            },
+          });
+        }
+
+        const [, name] = removed;
+
         return {
           offering: new Offering({ id, assetId: parent.id }, context),
           details: fundraiserToOfferingDetails(fundraiser.unwrap(), name.unwrap(), context),

@@ -336,7 +336,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
 
       const jurisdictionValues: JurisdictionValue[] = [];
 
-      entries.forEach(([key, rawValue]) => {
+      entries!.forEach(([key, rawValue]) => {
         const secondKey = key.args[1];
 
         if (secondKey.isNoClaimStat) {
@@ -384,9 +384,9 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
           claimTypeForComparison === ClaimType.Affiliate
         ) {
           // Get the specific claim values (true/false queries only)
-          const withClaimValue = u128ToStatValue(nonJurisdictionResults[resultIndex], statType);
+          const withClaimValue = u128ToStatValue(nonJurisdictionResults[resultIndex]!, statType);
           const withoutClaimValue = u128ToStatValue(
-            nonJurisdictionResults[resultIndex + 1],
+            nonJurisdictionResults[resultIndex + 1]!,
             statType
           );
           resultIndex += 2;
@@ -409,7 +409,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
               claimType,
             },
             type: statType,
-            value: u128ToStatValue(nonJurisdictionResults[resultIndex], statType),
+            value: u128ToStatValue(nonJurisdictionResults[resultIndex]!, statType),
           });
           resultIndex++;
         }
@@ -417,7 +417,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
         // Handle non-claim stats
         result.push({
           type: statType,
-          value: u128ToStatValue(nonJurisdictionResults[resultIndex], statType),
+          value: u128ToStatValue(nonJurisdictionResults[resultIndex]!, statType),
         });
         resultIndex++;
       }

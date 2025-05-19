@@ -1,3 +1,5 @@
+import BigNumber from 'bignumber.js';
+
 import { Context, Portfolio } from '~/internal';
 
 export interface UniqueIdentifiers {
@@ -12,8 +14,7 @@ export class DefaultPortfolio extends Portfolio {
    * @hidden
    */
   constructor(identifiers: UniqueIdentifiers, context: Context) {
-    // NOTE @monitz87: this is necessary to remove `id` from the DefaultPortfolio constructor signature
-    super({ ...identifiers, id: undefined }, context);
+    super({ ...identifiers, id: new BigNumber(0) }, context);
   }
 
   /**

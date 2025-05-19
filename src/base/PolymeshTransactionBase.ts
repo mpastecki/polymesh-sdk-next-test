@@ -71,9 +71,9 @@ export abstract class PolymeshTransactionBase<
 
     return {
       resolver,
-      transformer,
-      paidForBy,
-      multiSig: multiSig ?? undefined,
+      ...(transformer ? { transformer } : {}),
+      ...(paidForBy ? { paidForBy } : {}),
+      ...(multiSig ? { multiSig } : {}),
     };
   }
 
@@ -85,27 +85,27 @@ export abstract class PolymeshTransactionBase<
   /**
    * stores errors thrown while running the transaction (status: `Failed`, `Aborted`)
    */
-  public error?: PolymeshError;
+  public error?: PolymeshError | undefined;
 
   /**
    * stores the transaction receipt (if successful)
    */
-  public receipt?: ISubmittableResult;
+  public receipt?: ISubmittableResult | undefined;
 
   /**
    * transaction hash (status: `Running`, `Succeeded`, `Failed`)
    */
-  public txHash?: string;
+  public txHash?: string | undefined;
 
   /**
    * transaction index within its block (status: `Succeeded`, `Failed`)
    */
-  public txIndex?: BigNumber;
+  public txIndex?: BigNumber | undefined;
 
   /**
    * hash of the block where this transaction resides (status: `Succeeded`, `Failed`)
    */
-  public blockHash?: string;
+  public blockHash?: string | undefined;
 
   /**
    * number of the block where this transaction resides (status: `Succeeded`, `Failed`)
@@ -126,7 +126,7 @@ export abstract class PolymeshTransactionBase<
    * Identity that will pay for this transaction's fees. This value overrides any subsidy,
    *   and is seen as having infinite allowance (but still constrained by its current balance)
    */
-  protected paidForBy?: Identity;
+  protected paidForBy?: Identity | undefined;
 
   /**
    * @hidden
@@ -168,7 +168,7 @@ export abstract class PolymeshTransactionBase<
    *
    * object that performs the payload signing logic
    */
-  protected signer?: PolkadotSigner;
+  protected signer?: PolkadotSigner | undefined;
 
   /**
    * @hidden
@@ -176,9 +176,9 @@ export abstract class PolymeshTransactionBase<
    * function that transforms the return value to another type. Useful when using the same
    *   Procedure for different endpoints which are supposed to return different values
    */
-  protected transformer?: (
-    result: ReturnValue
-  ) => Promise<TransformedReturnValue> | TransformedReturnValue;
+  protected transformer?:
+    | undefined
+    | ((result: ReturnValue) => Promise<TransformedReturnValue> | TransformedReturnValue);
 
   protected context: Context;
 
@@ -256,6 +256,14 @@ export abstract class PolymeshTransactionBase<
     }
 
     const [proposalAddedEvent] = filterEventRecords(this.receipt, 'multiSig', 'ProposalAdded');
+
+    if (!proposalAddedEvent) {
+      throw new PolymeshError({
+        code: ErrorCode.TransactionAborted,
+        message: 'Transaction was aborted',
+      });
+    }
+
     const id = u64ToBigNumber(proposalAddedEvent.data[2]);
 
     this.updateStatus(TransactionStatus.Succeeded);
@@ -383,7 +391,7 @@ export abstract class PolymeshTransactionBase<
         let settingBlockData = Promise.resolve();
         const gettingUnsub = txWithArgs.signAndSend(
           signingAddress,
-          { nonce, signer, era },
+          { nonce, ...(signer && { signer }), ...(era && { era }) },
           receipt => {
             const { status } = receipt;
             let isLastCallback = false;
@@ -427,7 +435,7 @@ export abstract class PolymeshTransactionBase<
               }
 
               if (isLastCallback) {
-                unsubscribing = gettingUnsub.then(unsub => {
+                unsubscribing = gettingUnsub.then((unsub: UnsubCallback) => {
                   unsub();
                 });
               }
@@ -472,7 +480,7 @@ export abstract class PolymeshTransactionBase<
       const startingBlock = await context.getLatestBlock();
 
       await txWithArgs
-        .signAndSend(signingAddress, { nonce, signer, era })
+        .signAndSend(signingAddress, { nonce, ...(signer && { signer }), ...(era && { era }) })
         .then(() => {
           this.setIsRunningStatus(txWithArgs.hash.toString());
         })
@@ -612,10 +620,19 @@ export abstract class PolymeshTransactionBase<
     const {
       data: {
         blocks: {
-          nodes: [{ blockId: processedBlock }],
+          nodes: [block],
         },
       },
     } = await context.queryMiddleware<Ensured<Query, 'blocks'>>(latestBlockQuery());
+
+    if (!block) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'Failed to retrieve latest block from middleware',
+      });
+    }
+
+    const { blockId: processedBlock } = block;
 
     return new BigNumber(processedBlock);
   }

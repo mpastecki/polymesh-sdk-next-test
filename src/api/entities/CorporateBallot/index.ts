@@ -1,3 +1,4 @@
+import { u128 } from '@polkadot/types';
 import BigNumber from 'bignumber.js';
 
 import {
@@ -206,9 +207,10 @@ export class CorporateBallot extends CorporateActionBase {
       };
       choices.forEach(choice => {
         // when no votes have been cast the rawResults[resultIndex] is undefined
-        const choiceVoteTally = rawResults[resultIndex]
-          ? u128ToBigNumber(rawResults[resultIndex])
-          : new BigNumber(0);
+        const choiceVoteTally =
+          rawResults[resultIndex] !== undefined
+            ? u128ToBigNumber(rawResults[resultIndex] as u128)
+            : new BigNumber(0);
         motionWithResults.choices.push({
           choice,
           votes: choiceVoteTally,
@@ -275,10 +277,12 @@ export class CorporateBallot extends CorporateActionBase {
               fallback = u16ToBigNumber(rawFallback.unwrap());
             }
 
+            const power = BigNumber.isBigNumber(rawPower) ? rawPower : u128ToBigNumber(rawPower);
+
             const choiceWithParticipation: ChoiceWithParticipation = {
               choice,
-              power: u128ToBigNumber(rawPower),
-              fallback,
+              power,
+              ...(fallback && { fallback }),
             };
 
             index++;

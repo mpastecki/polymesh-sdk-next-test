@@ -709,9 +709,9 @@ export function meshClaimToInputStatClaim(
   } else {
     return {
       type: ClaimType.Jurisdiction,
-      countryCode: claim.asJurisdiction.isSome
-        ? meshCountryCodeToCountryCode(claim.asJurisdiction.unwrap())
-        : undefined,
+      ...(claim.asJurisdiction.isSome
+        ? { countryCode: meshCountryCodeToCountryCode(claim.asJurisdiction.unwrap()) }
+        : {}),
     };
   }
 }
@@ -730,7 +730,7 @@ export function claimCountToClaimCountRestrictionValue(
     claim: meshClaimToInputStatClaim(claim),
     issuer: new Identity({ did: identityIdToString(issuer) }, context),
     min: u64ToBigNumber(min),
-    max: max.isSome ? u64ToBigNumber(max.unwrap()) : undefined,
+    ...(max.isSome && { max: u64ToBigNumber(max.unwrap()) }),
   };
 }
 
@@ -806,7 +806,7 @@ export function portfolioLikeToPortfolioId(value: PortfolioLike): PortfolioId {
     did = asDid(valueIdentity);
   }
 
-  return { did, number: number?.gt(0) ? number : undefined };
+  return { did, ...(number && number.gt(0) && { number }) };
 }
 
 /**
@@ -1931,7 +1931,7 @@ export function assetTypeToKnownOrId(
  */
 export function posRatioToBigNumber(postRatio: PolymeshPrimitivesPosRatio): BigNumber {
   const [numerator, denominator] = postRatio.map(u32ToBigNumber);
-  return numerator.dividedBy(denominator);
+  return numerator!.dividedBy(denominator!);
 }
 
 /**
@@ -2013,11 +2013,11 @@ export function isIsinValid(isin: string): boolean {
 
   range(v.length).forEach(i => {
     if (i % 2 === 0) {
-      const d = v[i] * 2;
+      const d = v[i]! * 2;
       sum += Math.floor(d / 10);
       sum += d % 10;
     } else {
-      sum += v[i];
+      sum += v[i]!;
     }
   });
 
@@ -2036,7 +2036,7 @@ function validateCusipChecksum(cusip: string): boolean {
   const cusipLength = cusip.length - 1;
 
   range(cusipLength).forEach(i => {
-    const item = cusip[i];
+    const item = cusip[i]!;
     const code = item.charCodeAt(0);
 
     let num;
@@ -3105,6 +3105,14 @@ export function extrinsicIdentifierToTxTag(extrinsicIdentifier: ExtrinsicIdentif
  */
 export function txTagToExtrinsicIdentifier(tag: TxTag): ExtrinsicIdentifier {
   const [moduleName, extrinsicName] = tag.split('.');
+
+  if (!moduleName || !extrinsicName) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Invalid extrinsic identifier',
+    });
+  }
+
   return {
     moduleId: moduleName.toLowerCase() as ModuleIdEnum,
     callId: snakeCase(extrinsicName) as CallIdEnum,
@@ -4144,7 +4152,9 @@ export function corporateActionParamsToMeshCorporateActionArgs(
 export function statisticsOpTypeToStatType(
   args: {
     operationType: PolymeshPrimitivesStatisticsStatOpType;
-    claimIssuer?: [PolymeshPrimitivesIdentityClaimClaimType, PolymeshPrimitivesIdentityId];
+    claimIssuer?:
+      | [PolymeshPrimitivesIdentityClaimClaimType, PolymeshPrimitivesIdentityId]
+      | undefined;
   },
   context: Context
 ): PolymeshPrimitivesStatisticsStatType {
@@ -4386,7 +4396,7 @@ export function toExemptKey(
   op: PolymeshPrimitivesStatisticsStatOpType,
   claimType?: ClaimType
 ): ExemptKey {
-  return { assetId: rawAssetId, op, claimType };
+  return { assetId: rawAssetId, op, ...(claimType && { claimType }) };
 }
 
 /**
@@ -4450,7 +4460,10 @@ export function inputStatTypeToMeshStatType(
   if (type === StatType.ScopedCount || type === StatType.ScopedBalance) {
     claimIssuer = claimIssuerToMeshClaimIssuer(input.claimIssuer, context);
   }
-  return statisticsOpTypeToStatType({ operationType: op, claimIssuer }, context);
+  return statisticsOpTypeToStatType(
+    { operationType: op, ...(claimIssuer ? { claimIssuer } : {}) },
+    context
+  );
 }
 
 /**
@@ -4676,6 +4689,16 @@ export function instructionMemoToString(value: U8aFixed): string {
 export function portfolioIdStringToPortfolio(id: string): MiddlewarePortfolio {
   const [identityId, number] = id.split('/');
 
+  if (!number) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Invalid portfolio ID',
+      data: {
+        id,
+      },
+    });
+  }
+
   return { identityId, number: parseInt(number, 10) } as MiddlewarePortfolio;
 }
 
@@ -4688,7 +4711,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
   if (legType === LegTypeEnum.Fungible) {
     return {
       asset: new FungibleAsset(
-        { assetId: getAssetIdFromMiddleware({ id: assetId, ticker }) },
+        { assetId: getAssetIdFromMiddleware({ id: assetId, ...(ticker ? { ticker } : {}) }) },
         context
       ),
       amount: new BigNumber(amount).shiftedBy(-6),
@@ -4704,7 +4727,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
   }
 
   if (legType === LegTypeEnum.NonFungible) {
-    const id = getAssetIdFromMiddleware({ id: assetId, ticker });
+    const id = getAssetIdFromMiddleware({ id: assetId, ...(ticker ? { ticker } : {}) });
     return {
       from: middlewarePortfolioToPortfolio(
         { identityId: from, number: fromPortfolio! } as MiddlewarePortfolio,
@@ -4822,7 +4845,7 @@ export function middlewareInstructionToHistoricInstruction(
     valueDate,
     ...middlewareInstructionToInstructionEndCondition(instruction),
     memo: memo ?? null,
-    venueId: venueId ? new BigNumber(venueId) : undefined,
+    ...(venueId && { venueId: new BigNumber(venueId) }),
     createdAt: new Date(datetime),
     legs: legs.map(leg => middlewareLegToLeg(leg, context)),
   };
@@ -4912,8 +4935,28 @@ export function middlewareAgentGroupDataToPermissionGroup(
   context: Context
 ): KnownPermissionGroup | CustomPermissionGroup {
   const asset = Object.keys(agentGroupData)[0];
+
+  if (!asset) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'No asset found in agent group data',
+      data: {
+        agentGroupData,
+      },
+    });
+  }
+
   const agentGroup = agentGroupData[asset];
 
+  if (!agentGroup) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'No agent group found in agent group data',
+      data: {
+        asset,
+      },
+    });
+  }
   let permissionGroupIdentifier: PermissionGroupIdentifier;
   if ('full' in agentGroup) {
     permissionGroupIdentifier = PermissionGroupType.Full;
@@ -4976,14 +5019,14 @@ function middlewareExtrinsicPermissionsDataToTransactionPermissions(
   pallets.forEach(({ palletName, dispatchableNames }) => {
     const moduleName = stringLowerFirst(coerceHexToString(palletName));
     if ('except' in dispatchableNames) {
-      const dispatchables = [...dispatchableNames.except];
+      const dispatchables = [...(dispatchableNames.except as string[])];
       exceptions = [
         ...exceptions,
         ...dispatchables.map(name => formatTxTag(coerceHexToString(name), moduleName)),
       ];
       txValues = [...txValues, moduleName as ModuleName];
     } else if ('these' in dispatchableNames) {
-      const dispatchables = [...dispatchableNames.these];
+      const dispatchables = [...(dispatchableNames.these as string[])];
       txValues = [
         ...txValues,
         ...dispatchables.map(name => formatTxTag(coerceHexToString(name), moduleName)),
@@ -5121,6 +5164,18 @@ export function middlewareAuthorizationDataToAuthorization(
         .replace(/"/g, '')
         .split(',');
 
+      if (!beneficiary || !subsidizer || !allowance) {
+        throw new PolymeshError({
+          code: ErrorCode.UnexpectedError,
+          message: 'Invalid data',
+          data: {
+            beneficiary,
+            subsidizer,
+            allowance,
+          },
+        });
+      }
+
       return {
         type: AuthorizationType.AddRelayerPayingKey,
         value: {
@@ -5255,7 +5310,7 @@ export function toCustomClaimTypeWithIdentity(
   return data.map(({ id, name, identityId: did }) => ({
     id: new BigNumber(id),
     name,
-    did,
+    ...(did ? { did } : {}),
   }));
 }
 
@@ -5334,6 +5389,13 @@ export function toHistoricalSettlements(
 
     const { blockId, hash } = createdBlock!;
 
+    if (!legs[0]) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Failed to retrieve addresses',
+      });
+    }
+
     data.push({
       blockNumber: new BigNumber(blockId),
       blockHash: hash,
@@ -5374,7 +5436,7 @@ export function mediatorAffirmationStatusToStatus(
     case 'Affirmed': {
       const rawExpiry = rawStatus.asAffirmed.expiry;
       const expiry = rawExpiry.isSome ? momentToDate(rawExpiry.unwrap()) : undefined;
-      return { status: AffirmationStatus.Affirmed, expiry };
+      return { status: AffirmationStatus.Affirmed, ...(expiry ? { expiry } : {}) };
     }
     default:
       throw new UnreachableCaseError(rawStatus.type);

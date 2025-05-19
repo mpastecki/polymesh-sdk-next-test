@@ -79,7 +79,7 @@ export async function prepareNominateValidators(
       message: 'Commission not found for validator(s)',
       data: {
         missingCommissions: badValidators.missing.map(
-          missingIndex => validators[missingIndex].address
+          missingIndex => validators[missingIndex]!.address
         ),
       },
     });
@@ -91,7 +91,7 @@ export async function prepareNominateValidators(
       message: 'Validator(s) have been blocked',
       data: {
         blockedValidators: badValidators.blocked.map(
-          blockedIndex => validators[blockedIndex].address
+          blockedIndex => validators[blockedIndex]!.address
         ),
       },
     });

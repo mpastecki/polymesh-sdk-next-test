@@ -174,14 +174,14 @@ export class Polymesh {
         rpc,
         runtime: runtime as unknown as DefinitionsCall,
         signedExtensions,
-        metadata,
-        noInitWarn,
-        typesBundle,
+        ...(metadata ? { metadata } : {}),
+        ...(noInitWarn ? { noInitWarn } : {}),
+        ...(typesBundle ? { typesBundle } : {}),
       });
       context = await Context.create({
         polymeshApi,
         middlewareApiV2: createMiddlewareApi(middlewareV2),
-        signingManager,
+        ...(signingManager ? { signingManager } : {}),
       });
     } catch (err) {
       const { message, code } = err;

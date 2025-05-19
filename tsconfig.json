@@ -28,7 +28,11 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "lib": ["es2017", "dom"],
-    "typeRoots": ["./node_modules/@types", "./src/typings"]
+    "typeRoots": ["./node_modules/@types", "./src/typings"],
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
   },
   "exclude": ["dist", "node_modules", "sandbox.ts", "test.ts", "src-temp"]
 }

@@ -173,8 +173,10 @@ export class Assets {
     const rawAssetIds = await asset.tickerAssetId.multi(rawTickers);
 
     return rawAssetIds.reduce<TickerReservation[]>((result, rawAssetId, index) => {
-      if (rawAssetId.isNone) {
-        const ticker = tickerToString(rawTickers[index]);
+      const rawTicker = rawTickers[index];
+
+      if (rawAssetId.isNone && rawTicker) {
+        const ticker = tickerToString(rawTicker);
 
         if (isPrintableAscii(ticker)) {
           return [...result, new TickerReservation({ ticker }, context)];
@@ -378,7 +380,7 @@ export class Assets {
     } = this;
 
     const { entries, lastKey: next } = await requestPaginated(asset.assetNames, {
-      paginationOpts,
+      ...(paginationOpts && { paginationOpts }),
     });
 
     const assetIds: string[] = [];

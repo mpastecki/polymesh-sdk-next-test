@@ -27,7 +27,16 @@ export type Params = RegisterMetadataParams & {
 export const createMetadataResolver =
   (assetId: string, context: Context) =>
   (receipt: ISubmittableResult): MetadataEntry => {
-    const [{ data }] = filterEventRecords(receipt, 'asset', 'RegisterAssetMetadataLocalType');
+    const [record] = filterEventRecords(receipt, 'asset', 'RegisterAssetMetadataLocalType');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.DataUnavailable,
+        message: 'Expected at least one metadata record',
+      });
+    }
+
+    const { data } = record;
 
     const id = u64ToBigNumber(data[3]);
 

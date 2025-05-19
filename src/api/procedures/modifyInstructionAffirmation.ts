@@ -193,8 +193,10 @@ const assertReceipts = async (
 
   const alreadyAffirmedLegs: BigNumber[] = [];
   offChainAffirmationStatuses.forEach((status, index) => {
-    if (meshAffirmationStatusToAffirmationStatus(status) !== AffirmationStatus.Pending) {
-      alreadyAffirmedLegs.push(receipts[index].legId);
+    const receipt = receipts[index];
+
+    if (meshAffirmationStatusToAffirmationStatus(status) !== AffirmationStatus.Pending && receipt) {
+      alreadyAffirmedLegs.push(receipt.legId);
     }
   });
 
@@ -219,8 +221,10 @@ const assertReceipts = async (
   const receiptsUsed = await Promise.all(receiptsUsedPromises);
 
   receiptsUsed.forEach((rawBool, index) => {
-    if (boolToBoolean(rawBool)) {
-      invalidReceipts.push(receipts[index]);
+    const receipt = receipts[index];
+
+    if (boolToBoolean(rawBool) && receipt) {
+      invalidReceipts.push(receipt);
     }
   });
 
@@ -515,7 +519,7 @@ export async function prepareModifyInstructionAffirmation(
   }
 
   const validPortfolioIds = rawPortfolioIds.filter(
-    (_, index) => !excludeCriteria.includes(affirmationStatuses[index])
+    (_, index) => !excludeCriteria.includes(affirmationStatuses[index]!)
   );
 
   if (!validPortfolioIds.length && !rawReceiptDetails) {

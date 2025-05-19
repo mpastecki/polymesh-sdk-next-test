@@ -249,7 +249,7 @@ export function customClaimTypeQuery(
   start?: BigNumber,
   dids?: string[]
 ): QueryOptions<PaginatedQueryArgs<CustomClaimTypesQuery>> {
-  const { args, filter } = createCustomClaimTypeQueryFilters({ dids });
+  const { args, filter } = createCustomClaimTypeQueryFilters({ ...(dids && { dids }) });
 
   const query = gql`
   query CustomClaimTypesQuery

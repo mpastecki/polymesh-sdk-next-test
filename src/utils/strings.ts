@@ -72,5 +72,5 @@ export const isSnakeCase = (input: string): boolean => {
 };
 
 export const startsWithCapital = (input: string): boolean => {
-  return input[0] === input[0].toUpperCase();
+  return /^[A-Z]/.test(input);
 };

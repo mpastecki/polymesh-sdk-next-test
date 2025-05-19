@@ -59,7 +59,7 @@ export async function prepareSetTransferRestrictionExemptions(
       const isSet = boolToBoolean(rawResult);
 
       if (isSet) {
-        ids.push(identities[index].did);
+        ids.push(identities[index]!.did);
       }
 
       return ids;
@@ -83,7 +83,7 @@ export async function prepareSetTransferRestrictionExemptions(
       const isSet = boolToBoolean(rawResult);
 
       if (!isSet) {
-        ids.push(identities[index].did);
+        ids.push(identities[index]!.did);
       }
 
       return ids;

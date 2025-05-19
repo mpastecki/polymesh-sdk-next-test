@@ -1978,30 +1978,30 @@ describe('Context class', () => {
       });
 
       expect(result.length).toBe(2);
-      expect(result[0].details.fundsReclaimed).toBe(false);
-      expect(result[0].details.remainingFunds).toEqual(new BigNumber(400000));
-      expect(result[0].distribution.origin).toEqual(
+      expect(result[0]!.details.fundsReclaimed).toBe(false);
+      expect(result[0]!.details.remainingFunds).toEqual(new BigNumber(400000));
+      expect(result[0]!.distribution.origin).toEqual(
         expect.objectContaining({ owner: expect.objectContaining({ did: 'someDid' }) })
       );
-      expect(result[0].distribution.currency).toBe('00000000-0000-8000-8000-000000000001');
-      expect(result[0].distribution.perShare).toEqual(new BigNumber(10));
-      expect(result[0].distribution.maxAmount).toEqual(new BigNumber(500000));
-      expect(result[0].distribution.expiryDate).toBe(null);
-      expect(result[0].distribution.paymentDate).toEqual(new Date('10/14/1987'));
+      expect(result[0]!.distribution.currency).toBe('00000000-0000-8000-8000-000000000001');
+      expect(result[0]!.distribution.perShare).toEqual(new BigNumber(10));
+      expect(result[0]!.distribution.maxAmount).toEqual(new BigNumber(500000));
+      expect(result[0]!.distribution.expiryDate).toBe(null);
+      expect(result[0]!.distribution.paymentDate).toEqual(new Date('10/14/1987'));
 
-      expect(result[1].details.fundsReclaimed).toBe(false);
-      expect(result[1].details.remainingFunds).toEqual(new BigNumber(200000));
-      expect(result[1].distribution.origin).toEqual(
+      expect(result[1]!.details.fundsReclaimed).toBe(false);
+      expect(result[1]!.details.remainingFunds).toEqual(new BigNumber(200000));
+      expect(result[1]!.distribution.origin).toEqual(
         expect.objectContaining({
           owner: expect.objectContaining({ did: 'someDid' }),
           id: new BigNumber(2),
         })
       );
-      expect(result[1].distribution.currency).toBe('00000000-0000-8000-8000-000000000002');
-      expect(result[1].distribution.perShare).toEqual(new BigNumber(20));
-      expect(result[1].distribution.maxAmount).toEqual(new BigNumber(300000));
-      expect(result[1].distribution.expiryDate).toBe(null);
-      expect(result[1].distribution.paymentDate).toEqual(new Date('11/26/1989'));
+      expect(result[1]!.distribution.currency).toBe('00000000-0000-8000-8000-000000000002');
+      expect(result[1]!.distribution.perShare).toEqual(new BigNumber(20));
+      expect(result[1]!.distribution.maxAmount).toEqual(new BigNumber(300000));
+      expect(result[1]!.distribution.expiryDate).toBe(null);
+      expect(result[1]!.distribution.paymentDate).toEqual(new Date('11/26/1989'));
     });
   });
 

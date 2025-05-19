@@ -42,12 +42,12 @@ export async function prepareRedeemNft(
   const rawId = bigNumberToU64(id, context);
   const rawCollectionId = bigNumberToU64(collectionId, context);
 
-  const [[{ free }], rawKeySet] = await Promise.all([
+  const [[portfolioCollection], rawKeySet] = await Promise.all([
     fromPortfolio.getCollections({ collections: [collection.id] }),
     query.nft.collectionKeys(rawCollectionId),
   ]);
 
-  if (!free.find(heldNft => heldNft.id.eq(id))) {
+  if (!portfolioCollection?.free.find(heldNft => heldNft.id.eq(id))) {
     throw new PolymeshError({
       code: ErrorCode.InsufficientBalance,
       message: 'Portfolio does not hold NFT to redeem',

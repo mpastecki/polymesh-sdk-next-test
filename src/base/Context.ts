@@ -123,11 +123,11 @@ export class Context {
 
   private readonly _middlewareApi: ApolloClient<NormalizedCacheObject> | null;
 
-  private _signingManager?: SigningManager;
+  private _signingManager?: SigningManager | undefined;
 
-  private signingAddress?: string;
+  private signingAddress?: string | undefined;
 
-  private nonce?: BigNumber;
+  private nonce?: BigNumber | undefined;
 
   private _isArchiveNodeResult?: boolean;
 
@@ -162,7 +162,7 @@ export class Context {
     const context = new Context({
       polymeshApi,
       middlewareApiV2,
-      signingManager,
+      ...(signingManager ? { signingManager } : {}),
       ss58Format,
     });
 
@@ -558,8 +558,9 @@ export class Context {
     const invalidDids: string[] = [];
 
     records.forEach((record, index) => {
-      if (record.isNone) {
-        invalidDids.push(dids[index]);
+      const did = dids[index];
+      if (record.isNone && did) {
+        invalidDids.push(did);
       }
     });
 
@@ -734,6 +735,16 @@ export class Context {
 
     const [section, method] = tag.split('.');
 
+    if (!section || !method) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Unable to parse transaction tag',
+        data: {
+          tag,
+        },
+      });
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((tx as any)[section][method] as CallFunction).meta.args.map(({ name, type }) => {
       const typeDef = getTypeDef(type.toString());
@@ -831,12 +842,35 @@ export class Context {
 
         const { reclaimed, remaining } = dist;
 
+        const assetId = assetIds[index];
+        const id = corporateActionIds[index];
+
+        if (!assetId || !id) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Asset ID or Corporate Action ID is missing',
+            data: {
+              assetId,
+              id,
+            },
+          });
+        }
+
+        const caParams = corporateActionParams[index];
+
+        if (!caParams) {
+          throw new PolymeshError({
+            code: ErrorCode.UnexpectedError,
+            message: 'Corporate Action Parameters are missing',
+          });
+        }
+
         result.push({
           distribution: new DividendDistribution(
             {
-              assetId: assetIds[index],
-              id: corporateActionIds[index],
-              ...corporateActionParams[index],
+              assetId,
+              id,
+              ...caParams,
               ...distributionToDividendDistributionParams(dist, this),
             },
             this
@@ -950,12 +984,16 @@ export class Context {
       claimsQuery(
         this.isSqIdPadded,
         {
-          dids: targets?.map(target => signerToString(target)),
-          trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
-            signerToString(trustedClaimIssuer)
-          ),
-          claimTypes: claimTypes?.map(ct => ClaimTypeEnum[ct]),
-          includeExpired,
+          ...(targets ? { dids: targets.map(target => signerToString(target)) } : {}),
+          ...(trustedClaimIssuers
+            ? {
+                trustedClaimIssuers: trustedClaimIssuers.map(trustedClaimIssuer =>
+                  signerToString(trustedClaimIssuer)
+                ),
+              }
+            : {}),
+          ...(claimTypes ? { claimTypes: claimTypes.map(ct => ClaimTypeEnum[ct]) } : {}),
+          ...(includeExpired !== undefined ? { includeExpired } : {}),
         },
         size,
         start
@@ -1005,12 +1043,12 @@ export class Context {
 
     if (isMiddlewareAvailable) {
       return this.getIdentityClaimsFromMiddleware({
-        targets,
-        trustedClaimIssuers,
-        claimTypes,
+        ...(targets ? { targets } : {}),
+        ...(trustedClaimIssuers ? { trustedClaimIssuers } : {}),
+        ...(claimTypes ? { claimTypes } : {}),
         includeExpired,
-        size,
-        start,
+        ...(size ? { size } : {}),
+        ...(start ? { start } : {}),
       });
     }
 
@@ -1023,15 +1061,14 @@ export class Context {
 
     const identityClaimsFromChain = await this.getIdentityClaimsFromChain({
       targets,
-      claimTypes,
-      trustedClaimIssuers,
+      ...(claimTypes ? { claimTypes } : {}),
+      ...(trustedClaimIssuers ? { trustedClaimIssuers } : {}),
       includeExpired,
     });
 
     return {
       data: identityClaimsFromChain,
       next: null,
-      count: undefined,
     };
   }
 
@@ -1300,8 +1337,8 @@ export class Context {
       polyxTransactionsQuery(
         this.isSqIdPadded,
         {
-          identityId: identity ? asDid(identity) : undefined,
-          addresses: accounts?.map(account => signerToString(account)),
+          ...(identity ? { identityId: asDid(identity) } : {}),
+          ...(accounts ? { addresses: accounts.map(account => signerToString(account)) } : {}),
         },
         size,
         start
@@ -1329,18 +1366,18 @@ export class Context {
 
       /* eslint-disable @typescript-eslint/no-non-null-assertion */
       return {
-        fromIdentity: identityId ? new Identity({ did: identityId }, this) : undefined,
-        fromAccount: address ? new Account({ address }, this) : undefined,
-        toIdentity: toId ? new Identity({ did: toId }, this) : undefined,
-        toAccount: toAddress ? new Account({ address: toAddress }, this) : undefined,
+        ...(identityId && { fromIdentity: new Identity({ did: identityId }, this) }),
+        ...(address && { fromAccount: new Account({ address }, this) }),
+        ...(toId && { toIdentity: new Identity({ did: toId }, this) }),
+        ...(toAddress && { toAccount: new Account({ address: toAddress }, this) }),
         amount: new BigNumber(amount).shiftedBy(-6),
         type,
-        memo,
+        ...(memo && { memo }),
         ...middlewareEventDetailsToEventIdentifier(createdBlock!, eventIdx),
         callId,
         eventId: eventId!,
         moduleId: moduleId!,
-        extrinsicIdx: extrinsic ? new BigNumber(extrinsic.extrinsicIdx) : undefined,
+        ...(extrinsic && { extrinsicIdx: new BigNumber(extrinsic.extrinsicIdx) }),
       };
       /* eslint-enable @typescript-eslint/no-non-null-assertion */
     });

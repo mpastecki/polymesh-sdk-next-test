@@ -229,6 +229,16 @@ export class Metadata extends Namespace<BaseAsset> {
     const data = [];
     let index = 0;
     for (const rawValueEntry of rawValueEntries) {
+      const nameValue = nameValues[index];
+      const valueDetail = valueDetails[index];
+
+      if (!nameValue || !valueDetail) {
+        throw new PolymeshError({
+          code: ErrorCode.UnexpectedError,
+          message: 'Metadata name or value detail is missing',
+        });
+      }
+
       const [
         {
           args: [, rawMetadataKey],
@@ -244,13 +254,13 @@ export class Metadata extends Namespace<BaseAsset> {
           },
           context
         ),
-        name: bytesToString(nameValues[index].unwrap()),
+        name: bytesToString(nameValue.unwrap()),
         specs: meshMetadataSpecToMetadataSpec(specValues[index]),
-        ...meshMetadataValueToMetadataValue(rawValue, valueDetails[index])!,
+        ...meshMetadataValueToMetadataValue(rawValue, valueDetail),
       });
       index++;
     }
 
-    return data;
+    return data as MetadataWithValue[];
   }
 }

@@ -19,7 +19,17 @@ import { asAccount, filterEventRecords, optionize } from '~/utils/internal';
 export const createRegisterIdentityResolver =
   (context: Context) =>
   (receipt: ISubmittableResult): Identity => {
-    const [{ data }] = filterEventRecords(receipt, 'identity', 'DidCreated');
+    const [record] = filterEventRecords(receipt, 'identity', 'DidCreated');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Identity creation event not found',
+      });
+    }
+
+    const { data } = record;
+
     const did = identityIdToString(data[0]);
 
     return new Identity({ did }, context);

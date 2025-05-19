@@ -224,11 +224,11 @@ export class Account extends Entity<UniqueIdentifiers, string> {
       extrinsicsByArgs(
         context.isSqIdPadded,
         {
-          blockId: blockNumber ? blockNumber.toString() : undefined,
+          ...(blockNumber ? { blockId: blockNumber.toString() } : {}),
           address,
-          moduleId,
-          callId,
-          success: successFilter,
+          ...(moduleId ? { moduleId } : {}),
+          ...(callId ? { callId } : {}),
+          ...(successFilter ? { success: successFilter } : {}),
         },
         size,
         start,
@@ -634,11 +634,24 @@ export class Account extends Entity<UniqueIdentifiers, string> {
 
     const rawBytes = blake2AsU8a(data, 128);
 
+    const rawBytesSix = rawBytes[6];
+    const rawBytesEight = rawBytes[8];
+
+    if (!rawBytesSix || !rawBytesEight) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Unexpected error while generating asset ID',
+        data: {
+          rawBytes,
+        },
+      });
+    }
+
     // Need to override 6bits to make it a valid v8 UUID.
-    rawBytes[6] = (rawBytes[6] & 0x0f) | 0x80;
+    rawBytes[6] = (rawBytesSix & 0x0f) | 0x80;
 
     // Set the RFC4122 variant (bits 10xx) in the 8th byte
-    rawBytes[8] = (rawBytes[8] & 0x3f) | 0x80;
+    rawBytes[8] = (rawBytesEight & 0x3f) | 0x80;
 
     return hexToUuid(u8aToHex(rawBytes));
   }

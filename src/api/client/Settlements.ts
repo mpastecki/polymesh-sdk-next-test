@@ -47,7 +47,7 @@ export class Settlements {
       {
         getProcedureAndArgs: args => {
           const { venueId, ...instruction } = args;
-          return [addInstruction, { instructions: [instruction], venueId }];
+          return [addInstruction, { instructions: [instruction], ...(venueId && { venueId }) }];
         },
         transformer: addInstructionTransformer,
       },

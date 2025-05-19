@@ -59,7 +59,7 @@ export class PolymeshTransaction<
    *
    * @note defaults to 1
    */
-  protected feeMultiplier?: BigNumber;
+  protected feeMultiplier?: BigNumber | undefined;
 
   /**
    * @hidden
@@ -68,7 +68,7 @@ export class PolymeshTransaction<
    *   dynamically generated from the transaction name, or a specific procedure has
    *   special rules for calculating them
    */
-  private readonly protocolFee?: BigNumber;
+  private readonly protocolFee?: BigNumber | undefined;
 
   /**
    * @hidden
@@ -78,9 +78,25 @@ export class PolymeshTransaction<
       TransactionConstructionData,
     context: Context
   ) {
-    const { args = [], feeMultiplier, transaction, fee, paidForBy, ...rest } = transactionSpec;
+    const {
+      args = [],
+      feeMultiplier,
+      transaction,
+      fee,
+      paidForBy,
+      multiSig,
+      transformer,
+      ...rest
+    } = transactionSpec;
 
-    super(rest, context);
+    super(
+      {
+        ...rest,
+        multiSig: multiSig ?? null,
+        ...(transformer ? { transformer } : {}),
+      },
+      context
+    );
 
     this.args = args as Args;
     this.transaction = transaction;
@@ -112,7 +128,16 @@ export class PolymeshTransaction<
 
     if (!fees) {
       const { tag } = this;
-      [{ fees }] = await this.context.getProtocolFees({ tags: [tag] });
+      const [result] = await this.context.getProtocolFees({ tags: [tag] });
+
+      if (!result) {
+        throw new PolymeshError({
+          code: ErrorCode.UnexpectedError,
+          message: 'Failed to get protocol fees',
+        });
+      }
+
+      fees = result.fees;
     }
 
     return fees.multipliedBy(feeMultiplier);

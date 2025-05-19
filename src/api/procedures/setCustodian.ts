@@ -43,7 +43,7 @@ export async function prepareSetCustodian(
   } = this;
 
   const { targetIdentity, expiry, did, id } = args;
-  const portfolio = portfolioIdToPortfolio({ did, number: id }, context);
+  const portfolio = portfolioIdToPortfolio({ did, number: id ?? new BigNumber(0) }, context);
   const issuerIdentity = await context.getSigningIdentity();
 
   const targetDid = signerToString(targetIdentity);
@@ -96,12 +96,12 @@ export function getAuthorization(
   { did, id }: Params
 ): ProcedureAuthorization {
   const { context } = this;
-  const portfolioId: PortfolioId = { did, number: id };
+  const portfolioId: PortfolioId = { did, number: id ?? new BigNumber(0) };
   return {
     roles: [{ type: RoleType.PortfolioCustodian, portfolioId }],
     permissions: {
       transactions: [TxTags.identity.AddAuthorization],
-      portfolios: [portfolioIdToPortfolio({ did, number: id }, context)],
+      portfolios: [portfolioIdToPortfolio({ did, number: id ?? new BigNumber(0) }, context)],
       assets: [],
     },
   };

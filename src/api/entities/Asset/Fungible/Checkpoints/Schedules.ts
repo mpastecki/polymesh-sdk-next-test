@@ -108,13 +108,14 @@ export class Schedules extends Namespace<FungibleAsset> {
       );
 
       const remainingCheckpoints = new BigNumber([...rawSchedule.pending].length);
+
       return {
         schedule,
         details: {
           remainingCheckpoints,
           nextCheckpointDate: points[0],
         },
-      };
+      } as ScheduleWithDetails;
     });
   }
 

@@ -26,7 +26,7 @@ export class AssetHolders extends Namespace<FungibleAsset> {
     const rawAssetId = assetToMeshAssetId(parent, context);
     const { entries, lastKey: next } = await requestPaginated(query.asset.balanceOf, {
       arg: rawAssetId,
-      paginationOpts,
+      ...(paginationOpts ? { paginationOpts } : {}),
     });
 
     const data: { identity: Identity; balance: BigNumber }[] = entries.map(

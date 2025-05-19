@@ -1,3 +1,4 @@
+import { u64 } from '@polkadot/types';
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
 import P from 'bluebird';
@@ -41,8 +42,18 @@ export interface Storage {
 export const createOfferingResolver =
   (assetId: string, context: Context) =>
   (receipt: ISubmittableResult): Offering => {
-    const [{ data }] = filterEventRecords(receipt, 'sto', 'FundraiserCreated');
-    const newFundraiserId = u64ToBigNumber(data[3]);
+    const [record] = filterEventRecords(receipt, 'sto', 'FundraiserCreated');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Fundraiser creation event not found',
+      });
+    }
+
+    const { data } = record;
+
+    const newFundraiserId = u64ToBigNumber(data[1] as unknown as u64);
 
     return new Offering({ id: newFundraiserId, assetId }, context);
   };
@@ -65,13 +76,22 @@ export async function prepareLaunchOffering(
 
   const portfolio = portfolioIdToPortfolio(offeringPortfolioId, context);
 
-  const [, , [{ free }]] = await Promise.all([
+  const [, , [balanceResult]] = await Promise.all([
     assertPortfolioExists(offeringPortfolioId, context),
     assertPortfolioExists(raisingPortfolioId, context),
     portfolio.getAssetBalances({
       assets: [asset],
     }),
   ]);
+
+  if (!balanceResult) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Free balance not found',
+    });
+  }
+
+  const { free } = balanceResult;
 
   let venueId: BigNumber | undefined;
 
@@ -90,9 +110,9 @@ export async function prepareLaunchOffering(
 
       return type === VenueType.Sto;
     });
-
     if (offeringVenues.length) {
-      [{ id: venueId }] = offeringVenues;
+      const firstVenue = offeringVenues[0];
+      venueId = firstVenue!.id;
     }
   }
 

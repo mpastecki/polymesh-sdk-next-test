@@ -13,7 +13,16 @@ import { filterEventRecords, isAllowedCharacters } from '~/utils/internal';
 export const createTickerReservationResolver =
   (context: Context) =>
   (receipt: ISubmittableResult): TickerReservation => {
-    const [{ data }] = filterEventRecords(receipt, 'asset', 'TickerRegistered');
+    const [record] = filterEventRecords(receipt, 'asset', 'TickerRegistered');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Ticker registration event not found',
+      });
+    }
+
+    const { data } = record;
     const newTicker = tickerToString(data[1]);
 
     return new TickerReservation({ ticker: newTicker }, context);

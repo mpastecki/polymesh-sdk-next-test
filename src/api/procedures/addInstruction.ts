@@ -637,8 +637,8 @@ async function getTxArgsAndErrors(
 
       const rawLegs: PolymeshPrimitivesSettlementLeg[] = rawLegValues.flat();
 
-      if (portfoliosToAffirm[i].length) {
-        const rawPortfolioIds = portfoliosToAffirm[i].map(portfolio =>
+      if (portfoliosToAffirm[i]!.length) {
+        const rawPortfolioIds = portfoliosToAffirm[i]!.map(portfolio =>
           portfolioIdToMeshPortfolioId(portfolioLikeToPortfolioId(portfolio), context)
         );
         addAndAffirmInstructionParams.push([
@@ -764,10 +764,8 @@ export function getAuthorization(
     portfolios = unionWith(portfolios, portfoliosList, isEqual);
   });
 
-  const roles = venueId ? [{ type: RoleType.VenueOwner, venueId } as const] : undefined;
-
   return {
-    roles,
+    ...(venueId ? { roles: [{ type: RoleType.VenueOwner, venueId }] } : {}),
     permissions: {
       assets: [],
       portfolios,

@@ -100,7 +100,7 @@ export class Authorizations<Parent extends Signer> extends Namespace<Parent> {
       });
     }
 
-    return this.createAuthorizationRequests([{ auth: auth.unwrap(), target: signerValue }])[0];
+    return this.createAuthorizationRequests([{ auth: auth.unwrap(), target: signerValue }])[0]!;
   }
 
   /**
@@ -161,7 +161,10 @@ export class Authorizations<Parent extends Signer> extends Namespace<Parent> {
 
     const { status, type, start, size } = opts;
 
-    const filters: QueryArgs<MiddlewareAuthorization, AuthorizationArgs> = { type, status };
+    const filters: QueryArgs<MiddlewareAuthorization, AuthorizationArgs> = {
+      ...(type ? { type } : {}),
+      ...(status ? { status } : {}),
+    };
     if (signerValue.type === SignerType.Identity) {
       filters.toId = signerValue.value;
     } else {

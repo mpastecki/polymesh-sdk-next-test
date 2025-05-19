@@ -84,7 +84,16 @@ describe('setAssetStats procedure', () => {
     statisticsOpTypeToStatOpTypeSpy = jest.spyOn(
       utilsConversionModule,
       'statisticsOpTypeToStatType'
-    );
+    ) as jest.SpyInstance<
+      PolymeshPrimitivesStatisticsStatType,
+      [
+        {
+          operationType: PolymeshPrimitivesStatisticsStatOpType;
+          claimIssuer?: [PolymeshPrimitivesIdentityClaimClaimType, PolymeshPrimitivesIdentityId];
+        },
+        Context
+      ]
+    >;
     statUpdatesToBtreeStatUpdateSpy = jest.spyOn(
       utilsConversionModule,
       'statUpdatesToBtreeStatUpdate'

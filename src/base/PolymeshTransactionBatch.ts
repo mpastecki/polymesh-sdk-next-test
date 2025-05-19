@@ -112,7 +112,16 @@ export class PolymeshTransactionBatch<
         let fees = fee;
 
         if (!fees) {
-          [{ fees }] = await this.context.getProtocolFees({ tags: [tag] });
+          const [protocolFees] = await this.context.getProtocolFees({ tags: [tag] });
+
+          if (!protocolFees) {
+            throw new PolymeshError({
+              code: ErrorCode.UnmetPrerequisite,
+              message: 'Transaction cannot be subsidized',
+            });
+          }
+
+          fees = protocolFees.fees;
         }
 
         return total.plus(fees.multipliedBy(feeMultiplier));
@@ -211,7 +220,7 @@ export class PolymeshTransactionBatch<
       const isLast = index === transactions.length - 1;
 
       const spec = {
-        signer,
+        ...(signer && { signer }),
         signingAddress,
         transaction,
         args,
@@ -235,7 +244,7 @@ export class PolymeshTransactionBatch<
 
               return resolver;
             },
-            transformer,
+            ...(transformer && { transformer }),
           },
           context
         );

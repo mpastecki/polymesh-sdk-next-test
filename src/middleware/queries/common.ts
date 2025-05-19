@@ -23,7 +23,6 @@ export function latestBlockQuery(): QueryOptions {
 
   return {
     query,
-    variables: undefined,
   };
 }
 
@@ -45,7 +44,6 @@ export function heartbeatQuery(): QueryOptions {
 
   return {
     query,
-    variables: undefined,
   };
 }
 
@@ -74,7 +72,6 @@ export function metadataQuery(): QueryOptions {
 
   return {
     query,
-    variables: undefined,
   };
 }
 
@@ -97,7 +94,6 @@ export function latestSqVersionQuery(): QueryOptions {
 
   return {
     query,
-    variables: undefined,
   };
 }
 

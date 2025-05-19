@@ -238,10 +238,16 @@ export abstract class CorporateActionBase extends Entity<UniqueIdentifiers, unkn
       );
     }
 
-    return new Checkpoint(
-      { assetId, id: u64ToBigNumber(rawCheckpointIds[createdCheckpointIndex]) },
-      context
-    );
+    const rawCheckpointId = rawCheckpointIds[createdCheckpointIndex];
+
+    if (!rawCheckpointId) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'No checkpoint found',
+      });
+    }
+
+    return new Checkpoint({ assetId, id: u64ToBigNumber(rawCheckpointId) }, context);
   }
 
   /**

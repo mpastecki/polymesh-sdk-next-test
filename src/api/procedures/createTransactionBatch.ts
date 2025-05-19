@@ -86,8 +86,8 @@ export function prepareStorage<ReturnValues extends unknown[]>(
     transactions.push({
       transaction: tx,
       args: txArgs,
-      fee,
-      feeMultiplier,
+      ...(fee && { fee }),
+      ...(feeMultiplier && { feeMultiplier }),
     });
 
     tags.push(transactionToTxTag(tx));
@@ -125,8 +125,8 @@ export function prepareStorage<ReturnValues extends unknown[]>(
       transactions.push({
         transaction: tx,
         args: txArgs,
-        fee,
-        feeMultiplier,
+        ...(fee && { fee }),
+        ...(feeMultiplier && { feeMultiplier }),
       });
 
       tags.push(transactionToTxTag(tx));
@@ -138,8 +138,8 @@ export function prepareStorage<ReturnValues extends unknown[]>(
         transactions.push({
           transaction: tx,
           args: txArgs,
-          fee,
-          feeMultiplier,
+          ...(fee && { fee }),
+          ...(feeMultiplier && { feeMultiplier }),
         });
 
         tags.push(transactionToTxTag(tx));

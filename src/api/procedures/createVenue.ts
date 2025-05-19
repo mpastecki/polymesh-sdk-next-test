@@ -18,7 +18,16 @@ import { asAccount, filterEventRecords } from '~/utils/internal';
 export const createCreateVenueResolver =
   (context: Context) =>
   (receipt: ISubmittableResult): Venue => {
-    const [{ data }] = filterEventRecords(receipt, 'settlement', 'VenueCreated');
+    const [record] = filterEventRecords(receipt, 'settlement', 'VenueCreated');
+
+    if (!record) {
+      throw new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Venue creation event not found',
+      });
+    }
+
+    const { data } = record;
     const id = u64ToBigNumber(data[1]);
 
     return new Venue({ id }, context);

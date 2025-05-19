@@ -10,6 +10,7 @@ import {
   Identity,
   Instruction,
   modifyVenue,
+  PolymeshError,
   updateVenueSigners,
 } from '~/internal';
 import { instructionsQuery } from '~/middleware/queries/settlements';
@@ -17,6 +18,7 @@ import { Query } from '~/middleware/types';
 import {
   AddInstructionParams,
   AddInstructionsParams,
+  ErrorCode,
   GroupedInstructions,
   InstructionStatus,
   ModifyVenueParams,
@@ -45,6 +47,12 @@ export interface UniqueIdentifiers {
  * @hidden
  */
 export function addInstructionTransformer([instruction]: Instruction[]): Instruction {
+  if (!instruction) {
+    throw new PolymeshError({
+      code: ErrorCode.DataUnavailable,
+      message: 'Expected at least one instruction',
+    });
+  }
   return instruction;
 }
 
@@ -52,6 +60,12 @@ export function addInstructionTransformer([instruction]: Instruction[]): Instruc
  * @hidden
  */
 export function createPortfolioTransformer([portfolio]: NumberedPortfolio[]): NumberedPortfolio {
+  if (!portfolio) {
+    throw new PolymeshError({
+      code: ErrorCode.DataUnavailable,
+      message: 'Expected at least one portfolio',
+    });
+  }
   return portfolio;
 }
 
@@ -183,12 +197,14 @@ export class Venue extends Entity<UniqueIdentifiers, string> {
     const details = await P.map(instructions, instruction => instruction.detailsFromChain());
 
     details.forEach(({ status }, index) => {
-      if (status === InstructionStatus.Pending) {
-        pending.push(instructions[index]);
+      const instruction = instructions[index];
+
+      if (status === InstructionStatus.Pending && instruction) {
+        pending.push(instruction);
       }
 
-      if (status === InstructionStatus.Failed) {
-        failed.push(instructions[index]);
+      if (status === InstructionStatus.Failed && instruction) {
+        failed.push(instruction);
       }
     });
 

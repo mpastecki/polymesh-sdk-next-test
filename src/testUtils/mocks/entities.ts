@@ -434,7 +434,7 @@ function extractFromArgs<ArgsType extends object[], Props extends keyof ArgsType
   properties: Props[]
 ): Pick<ArgsType[0], Props> | Record<string, never> {
   if (args.length) {
-    return pick<ArgsType[0], Props>(args[0], properties);
+    return pick<ArgsType[0], Props>(args[0]!, properties);
   }
 
   return {};
@@ -505,7 +505,7 @@ function createMockEntityClass<Options extends EntityOptions>(
           if (index === 0) {
             Object.setPrototypeOf(classProto, entities.Entity.prototype);
           } else {
-            Object.setPrototypeOf(classProto, entities[prototypeChain[index - 1]].prototype);
+            Object.setPrototypeOf(classProto, entities[prototypeChain[index - 1]!].prototype);
           }
         } else if (index === prototypeChain.length - 1) {
           Object.setPrototypeOf(classProto, entity.prototype);
@@ -1453,7 +1453,7 @@ const MockMetadataEntryClass = createMockEntityClass<MetadataEntryOptions>(
     value: {
       value: 'SOME_VALUE',
       lockStatus: MetadataLockStatus.Unlocked,
-      expiry: undefined,
+      expiry: null,
     },
     assetId: '12341234-1234-1234-1234-123412341234',
     id: new BigNumber(1),

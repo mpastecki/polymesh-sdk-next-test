@@ -131,14 +131,14 @@ export async function prepareMultiSigProposalEvaluation(
 
     return {
       transaction: multiSig.approve,
-      paidForBy,
+      ...(paidForBy ? { paidForBy } : {}),
       args: [rawMultiSigAddress, rawProposalId, runtimeInfo.weight],
       resolver: undefined,
     };
   } else {
     return {
       transaction: multiSig.reject,
-      paidForBy,
+      ...(paidForBy ? { paidForBy } : {}),
       args: [rawMultiSigAddress, rawProposalId],
       resolver: undefined,
     };

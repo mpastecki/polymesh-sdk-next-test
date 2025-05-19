@@ -179,7 +179,7 @@ export const handleExtrinsicFailure = (
   // get revert message from event
   const message = dispatchErrorToMessage(error);
 
-  return new PolymeshError({ code: ErrorCode.TransactionReverted, message, data });
+  return new PolymeshError({ code: ErrorCode.TransactionReverted, message, ...(data && { data }) });
 };
 
 export const handleTransactionSubmissionError = (err: Error): PolymeshError => {

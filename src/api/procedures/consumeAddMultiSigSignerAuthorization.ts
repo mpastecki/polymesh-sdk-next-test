@@ -107,7 +107,7 @@ export async function getAuthorization(
       roles:
         hasRoles ||
         '"AddMultiSigSigner" Authorization Requests can only be accepted by the target Signer',
-      permissions,
+      ...(permissions && { permissions }),
     };
   }
 
