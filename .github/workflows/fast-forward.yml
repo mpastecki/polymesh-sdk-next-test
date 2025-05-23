@@ -9,10 +9,9 @@ jobs:
       pr_number: ${{ github.event.issue.number }}
 
   fast-forward:
-    # Only run if the comment contains the /fast-forward command and is from a CODEOWNER
+    # Only run if the comment contains the /fast-forward command
     if: ${{ contains(github.event.comment.body, '/fast-forward')
-      && github.event.issue.pull_request
-      && github.event.comment.author_association == 'OWNER' }}
+      && github.event.issue.pull_request }}
     needs: check-ci-status
     runs-on: ubuntu-latest
 
@@ -34,10 +33,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }} ## This allows to trigger push action from within this workflow. Read more - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
 
   fast-forward-next-rebase:
-    # Only run if the comment contains the /force-next-ff command and is from a CODEOWNER
+    # Only run if the comment contains the /force-next-ff command
     if: ${{ contains(github.event.comment.body, '/force-next-ff')
-      && github.event.issue.pull_request
-      && github.event.comment.author_association == 'OWNER' }}
+      && github.event.issue.pull_request }}
     needs: check-ci-status
     runs-on: ubuntu-latest
 
@@ -64,15 +62,31 @@ jobs:
           # Extract the PR number
           PR_URL="${{ github.event.issue.pull_request.url }}"
           PR_NUMBER="${PR_URL##*/}"
+          PR_AUTHOR="${{ github.event.issue.user.login }}"
 
           # Get the target branch
           TARGET_BRANCH=$(gh pr view $PR_NUMBER --json baseRefName -q '.baseRefName')
           echo "Target branch: $TARGET_BRANCH"
 
+          SOURCE_BRANCH=$(gh pr view $PR_NUMBER --json headRefName -q '.headRefName')
+          echo "Source branch: $SOURCE_BRANCH"
+
           # Check if the target branch is 'next'
-          if [ "$TARGET_BRANCH" != "next" ]; then
-            echo "This PR does not target the 'next' branch. Exiting."
+          if [[ "$TARGET_BRANCH" != "next" || ! "$SOURCE_BRANCH" =~ ^rebase-next-[0-9]+$ ]]; then
+            echo "This PR does not meet criteria for force-next-ff. Exiting."
             exit 1
+          else
+            ## Case when target and source match the criteria
+            echo "This PR meets criteria for force-next-ff. Proceeding."
+            COMMENT_AUTHOR="${{ github.event.comment.user.login }}"
+            PERMISSION=$(gh api "/repos/${{ github.repository }}/collaborators/$COMMENT_AUTHOR/permission" --jq .permission)
+
+            echo "User permission: $PERMISSION"
+
+            if [[ "$PERMISSION" != "admin" && "$PERMISSION" != "write" ]]; then
+              echo "Commentor $COMMENT_AUTHOR does not fast-forwarding access. Exiting"
+              exit 1
+            fi
           fi
 
           # Get the commit SHA
