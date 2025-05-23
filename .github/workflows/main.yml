@@ -127,6 +127,10 @@ jobs:
           echo "Source: $SOURCE_BRANCH"
           echo "Author: $PR_AUTHOR"
 
+          PERMISSION_ECHO=$(gh api "/repos/${{ github.repository }}/collaborators/$PR_AUTHOR/permission" --jq .permission)
+
+          echo "User permission: $PERMISSION_ECHO"
+
           SKIP=false
 
           if [[ "$TARGET_BRANCH" == "next" && "$SOURCE_BRANCH" =~ ^rebase-next-[0-9]+$ ]]; then

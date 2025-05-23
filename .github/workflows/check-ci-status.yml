@@ -6,7 +6,6 @@ on:
         required: true
         type: number
       required_checks:
-        required: true
         type: string
         default: '["check-fast-forward"]'
     outputs:
@@ -35,7 +34,7 @@ jobs:
             });
 
             const failedChecks = checks.check_runs.filter(check => 
-              requiredChecks.includes(check.name) && check.conclusion === 'failure'
+              requiredChecks.includes(check.name) && check.conclusion !== 'success'
             );
 
             if (failedChecks.length > 0) {
