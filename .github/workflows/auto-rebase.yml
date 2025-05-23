@@ -77,5 +77,3 @@ jobs:
             Please review and merge it.
 
             **NOTE:** Merge conflicts are not resolved in this PR and the commits from next needs to be resigned.
-
-            Once all the merge conflicts are resolved and commits from next branch have been signed, you can merge this PR by adding the comment `/force-next-ff` to the PR.
