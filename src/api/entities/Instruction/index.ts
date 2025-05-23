@@ -1103,7 +1103,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
 
       const { status, expiry } = mediatorAffirmationStatusToStatus(affirmStatus);
 
-      return { identity, status, ...(expiry ? { expiry } : {}) };
+      return { identity, status, expiry };
     });
   }
 

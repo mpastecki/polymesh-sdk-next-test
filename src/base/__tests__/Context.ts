@@ -196,8 +196,8 @@ describe('Context class', () => {
       });
 
       const result = await context.getSigningAccounts();
-      expect(result[0].address).toBe(addresses[0]);
-      expect(result[1].address).toBe(addresses[1]);
+      expect(result[0]!.address).toBe(addresses[0]);
+      expect(result[1]!.address).toBe(addresses[1]);
       expect(result[0] instanceof Account).toBe(true);
       expect(result[1] instanceof Account).toBe(true);
     });
@@ -1342,9 +1342,6 @@ describe('Context class', () => {
         claimsQuery(
           false,
           {
-            dids: undefined,
-            trustedClaimIssuers: undefined,
-            claimTypes: undefined,
             includeExpired: true,
           },
           new BigNumber(25),
@@ -1940,34 +1937,34 @@ describe('Context class', () => {
         .calledWith(
           {
             asset: expect.objectContaining({ id: assetIds[0] }),
-            localId: new BigNumber(localIds[0]),
+            localId: new BigNumber(localIds[0]!),
           },
           context
         )
-        .mockReturnValue(caIds[0]);
+        .mockReturnValue(caIds[0]!);
       when(corporateActionIdentifierToCaIdSpy)
         .calledWith(
           {
             asset: expect.objectContaining({ id: assetIds[1] }),
-            localId: new BigNumber(localIds[1]),
+            localId: new BigNumber(localIds[1]!),
           },
           context
         )
-        .mockReturnValue(caIds[1]);
+        .mockReturnValue(caIds[1]!);
       when(corporateActionIdentifierToCaIdSpy)
         .calledWith(
           {
             asset: expect.objectContaining({ id: assetIds[1] }),
-            localId: new BigNumber(localIds[2]),
+            localId: new BigNumber(localIds[2]!),
           },
           context
         )
-        .mockReturnValue(caIds[2]);
+        .mockReturnValue(caIds[2]!);
 
       const detailsMock = dsMockUtils.createQueryMock('corporateAction', 'details');
-      when(detailsMock).calledWith(caIds[0]).mockResolvedValue(details[0]);
-      when(detailsMock).calledWith(caIds[1]).mockResolvedValue(details[1]);
-      when(detailsMock).calledWith(caIds[2]).mockResolvedValue(details[2]);
+      when(detailsMock).calledWith(caIds[0]!).mockResolvedValue(details[0]);
+      when(detailsMock).calledWith(caIds[1]!).mockResolvedValue(details[1]);
+      when(detailsMock).calledWith(caIds[2]!).mockResolvedValue(details[2]);
 
       dsMockUtils.createQueryMock('capitalDistribution', 'distributions', {
         multi: distributions,
@@ -2252,26 +2249,18 @@ describe('Context class', () => {
           amount: new BigNumber(3000).shiftedBy(-6),
           fromIdentity: expect.objectContaining({ did: 'someDid' }),
           fromAccount: expect.objectContaining({ address: 'someAddress' }),
-          toIdentity: undefined,
-          toAccount: undefined,
-          memo: undefined,
         }),
         expect.objectContaining({
-          callId: undefined,
           moduleId: ModuleIdEnum.Staking,
           eventId: EventIdEnum.Reward,
-          extrinsicIdx: undefined,
           eventIndex: new BigNumber(0),
           blockNumber: new BigNumber(124),
           blockHash: 'someHash2',
           blockDate: new Date(date),
           type: BalanceTypeEnum.Free,
           amount: new BigNumber(876023429).shiftedBy(-6),
-          fromIdentity: undefined,
-          fromAccount: undefined,
           toIdentity: expect.objectContaining({ did: 'someDid' }),
           toAccount: expect.objectContaining({ address: 'someAddress' }),
-          memo: undefined,
         }),
       ];
       const transactionsQueryResponse = {
@@ -2294,6 +2283,7 @@ describe('Context class', () => {
             amount: '3000',
             identityId: 'someDid',
             address: 'someAddress',
+            memo: 'someMemo',
           },
           {
             moduleId: ModuleIdEnum.Staking,
@@ -2304,7 +2294,6 @@ describe('Context class', () => {
               hash: 'someHash2',
               datetime: date,
             },
-            extrinsic: undefined,
             type: BalanceTypeEnum.Free,
             amount: '876023429',
             toId: 'someDid',
@@ -2341,15 +2330,7 @@ describe('Context class', () => {
       expect(result.next).toEqual(null);
 
       dsMockUtils.createApolloQueryMock(
-        polyxTransactionsQuery(
-          false,
-          {
-            identityId: undefined,
-            addresses: undefined,
-          },
-          new BigNumber(25),
-          new BigNumber(0)
-        ),
+        polyxTransactionsQuery(false, {}, new BigNumber(25), new BigNumber(0)),
         {
           polyxTransactions: { nodes: [], totalCount: 0 },
         }

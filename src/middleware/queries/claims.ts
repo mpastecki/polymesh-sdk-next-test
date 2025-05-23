@@ -50,12 +50,12 @@ function createClaimsFilters(variables: ClaimsQueryFilter): {
 }
 
 export interface ClaimsQueryFilter {
-  dids?: string[];
-  scope?: Record<string, unknown>;
-  trustedClaimIssuers?: string[];
-  claimTypes?: ClaimTypeEnum[];
-  includeExpired?: boolean;
-  expiryTimestamp?: number;
+  dids?: string[] | undefined;
+  scope?: Record<string, unknown> | undefined;
+  trustedClaimIssuers?: string[] | undefined;
+  claimTypes?: ClaimTypeEnum[] | undefined;
+  includeExpired?: boolean | undefined;
+  expiryTimestamp?: number | undefined;
 }
 /**
  * @hidden

@@ -452,7 +452,7 @@ interface ContextOptions {
   latestBlock?: BigNumber;
   middlewareEnabled?: boolean;
   middlewareAvailable?: boolean;
-  getMiddlewareMetadata?: MiddlewareMetadata;
+  getMiddlewareMetadata?: MiddlewareMetadata | undefined;
   sentAuthorizations?: ResultSet<AuthorizationRequest>;
   isCurrentNodeArchive?: boolean;
   ss58Format?: BigNumber;
@@ -1167,8 +1167,8 @@ function initSigningManager(opts?: SigningManagerOptions): void {
  * Temporarily change instance mock configuration (calling .reset will go back to the configuration passed in `initMocks`)
  */
 export function configureMocks(opts?: {
-  contextOptions?: ContextOptions;
-  signingManagerOptions?: SigningManagerOptions;
+  contextOptions?: ContextOptions | undefined;
+  signingManagerOptions?: SigningManagerOptions | undefined;
 }): void {
   const tempContextOptions = { ...defaultContextOptions, ...opts?.contextOptions };
 
@@ -1189,8 +1189,8 @@ export function configureMocks(opts?: {
  * @param opts.mockContext - if defined, the internal {@link Context} class will also be mocked with custom properties
  */
 export function initMocks(opts?: {
-  contextOptions?: ContextOptions;
-  signingManagerOptions?: SigningManagerOptions;
+  contextOptions?: ContextOptions | undefined;
+  signingManagerOptions?: SigningManagerOptions | undefined;
 }): void {
   /*
     NOTE: the idea is to expand this function to mock things as we need them
@@ -1372,7 +1372,6 @@ export function createTxMock<
   (transaction as any).addSignature = jest.fn();
   (transaction as any).send = mockSend;
   (transaction as any).hash = createMockHash('0x01');
-
   // @ts-expect-error - this is a mock
   runtimeModule[tx] = transaction;
 
@@ -1948,7 +1947,7 @@ const createMockEnum = <T extends Enum>(
     codec[`is${upperFirst(enumValue)}`] = true;
     codec.type = enumValue;
   } else if (typeof enumValue === 'object') {
-    const key = Object.keys(enumValue)[0];
+    const key = Object.keys(enumValue)[0]!;
 
     codec[`is${upperFirst(key)}`] = true;
     codec[`as${upperFirst(key)}`] = enumValue[key!];
@@ -4060,14 +4059,14 @@ export const createMockExtrinsics = (
         hash: Hash;
       }[]
 ): MockCodec<Vec<GenericExtrinsic>> => {
-  // @ts-expect-error - this is a mock
-  const [{ toHex, hash }] = extrinsics ?? [
-    {
-      toHex: () => createMockStringCodec(),
-      hash: createMockHash(),
-      addSignature: (): void => {},
-    },
-  ];
+  const defaultExtrinsic = {
+    toHex: () => createMockStringCodec(),
+    hash: createMockHash(),
+    addSignature: (): void => {},
+  };
+
+  const extrinsicsArray = extrinsics ?? [defaultExtrinsic];
+  const { toHex, hash } = extrinsicsArray[0] ?? defaultExtrinsic;
   return createMockCodec(
     [
       {

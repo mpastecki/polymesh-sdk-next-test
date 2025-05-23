@@ -320,9 +320,9 @@ describe('Offering class', () => {
 
       const { data } = result;
 
-      expect(data[0].investor.did).toBe(did);
-      expect(data[0].soldAmount).toEqual(offeringTokenAmount.div(Math.pow(10, 6)));
-      expect(data[0].investedAmount).toEqual(raiseTokenAmount.div(Math.pow(10, 6)));
+      expect(data[0]!.investor.did).toBe(did);
+      expect(data[0]!.soldAmount).toEqual(offeringTokenAmount.div(Math.pow(10, 6)));
+      expect(data[0]!.investedAmount).toEqual(raiseTokenAmount.div(Math.pow(10, 6)));
 
       dsMockUtils.createApolloQueryMock(
         investmentsQuery(false, {

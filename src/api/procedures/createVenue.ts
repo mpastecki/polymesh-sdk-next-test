@@ -20,14 +20,7 @@ export const createCreateVenueResolver =
   (receipt: ISubmittableResult): Venue => {
     const [record] = filterEventRecords(receipt, 'settlement', 'VenueCreated');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Venue creation event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
     const id = u64ToBigNumber(data[1]);
 
     return new Venue({ id }, context);

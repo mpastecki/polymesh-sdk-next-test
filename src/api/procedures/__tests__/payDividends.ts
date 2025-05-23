@@ -5,7 +5,7 @@ import { getAuthorization, Params, preparePayDividends } from '~/api/procedures/
 import { Context, DividendDistribution } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
-import { TargetTreatment, TxTags } from '~/types';
+import { Identity, TargetTreatment, TxTags } from '~/types';
 import { PolymeshTx } from '~/types/internal';
 import * as utilsConversionModule from '~/utils/conversion';
 
@@ -171,7 +171,10 @@ describe('payDividends procedure', () => {
 
   it('should throw an error if some of the supplied targets has already claimed their benefits', async () => {
     const dids = ['someDid', 'otherDid'];
-    const targets = [dids[0], entityMockUtils.getIdentityInstance({ isEqual: true, did: dids[1] })];
+    const targets = [
+      dids[0],
+      entityMockUtils.getIdentityInstance({ isEqual: true, did: dids[1]! }),
+    ];
 
     dsMockUtils.createQueryMock('capitalDistribution', 'holderPaid', {
       multi: [dsMockUtils.createMockBool(true)],
@@ -199,7 +202,7 @@ describe('payDividends procedure', () => {
     let err;
 
     try {
-      await preparePayDividends.call(proc, { targets, distribution });
+      await preparePayDividends.call(proc, { targets: targets as Identity[], distribution });
     } catch (error) {
       err = error;
     }

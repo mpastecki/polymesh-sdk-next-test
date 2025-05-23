@@ -129,7 +129,7 @@ function getCreateAssetTxAndFees(
 
   return checkTxType({
     transaction: tx.asset.createAsset,
-    ...(fee ? { fee } : {}),
+    fee,
     args: [rawName, rawDivisibility, rawAssetType, rawIdentifiers, rawFundingRound],
   });
 }

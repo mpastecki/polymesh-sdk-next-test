@@ -15,14 +15,7 @@ export const createTickerReservationResolver =
   (receipt: ISubmittableResult): TickerReservation => {
     const [record] = filterEventRecords(receipt, 'asset', 'TickerRegistered');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Ticker registration event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
     const newTicker = tickerToString(data[1]);
 
     return new TickerReservation({ ticker: newTicker }, context);

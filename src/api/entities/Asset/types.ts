@@ -175,15 +175,15 @@ export interface BaseHistoricAssetTransaction extends EventIdentifier {
   /**
    * Name of the funding round (if provided while issuing the Asset). This value is present only when the value of `event` is `Issued`
    */
-  fundingRound?: string;
+  fundingRound?: string | undefined;
   /**
    * ID of the instruction being executed. This value is present only when the value of `event` is `Transfer`
    */
-  instructionId?: BigNumber;
+  instructionId?: BigNumber | undefined;
   /**
    * Memo provided against the executed instruction. This value is present only when the value of `event` is `Transfer`
    */
-  instructionMemo?: string;
+  instructionMemo?: string | undefined;
 }
 
 export interface HistoricAssetTransaction extends BaseHistoricAssetTransaction {

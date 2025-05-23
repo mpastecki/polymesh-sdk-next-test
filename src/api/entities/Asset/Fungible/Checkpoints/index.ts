@@ -98,7 +98,7 @@ export class Checkpoints extends Namespace<FungibleAsset> {
 
     const { entries, lastKey: next } = await requestPaginated(checkpointQuery.totalSupply, {
       arg: rawAssetId,
-      ...(paginationOpts ?? {}),
+      paginationOpts,
     });
 
     const checkpointsMultiParams: [PolymeshPrimitivesTicker, u64][] = [];
@@ -122,18 +122,7 @@ export class Checkpoints extends Namespace<FungibleAsset> {
     const timestamps = await checkpointQuery.timestamps.multi(checkpointsMultiParams);
 
     const data = timestamps.map((moment, i) => {
-      const entry = checkpoints[i];
-
-      if (!entry) {
-        throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Checkpoint with provided index not found',
-          data: {
-            index: i,
-            checkpoints,
-          },
-        });
-      }
+      const entry = checkpoints[i]!;
 
       const { totalSupply, checkpoint } = entry;
 

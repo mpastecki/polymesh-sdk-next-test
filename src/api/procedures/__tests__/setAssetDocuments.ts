@@ -101,7 +101,7 @@ describe('setAssetDocuments procedure', () => {
 
   beforeEach(() => {
     dsMockUtils.createQueryMock('asset', 'assetDocuments', {
-      entries: [documentEntries[0]],
+      entries: [documentEntries[0]!],
     });
 
     removeDocumentsTransaction = dsMockUtils.createTxMock('asset', 'removeDocuments');
@@ -113,7 +113,7 @@ describe('setAssetDocuments procedure', () => {
     documents.forEach((doc, index) => {
       when(assetDocumentToDocumentSpy)
         .calledWith(doc, mockContext)
-        .mockReturnValue(rawDocuments[index]);
+        .mockReturnValue(rawDocuments[index]!);
     });
   });
 
@@ -140,7 +140,7 @@ describe('setAssetDocuments procedure', () => {
   });
 
   it('should add a remove documents transaction and an add documents transaction to the batch', async () => {
-    const docIds = [documentEntries[0][0][1]];
+    const docIds = [documentEntries[0]![0][1]];
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
       currentDocIds: docIds,
       currentDocs: [],
@@ -186,9 +186,9 @@ describe('setAssetDocuments procedure', () => {
   });
 
   it('should not add an add documents transaction if there are no documents passed as arguments', async () => {
-    const docIds = [documentEntries[0][0][1]];
+    const docIds = [documentEntries[0]![0][1]];
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
-      currentDocs: [documents[0]],
+      currentDocs: [documents[0]!],
       currentDocIds: docIds,
     });
 
@@ -209,7 +209,7 @@ describe('setAssetDocuments procedure', () => {
   describe('getAuthorization', () => {
     it('should return the appropriate roles and permissions', () => {
       let proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
-        currentDocIds: [documentEntries[0][0][1]],
+        currentDocIds: [documentEntries[0]![0][1]],
         currentDocs: [],
       });
       let boundFunc = getAuthorization.bind(proc);

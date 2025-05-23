@@ -144,14 +144,30 @@ describe('Checkpoints class', () => {
         )
       );
 
-      const result = await checkpoints.get();
+      let result = await checkpoints.get();
 
       result.data.forEach(({ checkpoint, totalSupply: ts, createdAt }, index) => {
         const {
           checkpointId: expectedCheckpointId,
           balance: expectedBalance,
           moment: expectedMoment,
-        } = totalSupply[index];
+        } = totalSupply[index] as { checkpointId: BigNumber; balance: BigNumber; moment: Date };
+
+        expect(checkpoint.id).toEqual(expectedCheckpointId);
+        expect(checkpoint.asset.id).toBe(assetId);
+        expect(ts).toEqual(expectedBalance.shiftedBy(-6));
+        expect(createdAt).toEqual(expectedMoment);
+      });
+      expect(result.next).toBeNull();
+
+      result = await checkpoints.get({ size: new BigNumber(2) });
+
+      result.data.forEach(({ checkpoint, totalSupply: ts, createdAt }, index) => {
+        const {
+          checkpointId: expectedCheckpointId,
+          balance: expectedBalance,
+          moment: expectedMoment,
+        } = totalSupply[index] as { checkpointId: BigNumber; balance: BigNumber; moment: Date };
 
         expect(checkpoint.id).toEqual(expectedCheckpointId);
         expect(checkpoint.asset.id).toBe(assetId);

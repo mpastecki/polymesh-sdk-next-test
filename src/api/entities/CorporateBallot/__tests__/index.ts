@@ -282,19 +282,19 @@ describe('CorporateBallot class', () => {
         title: mockBallotMeta.title,
         motions: [
           {
-            title: mockBallotMeta.motions[0].title,
-            infoLink: mockBallotMeta.motions[0].infoLink,
+            title: mockBallotMeta.motions[0]!.title,
+            infoLink: mockBallotMeta.motions[0]!.infoLink,
             choices: [
               {
-                choice: mockBallotMeta.motions[0].choices[0],
+                choice: mockBallotMeta.motions[0]!.choices[0],
                 votes: new BigNumber(0),
               },
               {
-                choice: mockBallotMeta.motions[0].choices[1],
+                choice: mockBallotMeta.motions[0]!.choices[1],
                 votes: new BigNumber(0),
               },
               {
-                choice: mockBallotMeta.motions[0].choices[2],
+                choice: mockBallotMeta.motions[0]!.choices[2],
                 votes: new BigNumber(0),
               },
             ],
@@ -331,20 +331,20 @@ describe('CorporateBallot class', () => {
         title: mockBallotMeta.title,
         motions: [
           {
-            title: mockBallotMeta.motions[0].title,
-            infoLink: mockBallotMeta.motions[0].infoLink,
+            title: mockBallotMeta.motions[0]!.title,
+            infoLink: mockBallotMeta.motions[0]!.infoLink,
             choices: [
               {
-                choice: mockBallotMeta.motions[0].choices[0],
-                votes: new BigNumber(mockResults[0]),
+                choice: mockBallotMeta.motions[0]!.choices[0],
+                votes: new BigNumber(mockResults[0]!),
               },
               {
-                choice: mockBallotMeta.motions[0].choices[1],
-                votes: new BigNumber(mockResults[1]),
+                choice: mockBallotMeta.motions[0]!.choices[1],
+                votes: new BigNumber(mockResults[1]!),
               },
               {
-                choice: mockBallotMeta.motions[0].choices[2],
-                votes: new BigNumber(mockResults[2]),
+                choice: mockBallotMeta.motions[0]!.choices[2],
+                votes: new BigNumber(mockResults[2]!),
               },
             ],
             total: new BigNumber(
@@ -418,21 +418,21 @@ describe('CorporateBallot class', () => {
         title: mockBallotMeta.title,
         motions: [
           {
-            title: mockBallotMeta.motions[0].title,
-            infoLink: mockBallotMeta.motions[0].infoLink,
+            title: mockBallotMeta.motions[0]!.title,
+            infoLink: mockBallotMeta.motions[0]!.infoLink,
             choices: [
               {
-                choice: mockBallotMeta.motions[0].choices[0],
+                choice: mockBallotMeta.motions[0]!.choices[0],
                 power: new BigNumber(100),
                 fallback: new BigNumber(1),
               },
               {
-                choice: mockBallotMeta.motions[0].choices[1],
+                choice: mockBallotMeta.motions[0]!.choices[1],
                 power: new BigNumber(0),
                 fallback: undefined,
               },
               {
-                choice: mockBallotMeta.motions[0].choices[2],
+                choice: mockBallotMeta.motions[0]!.choices[2],
                 power: new BigNumber(0),
                 fallback: undefined,
               },
@@ -467,21 +467,21 @@ describe('CorporateBallot class', () => {
         title: mockBallotMeta.title,
         motions: [
           {
-            title: mockBallotMeta.motions[0].title,
-            infoLink: mockBallotMeta.motions[0].infoLink,
+            title: mockBallotMeta.motions[0]!.title,
+            infoLink: mockBallotMeta.motions[0]!.infoLink,
             choices: [
               {
-                choice: mockBallotMeta.motions[0].choices[0],
+                choice: mockBallotMeta.motions[0]!.choices[0],
                 power: new BigNumber(0),
                 fallback: undefined,
               },
               {
-                choice: mockBallotMeta.motions[0].choices[1],
+                choice: mockBallotMeta.motions[0]!.choices[1],
                 power: new BigNumber(0),
                 fallback: undefined,
               },
               {
-                choice: mockBallotMeta.motions[0].choices[2],
+                choice: mockBallotMeta.motions[0]!.choices[2],
                 power: new BigNumber(0),
                 fallback: undefined,
               },

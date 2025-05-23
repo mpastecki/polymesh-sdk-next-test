@@ -38,7 +38,7 @@ describe('registerIdentity procedure', () => {
   const rawAccountId = dsMockUtils.createMockAccountId(targetAccount);
   const rawSecondaryAccount = dsMockUtils.createMockSecondaryKey({
     signer: dsMockUtils.createMockSignatory({
-      Account: dsMockUtils.createMockAccountId(secondaryAccounts[0].account.address),
+      Account: dsMockUtils.createMockAccountId(secondaryAccounts[0]!.account.address),
     }),
     permissions: dsMockUtils.createMockPermissions(),
   });
@@ -104,7 +104,7 @@ describe('registerIdentity procedure', () => {
         .calledWith(targetAccount, mockContext)
         .mockReturnValue(rawAccountId);
       when(secondaryAccountToMeshSecondaryKeySpy)
-        .calledWith(secondaryAccounts[0], mockContext)
+        .calledWith(secondaryAccounts[0]!, mockContext)
         .mockReturnValue(rawSecondaryAccount);
 
       let result = await prepareRegisterIdentity.call(proc, args);
@@ -162,7 +162,7 @@ describe('registerIdentity procedure', () => {
         .calledWith(targetAccount, mockContext)
         .mockReturnValue(rawAccountId);
       when(secondaryAccountToMeshSecondaryKeySpy)
-        .calledWith(secondaryAccounts[0], mockContext)
+        .calledWith(secondaryAccounts[0]!, mockContext)
         .mockReturnValue(rawSecondaryAccount);
 
       let result = await prepareRegisterIdentity.call(proc, args);

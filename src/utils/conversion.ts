@@ -806,7 +806,7 @@ export function portfolioLikeToPortfolioId(value: PortfolioLike): PortfolioId {
     did = asDid(valueIdentity);
   }
 
-  return { did, ...(number && number.gt(0) && { number }) };
+  return { did, ...(number?.gt(0) && { number }) };
 }
 
 /**
@@ -3106,15 +3106,8 @@ export function extrinsicIdentifierToTxTag(extrinsicIdentifier: ExtrinsicIdentif
 export function txTagToExtrinsicIdentifier(tag: TxTag): ExtrinsicIdentifier {
   const [moduleName, extrinsicName] = tag.split('.');
 
-  if (!moduleName || !extrinsicName) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Invalid extrinsic identifier',
-    });
-  }
-
   return {
-    moduleId: moduleName.toLowerCase() as ModuleIdEnum,
+    moduleId: moduleName!.toLowerCase() as ModuleIdEnum,
     callId: snakeCase(extrinsicName) as CallIdEnum,
   };
 }
@@ -4394,9 +4387,9 @@ export function complianceConditionsToBtreeSet(
 export function toExemptKey(
   rawAssetId: PolymeshPrimitivesAssetAssetId,
   op: PolymeshPrimitivesStatisticsStatOpType,
-  claimType?: ClaimType
+  claimType?: ClaimType | undefined
 ): ExemptKey {
-  return { assetId: rawAssetId, op, ...(claimType && { claimType }) };
+  return { assetId: rawAssetId, op, claimType };
 }
 
 /**
@@ -4689,17 +4682,7 @@ export function instructionMemoToString(value: U8aFixed): string {
 export function portfolioIdStringToPortfolio(id: string): MiddlewarePortfolio {
   const [identityId, number] = id.split('/');
 
-  if (!number) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Invalid portfolio ID',
-      data: {
-        id,
-      },
-    });
-  }
-
-  return { identityId, number: parseInt(number, 10) } as MiddlewarePortfolio;
+  return { identityId, number: parseInt(number!, 10) } as MiddlewarePortfolio;
 }
 
 /**
@@ -4711,7 +4694,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
   if (legType === LegTypeEnum.Fungible) {
     return {
       asset: new FungibleAsset(
-        { assetId: getAssetIdFromMiddleware({ id: assetId, ...(ticker ? { ticker } : {}) }) },
+        { assetId: getAssetIdFromMiddleware({ id: assetId, ...(ticker && { ticker }) }) },
         context
       ),
       amount: new BigNumber(amount).shiftedBy(-6),
@@ -4727,7 +4710,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
   }
 
   if (legType === LegTypeEnum.NonFungible) {
-    const id = getAssetIdFromMiddleware({ id: assetId, ...(ticker ? { ticker } : {}) });
+    const id = getAssetIdFromMiddleware({ id: assetId, ...(ticker && { ticker }) });
     return {
       from: middlewarePortfolioToPortfolio(
         { identityId: from, number: fromPortfolio! } as MiddlewarePortfolio,
@@ -4934,29 +4917,9 @@ export function middlewareAgentGroupDataToPermissionGroup(
   agentGroupData: Record<string, Record<string, null | number>>,
   context: Context
 ): KnownPermissionGroup | CustomPermissionGroup {
-  const asset = Object.keys(agentGroupData)[0];
+  const asset = Object.keys(agentGroupData)[0]!;
+  const agentGroup = agentGroupData[asset]!;
 
-  if (!asset) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'No asset found in agent group data',
-      data: {
-        agentGroupData,
-      },
-    });
-  }
-
-  const agentGroup = agentGroupData[asset];
-
-  if (!agentGroup) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'No agent group found in agent group data',
-      data: {
-        asset,
-      },
-    });
-  }
   let permissionGroupIdentifier: PermissionGroupIdentifier;
   if ('full' in agentGroup) {
     permissionGroupIdentifier = PermissionGroupType.Full;
@@ -5166,12 +5129,10 @@ export function middlewareAuthorizationDataToAuthorization(
 
       if (!beneficiary || !subsidizer || !allowance) {
         throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Invalid data',
+          code: ErrorCode.ValidationError,
+          message: 'Invalid data string passed.',
           data: {
-            beneficiary,
-            subsidizer,
-            allowance,
+            data,
           },
         });
       }
@@ -5389,18 +5350,11 @@ export function toHistoricalSettlements(
 
     const { blockId, hash } = createdBlock!;
 
-    if (!legs[0]) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Failed to retrieve addresses',
-      });
-    }
-
     data.push({
       blockNumber: new BigNumber(blockId),
       blockHash: hash,
       status,
-      accounts: legs[0].addresses.map((address: string) => new Account({ address }, context)),
+      accounts: legs[0]!.addresses.map((address: string) => new Account({ address }, context)),
       instruction: new Instruction({ id: new BigNumber(id) }, context),
       legs: legs.map(leg => ({
         ...middlewareLegToLeg(leg, context),

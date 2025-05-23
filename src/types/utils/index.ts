@@ -94,7 +94,7 @@ export type PaginatedQueryArgs<T> = T & {
 };
 
 export type QueryArgs<T, K extends keyof T> = {
-  [P in K]?: T[P];
+  [P in K]?: T[P] | undefined;
 };
 
 /**

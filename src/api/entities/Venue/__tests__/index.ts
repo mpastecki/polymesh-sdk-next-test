@@ -264,8 +264,8 @@ describe('Venue class', () => {
 
       const result = await venue.getInstructions();
 
-      expect(result.pending[0].id).toEqual(id1);
-      expect(result.failed[0].id).toEqual(id2);
+      expect(result.pending[0]!.id).toEqual(id1);
+      expect(result.failed[0]!.id).toEqual(id2);
       expect(result.pending).toHaveLength(1);
       expect(result.failed).toHaveLength(1);
     });
@@ -478,6 +478,10 @@ describe('addInstructionTransformer', () => {
 
     expect(result.id).toEqual(id);
   });
+
+  it('should throw if no Instruction is provided', () => {
+    expect(() => addInstructionTransformer([])).toThrow('Expected at least one instruction');
+  });
 });
 
 describe('createPortfolioTransformer', () => {
@@ -491,5 +495,9 @@ describe('createPortfolioTransformer', () => {
 
     expect(result.id).toEqual(id);
     expect(result.owner.did).toBe(did);
+  });
+
+  it('should throw if no Portfolio is provided', () => {
+    expect(() => createPortfolioTransformer([])).toThrow('Expected at least one portfolio');
   });
 });

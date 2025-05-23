@@ -108,6 +108,7 @@ describe('launchOffering procedure', () => {
     offeringTierToPriceTierSpy = jest.spyOn(utilsConversionModule, 'offeringTierToPriceTier');
     bigNumberToU64Spy = jest.spyOn(utilsConversionModule, 'bigNumberToU64');
     dateToMomentSpy = jest.spyOn(utilsConversionModule, 'dateToMoment');
+    // @ts-expect-error - mock
     bigNumberToBalanceSpy = jest.spyOn(utilsConversionModule, 'bigNumberToBalance');
     stringToBytesSpy = jest.spyOn(utilsConversionModule, 'stringToBytes');
     portfolioIdToPortfolioSpy = jest.spyOn(utilsConversionModule, 'portfolioIdToPortfolio');
@@ -178,7 +179,7 @@ describe('launchOffering procedure', () => {
       .mockReturnValue(rawRaisingPortfolio);
     when(offeringTierToPriceTierSpy)
       .calledWith({ amount, price }, mockContext)
-      .mockReturnValue(rawTiers[0]);
+      .mockReturnValue(rawTiers[0]!);
     when(bigNumberToU64Spy).calledWith(venue.id, mockContext).mockReturnValue(rawVenueId);
     when(dateToMomentSpy).calledWith(start, mockContext).mockReturnValue(rawStart);
     when(dateToMomentSpy).calledWith(end, mockContext).mockReturnValue(rawEnd);
@@ -244,7 +245,10 @@ describe('launchOffering procedure', () => {
     err = undefined;
 
     try {
-      await prepareLaunchOffering.call(proc, { ...args, venue: undefined });
+      /* eslint-disable @typescript-eslint/no-unused-vars */
+      const { venue: venueMock, ...rest } = args;
+      /* eslint-enable @typescript-eslint/no-unused-vars */
+      await prepareLaunchOffering.call(proc, rest);
     } catch (error) {
       err = error;
     }
@@ -314,11 +318,12 @@ describe('launchOffering procedure', () => {
       },
     });
 
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    const { venue: venueMock, start: startMock, end: endMock, ...rest } = args;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+
     result = await prepareLaunchOffering.call(proc, {
-      ...args,
-      venue: undefined,
-      start: undefined,
-      end: undefined,
+      ...rest,
     });
 
     expect(result).toEqual({

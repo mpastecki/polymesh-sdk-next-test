@@ -109,15 +109,15 @@ describe('modifyAssetTrustedClaimIssuers procedure', () => {
           expect.objectContaining({ identity: expect.objectContaining({ did }) }),
           mockContext
         )
-        .mockReturnValue(rawClaimIssuers[index]);
+        .mockReturnValue(rawClaimIssuers[index]!);
     });
     claimIssuers.forEach((issuer, index) => {
       when(identityIdToStringSpy)
-        .calledWith(rawClaimIssuers[index].issuer)
+        .calledWith(rawClaimIssuers[index]!.issuer)
         .mockReturnValue(issuer.identity.did);
       when(stringToIdentityIdSpy)
         .calledWith(utilsConversionModule.signerToString(issuer.identity), mockContext)
-        .mockReturnValue(rawClaimIssuers[index].issuer);
+        .mockReturnValue(rawClaimIssuers[index]!.issuer);
     });
   });
 
@@ -147,7 +147,7 @@ describe('modifyAssetTrustedClaimIssuers procedure', () => {
           expect.objectContaining({ identity: expect.objectContaining({ did }) }),
           mockContext
         )
-        .mockReturnValue(alternativeClaimIssuers[index]);
+        .mockReturnValue(alternativeClaimIssuers[index]!);
     });
     const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
 
@@ -162,7 +162,7 @@ describe('modifyAssetTrustedClaimIssuers procedure', () => {
 
   it("should throw an error if some of the supplied dids don't exist", async () => {
     const nonExistentDid = claimIssuerDids[1];
-    dsMockUtils.configureMocks({ contextOptions: { invalidDids: [nonExistentDid] } });
+    dsMockUtils.configureMocks({ contextOptions: { invalidDids: [nonExistentDid!] } });
     const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
 
     let error;

@@ -292,7 +292,7 @@ export interface VenueOwnerRole {
 
 export interface PortfolioId {
   did: string;
-  number?: BigNumber;
+  number?: BigNumber | undefined;
 }
 
 export interface PortfolioCustodianRole {
@@ -445,7 +445,7 @@ export enum TransferRestrictionType {
 
 export interface ClaimCountRestrictionValue {
   min: BigNumber;
-  max?: BigNumber;
+  max?: BigNumber | undefined;
   issuer: Identity;
   claim: InputStatClaim;
 }

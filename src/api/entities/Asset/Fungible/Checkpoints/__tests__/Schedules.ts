@@ -183,12 +183,12 @@ describe('Schedules class', () => {
 
       const result = await schedules.get();
 
-      expect(result[0].details).toEqual({
+      expect(result[0]!.details).toEqual({
         remainingCheckpoints: remaining,
         nextCheckpointDate: start,
       });
-      expect(result[0].schedule.id).toEqual(id);
-      expect(result[0].schedule.asset.id).toEqual(assetId);
+      expect(result[0]!.schedule.id).toEqual(id);
+      expect(result[0]!.schedule.asset.id).toEqual(assetId);
     });
   });
 

@@ -162,7 +162,7 @@ describe('Fungible class', () => {
       expect(details.isDivisible).toBe(isDivisible);
       expect(details.owner.did).toBe(owner);
       expect(details.assetType).toBe(assetType);
-      expect(details.fullAgents[0].did).toBe(owner);
+      expect(details.fullAgents[0]!.did).toBe(owner);
       expect(details.ticker).toEqual('TICKER');
 
       dsMockUtils.createQueryMock('externalAgents', 'groupOfAgent', {
@@ -179,7 +179,7 @@ describe('Fungible class', () => {
       });
 
       details = await asset.details();
-      expect(details.fullAgents[0].did).toEqual(did);
+      expect(details.fullAgents[0]!.did).toEqual(did);
       expect(details.ticker).toBe(undefined);
 
       tokensMock.mockResolvedValue(
@@ -475,11 +475,11 @@ describe('Fungible class', () => {
 
       const result = await asset.getIdentifiers();
 
-      expect(result[0].value).toBe(isinValue);
-      expect(result[1].value).toBe(cusipValue);
-      expect(result[2].value).toBe(cinsValue);
-      expect(result[3].value).toBe(leiValue);
-      expect(result[4].value).toBe(figiValue);
+      expect(result[0]!.value).toBe(isinValue);
+      expect(result[1]!.value).toBe(cusipValue);
+      expect(result[2]!.value).toBe(cinsValue);
+      expect(result[3]!.value).toBe(leiValue);
+      expect(result[4]!.value).toBe(figiValue);
     });
 
     it('should allow subscription', async () => {
@@ -763,9 +763,9 @@ describe('Fungible class', () => {
       let result = await asset.getOperationHistory();
 
       expect(result.length).toEqual(1);
-      expect(result[0].identity.did).toEqual(did);
-      expect(result[0].history.length).toEqual(1);
-      expect(result[0].history[0]).toEqual({
+      expect(result[0]!.identity.did).toEqual(did);
+      expect(result[0]!.history.length).toEqual(1);
+      expect(result[0]!.history[0]).toEqual({
         blockNumber: blockId,
         blockHash,
         blockDate: new Date(`${datetime}Z`),
@@ -866,25 +866,25 @@ describe('Fungible class', () => {
         start: new BigNumber(0),
       });
 
-      expect(result.data[0].asset.id).toEqual(assetId);
-      expect(result.data[0].amount).toEqual(new BigNumber(100));
-      expect(result.data[0].event).toEqual(transactionResponse.nodes[0].eventId);
-      expect(result.data[0].from).toBeNull();
-      expect(result.data[0].to instanceof DefaultPortfolio).toBe(true);
+      expect(result.data[0]!.asset.id).toEqual(assetId);
+      expect(result.data[0]!.amount).toEqual(new BigNumber(100));
+      expect(result.data[0]!.event).toEqual(transactionResponse.nodes[0]!.eventId);
+      expect(result.data[0]!.from).toBeNull();
+      expect(result.data[0]!.to instanceof DefaultPortfolio).toBe(true);
 
-      expect(result.data[1].asset.id).toEqual(assetId);
-      expect(result.data[1].amount).toEqual(new BigNumber(1));
-      expect(result.data[1].event).toEqual(transactionResponse.nodes[1].eventId);
-      expect(result.data[1].to).toBeNull();
-      expect(result.data[1].from).toBeInstanceOf(DefaultPortfolio);
+      expect(result.data[1]!.asset.id).toEqual(assetId);
+      expect(result.data[1]!.amount).toEqual(new BigNumber(1));
+      expect(result.data[1]!.event).toEqual(transactionResponse.nodes[1]!.eventId);
+      expect(result.data[1]!.to).toBeNull();
+      expect(result.data[1]!.from).toBeInstanceOf(DefaultPortfolio);
 
-      expect(result.data[2].asset.id).toEqual(assetId);
-      expect(result.data[2].amount).toEqual(new BigNumber(10));
-      expect(result.data[2].event).toEqual(transactionResponse.nodes[2].eventId);
-      expect(result.data[2].from).toBeInstanceOf(DefaultPortfolio);
-      expect(result.data[2].to).toBeInstanceOf(NumberedPortfolio);
-      expect(result.data[2].instructionId).toEqual(new BigNumber(2));
-      expect(result.data[2].instructionMemo).toEqual('Some memo');
+      expect(result.data[2]!.asset.id).toEqual(assetId);
+      expect(result.data[2]!.amount).toEqual(new BigNumber(10));
+      expect(result.data[2]!.event).toEqual(transactionResponse.nodes[2]!.eventId);
+      expect(result.data[2]!.from).toBeInstanceOf(DefaultPortfolio);
+      expect(result.data[2]!.to).toBeInstanceOf(NumberedPortfolio);
+      expect(result.data[2]!.instructionId).toEqual(new BigNumber(2));
+      expect(result.data[2]!.instructionMemo).toEqual('Some memo');
 
       expect(result.count).toEqual(transactionResponse.totalCount);
       expect(result.next).toEqual(new BigNumber(3));

@@ -15,14 +15,7 @@ export const createRegisterCustomAssetTypeResolver =
   (receipt: ISubmittableResult): BigNumber => {
     const [record] = filterEventRecords(receipt, 'asset', 'CustomAssetTypeRegistered');
 
-    if (!record?.data) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Custom Asset Type registration event not found',
-      });
-    }
-
-    return u32ToBigNumber(record.data[1]);
+    return u32ToBigNumber(record!.data[1]);
   };
 
 /**

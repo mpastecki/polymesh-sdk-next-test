@@ -114,14 +114,7 @@ export class PolymeshTransactionBatch<
         if (!fees) {
           const [protocolFees] = await this.context.getProtocolFees({ tags: [tag] });
 
-          if (!protocolFees) {
-            throw new PolymeshError({
-              code: ErrorCode.UnmetPrerequisite,
-              message: 'Transaction cannot be subsidized',
-            });
-          }
-
-          fees = protocolFees.fees;
+          fees = protocolFees!.fees;
         }
 
         return total.plus(fees.multipliedBy(feeMultiplier));

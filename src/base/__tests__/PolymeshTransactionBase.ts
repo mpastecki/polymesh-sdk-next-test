@@ -745,7 +745,7 @@ describe('Polymesh Transaction Base class', () => {
       const result = await tx.run();
       expect(txWithArgsMock.signAndSend).toHaveBeenCalledWith(
         txSpec.signingAddress,
-        expect.objectContaining({ era: undefined, nonce: -1, signer: 'signer' })
+        expect.objectContaining({ nonce: -1, signer: 'signer' })
       );
 
       expect(tx.blockHash).toEqual('blockHash');
@@ -1134,41 +1134,44 @@ describe('Polymesh Transaction Base class', () => {
 
     beforeEach(() => {
       when(context.getProtocolFees)
-        .calledWith({ tags: [TxTags.asset.RegisterUniqueTicker] })
+        .calledWith(expect.objectContaining({ tags: [TxTags.asset.RegisterUniqueTicker] }))
         .mockResolvedValue([
           {
             tag: TxTags.asset.RegisterUniqueTicker,
-            fees: protocolFees[0],
+            fees: protocolFees[0]!,
           },
         ]);
       when(context.getProtocolFees)
-        .calledWith({ tags: [TxTags.asset.CreateAsset] })
+        .calledWith(expect.objectContaining({ tags: [TxTags.asset.CreateAsset] }))
         .mockResolvedValue([
           {
             tag: TxTags.asset.CreateAsset,
-            fees: protocolFees[1],
+            fees: protocolFees[1]!,
           },
         ]);
       rawGasFees.forEach((rawGasFee, index) =>
         when(balanceToBigNumberSpy)
           .calledWith(rawGasFee)
-          .mockReturnValue(new BigNumber(gasFees[index]))
+          .mockReturnValue(new BigNumber(gasFees[index]!))
       );
     });
 
     it('should fetch (if missing) and return transaction fees', async () => {
-      const tx1 = dsMockUtils.createTxMock('asset', 'registerUniqueTicker', { gas: rawGasFees[0] });
-      const tx2 = dsMockUtils.createTxMock('asset', 'createAsset', { gas: rawGasFees[1] });
-      dsMockUtils.createTxMock('utility', 'batchAll', { gas: rawGasFees[1] });
+      const tx1 = dsMockUtils.createTxMock('asset', 'registerUniqueTicker', {
+        gas: rawGasFees[0]!,
+      });
+      const tx2 = dsMockUtils.createTxMock('asset', 'createAsset', { gas: rawGasFees[1]! });
+      dsMockUtils.createTxMock('utility', 'batchAll', { gas: rawGasFees[1]! });
 
       const args = tuple('OH_GOD_NO_IT_IS_BACK');
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { fee, ...rest } = txSpec;
       let tx: PolymeshTransactionBase = new PolymeshTransaction<void>(
         {
-          ...txSpec,
+          ...rest,
           transaction: tx1,
           args,
-          fee: undefined,
           resolver: undefined,
         },
         context
@@ -1176,6 +1179,9 @@ describe('Polymesh Transaction Base class', () => {
 
       let { fees, payingAccountData } = await tx.getTotalFees();
 
+      expect(context.getProtocolFees).toHaveBeenCalledWith(
+        expect.objectContaining({ tags: [TxTags.asset.RegisterUniqueTicker] })
+      );
       expect(fees.protocol).toEqual(new BigNumber(250));
       expect(fees.gas).toEqual(new BigNumber(5));
       expect(payingAccountData.type).toBe(PayingAccountType.Caller);
@@ -1184,10 +1190,9 @@ describe('Polymesh Transaction Base class', () => {
 
       tx = new PolymeshTransaction<void>(
         {
-          ...txSpec,
+          ...rest,
           transaction: tx1,
           args,
-          fee: undefined,
           feeMultiplier: new BigNumber(2),
           resolver: undefined,
         },
@@ -1204,8 +1209,8 @@ describe('Polymesh Transaction Base class', () => {
 
       tx = new PolymeshTransaction<void>(
         {
-          ...txSpec,
-          fee: new BigNumber(protocolFees[1]),
+          ...rest,
+          fee: new BigNumber(protocolFees[1]!),
           transaction: tx2,
           args,
           resolver: undefined,
@@ -1224,7 +1229,7 @@ describe('Polymesh Transaction Base class', () => {
       tx = new PolymeshTransaction<void>(
         {
           ...txSpec,
-          fee: new BigNumber(protocolFees[1]),
+          fee: new BigNumber(protocolFees[1]!),
           transaction: tx2,
           args,
           resolver: undefined,
@@ -1242,7 +1247,7 @@ describe('Polymesh Transaction Base class', () => {
 
       tx = new PolymeshTransactionBatch<void>(
         {
-          ...txSpec,
+          ...rest,
           transactions: [
             {
               transaction: tx1,

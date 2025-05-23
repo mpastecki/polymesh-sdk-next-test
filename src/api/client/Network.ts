@@ -182,11 +182,11 @@ export class Network {
       eventsByArgs(
         context.isSqIdPadded,
         {
-          ...(moduleId && { moduleId }),
-          ...(eventId && { eventId }),
-          ...(eventArg0 && { eventArg0 }),
-          ...(eventArg1 && { eventArg1 }),
-          ...(eventArg2 && { eventArg2 }),
+          moduleId,
+          eventId,
+          eventArg0,
+          eventArg1,
+          eventArg2,
         },
         new BigNumber(1)
       )
@@ -368,11 +368,11 @@ export class Network {
       eventsByArgs(
         context.isSqIdPadded,
         {
-          ...(moduleId && { moduleId }),
-          ...(eventId && { eventId }),
-          ...(eventArg0 && { eventArg0 }),
-          ...(eventArg1 && { eventArg1 }),
-          ...(eventArg2 && { eventArg2 }),
+          moduleId,
+          eventId,
+          eventArg0,
+          eventArg1,
+          eventArg2,
         },
         size,
         start
@@ -452,20 +452,13 @@ export class Network {
       } = await getBlock(rawBlockHash);
 
       // blockExtrinsics is a Vec<Extrinsic> from Polkadot.js, so we can safely access the index
-      const extrinsic = blockExtrinsics[extrinsicIdx];
-      if (!extrinsic) {
-        throw new PolymeshError({
-          code: ErrorCode.General,
-          message: 'No extrinsics found in block',
-        });
-      }
+      const extrinsic = blockExtrinsics[extrinsicIdx]!;
 
       const [{ partialFee }, [protocolFees]] = await Promise.all([
         call.transactionPaymentApi.queryInfo(extrinsic.toHex(), rawBlockHash),
         context.getProtocolFees({ tags: [txTag], blockHash }),
       ]);
-      const protocol = protocolFees?.fees ?? new BigNumber(0);
-
+      const protocol = protocolFees!.fees;
       const gas = balanceToBigNumber(partialFee);
 
       return {

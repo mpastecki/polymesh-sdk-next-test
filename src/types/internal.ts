@@ -91,12 +91,12 @@ interface BaseTx<Args extends unknown[] = unknown[]> {
   /**
    * amount by which the protocol fees should be multiplied (only applicable to transactions where the input size impacts the total fees)
    */
-  feeMultiplier?: BigNumber;
+  feeMultiplier?: BigNumber | undefined;
   /**
    * protocol fees associated with running the transaction (not gas). If not passed, they will be fetched from the chain. This is used for
    *   special cases where the fees aren't trivially derived from the extrinsic type
    */
-  fee?: BigNumber;
+  fee?: BigNumber | undefined;
 }
 
 /**
@@ -176,7 +176,7 @@ export interface BaseTransactionSpec<ReturnValue, TransformedReturnValue = Retur
    *   This is separate from a subsidy, and takes precedence over it. If the signing Account is being subsidized and
    *   they try to execute a transaction with `paidForBy` set, the fees will be paid for by the `paidForBy` Identity
    */
-  paidForBy?: Identity;
+  paidForBy?: Identity | undefined;
 
   /**
    * If present that means the current transaction is a MultiSigProposal and the `signingAccount` is a signer for this MultiSig
@@ -192,7 +192,9 @@ export interface BaseTransactionSpec<ReturnValue, TransformedReturnValue = Retur
   /**
    * function that transforms the transaction's return value before returning it after it is run
    */
-  transformer?: (result: ReturnValue) => Promise<TransformedReturnValue> | TransformedReturnValue;
+  transformer?:
+    | ((result: ReturnValue) => Promise<TransformedReturnValue> | TransformedReturnValue)
+    | undefined;
 }
 
 /**
@@ -343,7 +345,7 @@ export type ProcedureParams<ProcedureFunction extends (...args: unknown[]) => un
 
 export type ExemptKey = {
   op: PolymeshPrimitivesStatisticsStatOpType;
-  claimType?: ClaimType;
+  claimType?: ClaimType | undefined;
   assetId: PolymeshPrimitivesAssetAssetId;
 };
 

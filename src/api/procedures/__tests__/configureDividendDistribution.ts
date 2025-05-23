@@ -149,7 +149,7 @@ describe('configureDividendDistribution procedure', () => {
       defaultWithholdingTax: dsMockUtils.createMockOption(
         dsMockUtils.createMockPermill(defaultTaxWithholding)
       ),
-      withholdingTax: [[taxWithholdings[0].identity, taxWithholdings[0].percentage]],
+      withholdingTax: [[taxWithholdings[0]!.identity, taxWithholdings[0]!.percentage]],
     });
 
     assetToMeshAssetIdSpy = jest.spyOn(utilsConversionModule, 'assetToMeshAssetId');
@@ -706,8 +706,8 @@ describe('configureDividendDistribution procedure', () => {
       expect(result.defaultTaxWithholding).toEqual(defaultTaxWithholding);
       expect(result.taxWithholdings).toEqual([
         {
-          identity: expect.objectContaining({ did: taxWithholdings[0].identity }),
-          percentage: taxWithholdings[0].percentage,
+          identity: expect.objectContaining({ did: taxWithholdings[0]!.identity }),
+          percentage: taxWithholdings[0]!.percentage,
         },
       ]);
       expect(result.origin).toEqual(

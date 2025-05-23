@@ -49,14 +49,7 @@ export async function prepareControllerTransfer(
     assets: [asset],
   });
 
-  if (!balance) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Free balance not found',
-    });
-  }
-
-  const { free } = balance;
+  const { free } = balance!;
 
   if (free.lt(amount)) {
     throw new PolymeshError({

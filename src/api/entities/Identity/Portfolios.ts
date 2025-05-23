@@ -106,7 +106,7 @@ export class Portfolios extends Namespace<Identity> {
       portfolio.portfoliosInCustody,
       {
         arg: custodian,
-        ...(paginationOpts ? { paginationOpts } : {}),
+        paginationOpts,
       }
     );
 

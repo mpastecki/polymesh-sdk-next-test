@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 
-import { AuthorizationRequest, Authorizations, Identity, PolymeshError } from '~/internal';
-import { ErrorCode, PaginationOptions, ResultSet } from '~/types';
+import { AuthorizationRequest, Authorizations, Identity } from '~/internal';
+import { PaginationOptions, ResultSet } from '~/types';
 import { tuple } from '~/types/utils';
 import { bigNumberToU64, signatoryToSignerValue, stringToIdentityId } from '~/utils/conversion';
 import { defusePromise, requestPaginated } from '~/utils/internal';
@@ -30,7 +30,7 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
 
     const { entries, lastKey: next } = await requestPaginated(identity.authorizationsGiven, {
       arg: stringToIdentityId(did, context),
-      ...(paginationOpts ? { paginationOpts } : {}),
+      paginationOpts,
     });
 
     const authQueryParams = entries.map(([storageKey, signatory]) =>
@@ -41,22 +41,8 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
 
     const data = this.createAuthorizationRequests(
       authorizations.map((auth, index) => {
-        const params = authQueryParams[index];
-
-        if (!params) {
-          throw new PolymeshError({
-            code: ErrorCode.UnexpectedError,
-            message: 'Failed to retrieve authorization parameters',
-          });
-        }
+        const params = authQueryParams[index]!;
         const [signer] = params;
-
-        if (!signer) {
-          throw new PolymeshError({
-            code: ErrorCode.UnexpectedError,
-            message: 'Failed to retrieve signatory',
-          });
-        }
 
         return {
           auth: auth.unwrap(),
@@ -113,14 +99,7 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
 
       const request = this.createAuthorizationRequests([{ auth: auth.unwrap(), target }]);
 
-      if (!request[0]) {
-        throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Authorization request not found',
-        });
-      }
-
-      return request[0];
+      return request[0]!;
     }
 
     return gettingReceivedAuth;

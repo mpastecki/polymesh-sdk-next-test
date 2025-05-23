@@ -225,9 +225,9 @@ export class FungibleAsset extends BaseAsset {
         event: eventId,
         from: optionize(middlewarePortfolioToPortfolio)(fromPortfolio, context),
         to: optionize(middlewarePortfolioToPortfolio)(toPortfolio, context),
-        ...(fundingRound ? { fundingRound } : {}),
-        ...(instructionId ? { instructionId: new BigNumber(instructionId) } : {}),
-        ...(instructionMemo ? { instructionMemo } : {}),
+        fundingRound,
+        ...(instructionId && { instructionId: new BigNumber(instructionId) }),
+        instructionMemo,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         extrinsicIndex: new BigNumber(extrinsicIdx!),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

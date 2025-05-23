@@ -733,17 +733,9 @@ export class Context {
       polymeshApi: { tx },
     } = this;
 
-    const [section, method] = tag.split('.');
-
-    if (!section || !method) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Unable to parse transaction tag',
-        data: {
-          tag,
-        },
-      });
-    }
+    const sectionMethod = tag.split('.');
+    const section = sectionMethod[0]!;
+    const method = sectionMethod[1]!;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((tx as any)[section][method] as CallFunction).meta.args.map(({ name, type }) => {
@@ -842,28 +834,9 @@ export class Context {
 
         const { reclaimed, remaining } = dist;
 
-        const assetId = assetIds[index];
-        const id = corporateActionIds[index];
-
-        if (!assetId || !id) {
-          throw new PolymeshError({
-            code: ErrorCode.UnexpectedError,
-            message: 'Asset ID or Corporate Action ID is missing',
-            data: {
-              assetId,
-              id,
-            },
-          });
-        }
-
-        const caParams = corporateActionParams[index];
-
-        if (!caParams) {
-          throw new PolymeshError({
-            code: ErrorCode.UnexpectedError,
-            message: 'Corporate Action Parameters are missing',
-          });
-        }
+        const assetId = assetIds[index]!;
+        const id = corporateActionIds[index]!;
+        const caParams = corporateActionParams[index]!;
 
         result.push({
           distribution: new DividendDistribution(
@@ -964,8 +937,8 @@ export class Context {
     trustedClaimIssuers?: (string | Identity)[];
     claimTypes?: ClaimType[];
     includeExpired?: boolean;
-    size?: BigNumber;
-    start?: BigNumber;
+    size?: BigNumber | undefined;
+    start?: BigNumber | undefined;
   }): Promise<ResultSet<ClaimData>> {
     const {
       targets,
@@ -993,7 +966,7 @@ export class Context {
               }
             : {}),
           ...(claimTypes ? { claimTypes: claimTypes.map(ct => ClaimTypeEnum[ct]) } : {}),
-          ...(includeExpired !== undefined ? { includeExpired } : {}),
+          includeExpired,
         },
         size,
         start

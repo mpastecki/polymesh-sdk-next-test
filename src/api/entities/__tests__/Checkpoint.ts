@@ -139,7 +139,7 @@ describe('Checkpoint class', () => {
       }));
 
       rawBalanceOf.forEach(({ identityId, balance: rawBalance }, index) => {
-        const { identity, balance } = balanceOf[index];
+        const { identity, balance } = balanceOf[index]!;
         when(balanceToBigNumberSpy).calledWith(rawBalance).mockReturnValue(balance);
         when(stringToIdentityIdSpy).calledWith(identity).mockReturnValue(identityId);
       });
@@ -179,12 +179,12 @@ describe('Checkpoint class', () => {
 
       const { data } = await checkpoint.allBalances();
 
-      expect(data[0].identity.did).toEqual(balanceOf[0].identity);
-      expect(data[1].identity.did).toEqual(balanceOf[1].identity);
-      expect(data[2].identity.did).toEqual(balanceOf[2].identity);
-      expect(data[0].balance).toEqual(balanceMulti[0]);
-      expect(data[1].balance).toEqual(balanceMulti[1]);
-      expect(data[2].balance).toEqual(balanceOf[2].balance);
+      expect(data[0]!.identity.did).toEqual(balanceOf[0]!.identity);
+      expect(data[1]!.identity.did).toEqual(balanceOf[1]!.identity);
+      expect(data[2]!.identity.did).toEqual(balanceOf[2]!.identity);
+      expect(data[0]!.balance).toEqual(balanceMulti[0]);
+      expect(data[1]!.balance).toEqual(balanceMulti[1]);
+      expect(data[2]!.balance).toEqual(balanceOf[2]!.balance);
     });
   });
 

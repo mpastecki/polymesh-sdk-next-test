@@ -21,14 +21,7 @@ export const createRegisterIdentityResolver =
   (receipt: ISubmittableResult): Identity => {
     const [record] = filterEventRecords(receipt, 'identity', 'DidCreated');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Identity creation event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
 
     const did = identityIdToString(data[0]);
 

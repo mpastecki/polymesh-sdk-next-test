@@ -431,5 +431,65 @@ describe('Metadata class', () => {
 
       expect(JSON.stringify(result)).toEqual(JSON.stringify(mockResult));
     });
+
+    it('should throw an error if nameValue / valueDetail is not returned', async () => {
+      dsMockUtils.createQueryMock('asset', 'assetMetadataValueDetails');
+
+      dsMockUtils.createQueryMock('asset', 'assetMetadataLocalKeyToName', {
+        returnValue: [],
+      });
+
+      const rawLocalSpecs = dsMockUtils.createMockOption();
+
+      dsMockUtils.createQueryMock('asset', 'assetMetadataLocalSpecs', {
+        returnValue: rawLocalSpecs,
+      });
+
+      const localValue = '1234';
+      const rawLocalValue = dsMockUtils.createMockOption(dsMockUtils.createMockBytes(localValue));
+
+      const globalName = 'GLOBAL_METADATA';
+      const rawGlobalName = dsMockUtils.createMockBytes(globalName);
+
+      dsMockUtils.createQueryMock('asset', 'assetMetadataGlobalKeyToName', {
+        returnValue: dsMockUtils.createMockOption(rawGlobalName),
+      });
+
+      const globalSpecs = {
+        description: 'some description for local metadata',
+      };
+      const rawGlobalSpecs = dsMockUtils.createMockOption(
+        dsMockUtils.createMockAssetMetadataSpec({
+          url: dsMockUtils.createMockOption(),
+          description: dsMockUtils.createMockOption(
+            dsMockUtils.createMockBytes(globalSpecs.description)
+          ),
+          typeDef: dsMockUtils.createMockOption(),
+        })
+      );
+
+      dsMockUtils.createQueryMock('asset', 'assetMetadataGlobalSpecs', {
+        returnValue: rawGlobalSpecs,
+      });
+
+      const rawGlobalValue = dsMockUtils.createMockOption();
+
+      const globalKey = dsMockUtils.createMockAssetMetadataKey({
+        Global: dsMockUtils.createMockU64(new BigNumber(1)),
+      });
+      const localKey = dsMockUtils.createMockAssetMetadataKey({
+        Local: dsMockUtils.createMockU64(new BigNumber(1)),
+      });
+      dsMockUtils.createQueryMock('asset', 'assetMetadataValues', {
+        entries: [
+          tuple([rawAssetId, globalKey], rawGlobalValue),
+          tuple([rawAssetId, localKey], rawLocalValue),
+        ],
+      });
+
+      return expect(metadata.getDetails()).rejects.toThrow(
+        'Metadata name or value detail is missing'
+      );
+    });
   });
 });

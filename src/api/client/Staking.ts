@@ -165,7 +165,7 @@ export class Staking {
     const { entries: rawValidators, lastKey: next } = await requestPaginated(
       query.staking.validators,
       {
-        ...(paginationOpts && { paginationOpts }),
+        paginationOpts,
       }
     );
 

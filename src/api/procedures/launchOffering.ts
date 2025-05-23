@@ -44,14 +44,7 @@ export const createOfferingResolver =
   (receipt: ISubmittableResult): Offering => {
     const [record] = filterEventRecords(receipt, 'sto', 'FundraiserCreated');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Fundraiser creation event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
 
     const newFundraiserId = u64ToBigNumber(data[1] as unknown as u64);
 
@@ -84,14 +77,7 @@ export async function prepareLaunchOffering(
     }),
   ]);
 
-  if (!balanceResult) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Free balance not found',
-    });
-  }
-
-  const { free } = balanceResult;
+  const { free } = balanceResult!;
 
   let venueId: BigNumber | undefined;
 

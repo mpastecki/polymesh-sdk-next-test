@@ -302,7 +302,7 @@ describe('consumeAddRelayerPayingKeyAuthorization procedure', () => {
       >(mockContext, {
         actingAccount: entityMockUtils.getAccountInstance({
           address: 'someOtherAddress',
-          getIdentity: undefined,
+          getIdentity: entityMockUtils.getIdentityInstance({ did: 'someOtherDid', isEqual: false }),
         }),
         calledByTarget: false,
       });

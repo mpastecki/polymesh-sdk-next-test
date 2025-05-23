@@ -47,14 +47,7 @@ export const createDividendDistributionResolver =
   async (receipt: ISubmittableResult): Promise<DividendDistribution> => {
     const [record] = filterEventRecords(receipt, 'capitalDistribution', 'Created');
 
-    if (!record?.data) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Dividend distribution event not found',
-      });
-    }
-
-    const [, caId, distribution] = record.data;
+    const [, caId, distribution] = record!.data;
     const { localId, assetId } = caId;
 
     const { corporateAction } = context.polymeshApi.query;
@@ -186,14 +179,7 @@ export async function prepareConfigureDividendDistribution(
 
   const [result] = await portfolio.getAssetBalances({ assets: [currencyAsset] });
 
-  if (!result?.free) {
-    throw new PolymeshError({
-      code: ErrorCode.DataUnavailable,
-      message: 'Portfolio balance event not found',
-    });
-  }
-
-  const { free } = result;
+  const { free } = result!;
   if (free.lt(maxAmount)) {
     throw new PolymeshError({
       code: ErrorCode.InsufficientBalance,

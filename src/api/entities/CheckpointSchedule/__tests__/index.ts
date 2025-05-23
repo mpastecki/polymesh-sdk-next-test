@@ -84,6 +84,19 @@ describe('CheckpointSchedule class', () => {
       );
 
       expect(schedule.expiryDate).toEqual(new Date('10/14/1987 UTC'));
+
+      const firstPoint = new Date('10/14/1987 UTC');
+      const secondPoint = new Date('10/21/1987 UTC');
+
+      schedule = new CheckpointSchedule(
+        {
+          id,
+          assetId,
+          pendingPoints: [secondPoint, firstPoint],
+        },
+        context
+      );
+      expect(schedule.pendingPoints).toEqual([firstPoint, secondPoint]);
     });
   });
 
@@ -119,6 +132,26 @@ describe('CheckpointSchedule class', () => {
       }
 
       expect(error.message).toBe('Schedule no longer exists. It was either removed or it expired');
+    });
+
+    it('should throw an error if next checkpoint date is not found', async () => {
+      const rawRemaining = new BigNumber(1);
+      const checkpointSchedule = new CheckpointSchedule(
+        { id, assetId, pendingPoints: [] },
+        context
+      );
+
+      stringToAssetIdSpy.mockReturnValue(dsMockUtils.createMockAssetId(assetId));
+      jest.spyOn(utilsConversionModule, 'u32ToBigNumber').mockClear().mockReturnValue(rawRemaining);
+      jest.spyOn(utilsConversionModule, 'momentToDate').mockReturnValue(nextCheckpointDate);
+
+      dsMockUtils.createQueryMock('checkpoint', 'scheduledCheckpoints', {
+        returnValue: dsMockUtils.createMockOption(
+          dsMockUtils.createMockCheckpointSchedule({ pending: [] })
+        ),
+      });
+
+      return expect(checkpointSchedule.details()).rejects.toThrow('No next checkpoint date found');
     });
 
     it('should return the Schedule details ', async () => {
@@ -202,8 +235,8 @@ describe('CheckpointSchedule class', () => {
 
       const result = await schedule.getCheckpoints();
 
-      expect(result[0].id).toEqual(firstId);
-      expect(result[1].id).toEqual(secondId);
+      expect(result[0]!.id).toEqual(firstId);
+      expect(result[1]!.id).toEqual(secondId);
     });
   });
 

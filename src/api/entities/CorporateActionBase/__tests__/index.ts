@@ -292,6 +292,12 @@ describe('CorporateAction class', () => {
       expect(result.id).toEqual(new BigNumber(1));
       expect(result).toBeInstanceOf(Checkpoint);
     });
+
+    it('should thrown an error if the created Checkpoint is not returned from the query', async () => {
+      schedulePointsQueryMock.mockResolvedValue([]);
+
+      return expect(corporateAction.checkpoint()).rejects.toThrow('No checkpoint found');
+    });
   });
 
   describe('method: toHuman', () => {

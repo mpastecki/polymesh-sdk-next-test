@@ -175,7 +175,7 @@ describe('NftCollection class', () => {
 
       const result = await nftCollection.getIdentifiers();
 
-      expect(result[0].value).toBe(isinValue);
+      expect(result[0]!.value).toBe(isinValue);
     });
 
     it('should allow subscription', async () => {
@@ -644,23 +644,23 @@ describe('NftCollection class', () => {
         size: new BigNumber(3),
       });
 
-      expect(result.data[0].asset.id).toEqual(assetId);
-      expect(result.data[0].nfts).toEqual(
+      expect(result.data[0]!.asset.id).toEqual(assetId);
+      expect(result.data[0]!.nfts).toEqual(
         expect.arrayContaining([expect.objectContaining({ id: new BigNumber(1) })])
       );
-      expect(result.data[0].event).toEqual(transactionResponse.nodes[0].eventId);
-      expect(result.data[0].from).toBeNull();
-      expect(result.data[0].to instanceof DefaultPortfolio).toBe(true);
+      expect(result.data[0]!.event).toEqual(transactionResponse.nodes[0]!.eventId);
+      expect(result.data[0]!.from).toBeNull();
+      expect(result.data[0]!.to instanceof DefaultPortfolio).toBe(true);
 
-      expect(result.data[1].asset.id).toEqual(assetId);
-      expect(result.data[1].nfts).toEqual(
+      expect(result.data[1]!.asset.id).toEqual(assetId);
+      expect(result.data[1]!.nfts).toEqual(
         expect.arrayContaining([expect.objectContaining({ id: new BigNumber(1) })])
       );
-      expect(result.data[1].event).toEqual(transactionResponse.nodes[1].eventId);
-      expect(result.data[1].to instanceof DefaultPortfolio).toBe(true);
-      expect(result.data[1].from instanceof DefaultPortfolio).toBe(true);
-      expect(result.data[1].instructionId).toEqual(new BigNumber(1));
-      expect(result.data[1].instructionMemo).toEqual('some memo');
+      expect(result.data[1]!.event).toEqual(transactionResponse.nodes[1]!.eventId);
+      expect(result.data[1]!.to instanceof DefaultPortfolio).toBe(true);
+      expect(result.data[1]!.from instanceof DefaultPortfolio).toBe(true);
+      expect(result.data[1]!.instructionId).toEqual(new BigNumber(1));
+      expect(result.data[1]!.instructionMemo).toEqual('some memo');
 
       expect(result.count).toEqual(transactionResponse.totalCount);
       expect(result.next).toEqual(new BigNumber(2));

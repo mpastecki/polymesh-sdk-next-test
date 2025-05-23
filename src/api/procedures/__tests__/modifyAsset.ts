@@ -226,7 +226,7 @@ describe('modifyAsset procedure', () => {
 
   it('should add a update identifiers transaction to the batch', async () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
-      Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
+      Isin: dsMockUtils.createMockU8aFixed(identifiers[0]!.value),
     });
     jest
       .spyOn(utilsConversionModule, 'securityIdentifierToAssetIdentifier')
@@ -254,7 +254,7 @@ describe('modifyAsset procedure', () => {
 
   it('should  throw if provided asset type is the same as the current asset type', async () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
-      Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
+      Isin: dsMockUtils.createMockU8aFixed(identifiers[0]!.value),
     });
     jest
       .spyOn(utilsConversionModule, 'securityIdentifierToAssetIdentifier')
@@ -297,7 +297,7 @@ describe('modifyAsset procedure', () => {
 
   it('should  throw if trying to modify asset type for NFT collection', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
-      Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
+      Isin: dsMockUtils.createMockU8aFixed(identifiers[0]!.value),
     });
     jest
       .spyOn(utilsConversionModule, 'securityIdentifierToAssetIdentifier')
@@ -320,7 +320,7 @@ describe('modifyAsset procedure', () => {
 
   it('should  throw if trying to modify asset type with custom type that is not registered on chain', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
-      Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
+      Isin: dsMockUtils.createMockU8aFixed(identifiers[0]!.value),
     });
     jest
       .spyOn(utilsConversionModule, 'securityIdentifierToAssetIdentifier')
@@ -348,7 +348,7 @@ describe('modifyAsset procedure', () => {
 
   it('should  throw if trying to modify asset type with KnownNftType', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
-      Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
+      Isin: dsMockUtils.createMockU8aFixed(identifiers[0]!.value),
     });
     jest
       .spyOn(utilsConversionModule, 'securityIdentifierToAssetIdentifier')

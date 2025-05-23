@@ -95,7 +95,7 @@ describe('linkCaDocs procedure', () => {
 
   beforeEach(() => {
     dsMockUtils.createQueryMock('asset', 'assetDocuments', {
-      entries: [documentEntries[0], documentEntries[1]],
+      entries: [documentEntries[0]!, documentEntries[1]!],
     });
 
     linkCaDocTransaction = dsMockUtils.createTxMock('corporateAction', 'linkCaDoc');
@@ -127,7 +127,7 @@ describe('linkCaDocs procedure', () => {
         id,
         asset,
         documents: [
-          documents[0],
+          documents[0]!,
           {
             name,
             uri: 'someUri',

@@ -42,7 +42,7 @@ function assertInputValid(input: TransferRestrictionParams): void {
 
         if (claim.type === ClaimType.Jurisdiction) {
           // cannot add two claims with same country code restrictions will result in internal error
-          if (seenJurisdictions.has(claim.countryCode || 'none')) {
+          if (seenJurisdictions.has(claim.countryCode ?? 'none')) {
             throw new PolymeshError({
               code: ErrorCode.ValidationError,
               message: 'Duplicate Jurisdiction CountryCode found in input',

@@ -1,3 +1,5 @@
+import * as polkadotRef from '@polkadot/api';
+import { ApiOptions } from '@polkadot/api/types';
 import { SigningManager } from '@polymeshassociation/signing-manager-types';
 import { when } from 'jest-when';
 
@@ -82,12 +84,22 @@ describe('Polymesh Class', () => {
     });
 
     it('should instantiate Context with a Signing Manager and return a Polymesh instance', async () => {
+      const apiPromiseCreateSpy = jest.spyOn(polkadotRef.ApiPromise, 'create');
       const signingManager = 'signingManager' as unknown as SigningManager;
       const createMock = dsMockUtils.getContextCreateMock();
+      const typesBundle = {} as Required<ApiOptions>['typesBundle'];
+      const metadata = {
+        someHashAndVersion: '0x00',
+      } as const;
 
       await Polymesh.connect({
         nodeUrl: 'wss://some.url',
         signingManager,
+        polkadot: {
+          metadata,
+          noInitWarn: true,
+          typesBundle,
+        },
       });
 
       expect(createMock).toHaveBeenCalledTimes(1);
@@ -96,6 +108,13 @@ describe('Polymesh Class', () => {
         middlewareApiV2: null,
         signingManager,
       });
+      expect(apiPromiseCreateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata,
+          noInitWarn: true,
+          typesBundle,
+        })
+      );
     });
 
     it('should instantiate Context with an HTTP provider and return a Polymesh instance', async () => {

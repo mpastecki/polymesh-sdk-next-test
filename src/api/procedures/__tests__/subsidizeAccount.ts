@@ -36,6 +36,7 @@ describe('subsidizeAccount procedure', () => {
 
     signerToStringSpy = jest.spyOn(utilsConversionModule, 'signerToString');
     stringToAccountIdSpy = jest.spyOn(utilsConversionModule, 'stringToAccountId');
+    // @ts-expect-error - mock
     bigNumberToBalanceSpy = jest.spyOn(utilsConversionModule, 'bigNumberToBalance');
   });
 

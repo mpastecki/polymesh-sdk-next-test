@@ -274,7 +274,7 @@ describe('Ballots class', () => {
       );
 
       expect(ballots.length).toBe(1);
-      expect(ballots[0].ballot.id.isEqualTo(ballotId)).toBe(true);
+      expect(ballots[0]!.ballot.id.isEqualTo(ballotId)).toBe(true);
     });
   });
 

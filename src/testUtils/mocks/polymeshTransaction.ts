@@ -160,6 +160,7 @@ export function setupNextTransactions(specs: MockTransactionSpec[]): MockTransac
   polymeshTransactionConstructorMock = jest.fn();
 
   instances.forEach((instance, index) => {
+    // @ts-expect-error - ok
     polymeshTransactionConstructorMock.mockImplementation(() => {
       if (polymeshTransactionConstructorMock.mock.calls.length === index) {
         return instance;

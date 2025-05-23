@@ -110,7 +110,7 @@ export abstract class PolymeshTransactionBase<
   /**
    * number of the block where this transaction resides (status: `Succeeded`, `Failed`)
    */
-  public blockNumber?: BigNumber;
+  public blockNumber?: BigNumber | undefined;
 
   /**
    * This will be set if the signingAddress is a MultiSig signer, otherwise `null`
@@ -257,14 +257,7 @@ export abstract class PolymeshTransactionBase<
 
     const [proposalAddedEvent] = filterEventRecords(this.receipt, 'multiSig', 'ProposalAdded');
 
-    if (!proposalAddedEvent) {
-      throw new PolymeshError({
-        code: ErrorCode.TransactionAborted,
-        message: 'Transaction was aborted',
-      });
-    }
-
-    const id = u64ToBigNumber(proposalAddedEvent.data[2]);
+    const id = u64ToBigNumber(proposalAddedEvent!.data[2]);
 
     this.updateStatus(TransactionStatus.Succeeded);
 
@@ -380,7 +373,7 @@ export abstract class PolymeshTransactionBase<
     await context.assertHasSigningAddress(signingAddress);
 
     // era is how many blocks the transaction remains valid for, `undefined` for default
-    const era = mortality.immortal ? 0 : mortality.lifetime?.toNumber();
+    const era = mortality.immortal ? 0 : (mortality.lifetime?.toNumber() as number);
     const nonce = context.getNonce().toNumber();
 
     this.updateStatus(TransactionStatus.Unapproved);
@@ -391,7 +384,7 @@ export abstract class PolymeshTransactionBase<
         let settingBlockData = Promise.resolve();
         const gettingUnsub = txWithArgs.signAndSend(
           signingAddress,
-          { nonce, ...(signer && { signer }), ...(era && { era }) },
+          { nonce, ...(signer && { signer }), era },
           receipt => {
             const { status } = receipt;
             let isLastCallback = false;
@@ -480,7 +473,11 @@ export abstract class PolymeshTransactionBase<
       const startingBlock = await context.getLatestBlock();
 
       await txWithArgs
-        .signAndSend(signingAddress, { nonce, ...(signer && { signer }), ...(era && { era }) })
+        .signAndSend(signingAddress, {
+          nonce,
+          ...(signer && { signer }),
+          era,
+        })
         .then(() => {
           this.setIsRunningStatus(txWithArgs.hash.toString());
         })
@@ -619,18 +616,11 @@ export abstract class PolymeshTransactionBase<
 
     const {
       data: {
-        blocks: {
-          nodes: [block],
-        },
+        blocks: { nodes },
       },
     } = await context.queryMiddleware<Ensured<Query, 'blocks'>>(latestBlockQuery());
 
-    if (!block) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Failed to retrieve latest block from middleware',
-      });
-    }
+    const block = nodes[0]!;
 
     const { blockId: processedBlock } = block;
 

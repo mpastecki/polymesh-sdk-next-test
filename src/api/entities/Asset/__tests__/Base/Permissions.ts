@@ -255,9 +255,9 @@ describe('Permissions class', () => {
 
       expect(result.length).toEqual(5);
       for (const i in range(4)) {
-        expect(result[i].group instanceof KnownPermissionGroup).toEqual(true);
+        expect(result[i]!.group instanceof KnownPermissionGroup).toEqual(true);
       }
-      expect(result[4].group instanceof CustomPermissionGroup).toEqual(true);
+      expect(result[4]!.group instanceof CustomPermissionGroup).toEqual(true);
     });
   });
 });

@@ -634,18 +634,8 @@ export class Account extends Entity<UniqueIdentifiers, string> {
 
     const rawBytes = blake2AsU8a(data, 128);
 
-    const rawBytesSix = rawBytes[6];
-    const rawBytesEight = rawBytes[8];
-
-    if (!rawBytesSix || !rawBytesEight) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Unexpected error while generating asset ID',
-        data: {
-          rawBytes,
-        },
-      });
-    }
+    const rawBytesSix = rawBytes[6]!;
+    const rawBytesEight = rawBytes[8]!;
 
     // Need to override 6bits to make it a valid v8 UUID.
     rawBytes[6] = (rawBytesSix & 0x0f) | 0x80;

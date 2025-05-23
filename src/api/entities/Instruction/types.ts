@@ -123,7 +123,7 @@ export type MediatorAffirmation = {
   /**
    * Affirmations may have an expiration time
    */
-  expiry?: Date;
+  expiry?: Date | undefined;
 };
 
 export interface GroupedInstructions {

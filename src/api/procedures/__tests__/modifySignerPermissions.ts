@@ -161,7 +161,7 @@ describe('modifySignerPermissions procedure', () => {
 
     signersList = [[rawSignatory, fakeMeshPermissions]];
 
-    permissionsLikeToPermissionsSpy.mockResolvedValue(secondaryAccounts[0].permissions);
+    permissionsLikeToPermissionsSpy.mockResolvedValue(secondaryAccounts[0]!.permissions);
 
     result = await prepareModifySignerPermissions.call(proc, { secondaryAccounts, identity });
 

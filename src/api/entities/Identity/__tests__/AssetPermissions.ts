@@ -22,7 +22,9 @@ import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mo
 import { Mocked } from '~/testUtils/types';
 import {
   ErrorCode,
+  EventIdEnum,
   FungibleAsset,
+  ModuleIdEnum,
   NftCollection,
   PermissionGroupType,
   PermissionType,
@@ -443,8 +445,8 @@ describe('AssetPermissions class', () => {
 
       const result = await assetPermissions.get();
       expect(result.length).toEqual(1);
-      expect(result[0].asset.id).toEqual(assetId);
-      expect(result[0].group instanceof KnownPermissionGroup).toEqual(true);
+      expect(result[0]!.asset.id).toEqual(assetId);
+      expect(result[0]!.group instanceof KnownPermissionGroup).toEqual(true);
     });
 
     it('should return a list of AgentWithGroup for an NFT collection', async () => {
@@ -471,8 +473,8 @@ describe('AssetPermissions class', () => {
 
       const result = await assetPermissions.get();
       expect(result.length).toEqual(1);
-      expect(result[0].asset.id).toEqual(assetId);
-      expect(result[0].group instanceof KnownPermissionGroup).toEqual(true);
+      expect(result[0]!.asset.id).toEqual(assetId);
+      expect(result[0]!.group instanceof KnownPermissionGroup).toEqual(true);
     });
   });
 
@@ -489,8 +491,8 @@ describe('AssetPermissions class', () => {
           {
             assetId: assetIdHex,
             callerId: did,
-            palletName: undefined,
-            eventId: undefined,
+            palletName: ModuleIdEnum.Asset,
+            eventId: EventIdEnum.AssetCreated,
           },
           new BigNumber(1),
           new BigNumber(0)
@@ -516,6 +518,8 @@ describe('AssetPermissions class', () => {
         asset: assetId,
         start: new BigNumber(0),
         size: new BigNumber(1),
+        moduleId: ModuleIdEnum.Asset,
+        eventId: EventIdEnum.AssetCreated,
       });
 
       expect(result.next).toEqual(null);
@@ -533,8 +537,6 @@ describe('AssetPermissions class', () => {
         tickerExternalAgentActionsQuery(false, {
           assetId: assetIdHex,
           callerId: did,
-          palletName: undefined,
-          eventId: undefined,
         }),
         {
           tickerExternalAgentActions: {

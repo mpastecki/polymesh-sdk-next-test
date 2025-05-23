@@ -203,7 +203,7 @@ describe('setCustodian procedure', () => {
         did,
       } as Params;
 
-      let portfolioId: PortfolioId = { did: args.did, number: args.id };
+      let portfolioId = { did: args.did, number: args.id } as PortfolioId;
 
       expect(boundFunc(args)).toEqual({
         roles: [{ type: RoleType.PortfolioCustodian, portfolioId }],
@@ -218,7 +218,7 @@ describe('setCustodian procedure', () => {
         did,
       } as Params;
 
-      portfolioId = { did: args.did };
+      portfolioId = { did: args.did, number: new BigNumber(0) };
 
       expect(boundFunc(args)).toEqual({
         roles: [{ type: RoleType.PortfolioCustodian, portfolioId }],

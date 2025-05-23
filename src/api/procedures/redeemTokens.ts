@@ -53,7 +53,7 @@ export async function prepareRedeemTokens(
       code: ErrorCode.InsufficientBalance,
       message: 'Insufficient free balance',
       data: {
-        free: portfolioBalance?.free,
+        portfolioBalance,
       },
     });
   }

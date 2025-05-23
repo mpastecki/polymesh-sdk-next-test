@@ -194,21 +194,18 @@ describe('createNftCollection procedure', () => {
       .calledWith(nftType as KnownNftType, mockContext)
       .mockReturnValue(rawType);
     when(securityIdentifierToAssetIdentifierSpy)
-      .calledWith(securityIdentifiers[0], mockContext)
-      .mockReturnValue(rawIdentifiers[0]);
+      .calledWith(securityIdentifiers[0]!, mockContext)
+      .mockReturnValue(rawIdentifiers[0]!);
     when(assetDocumentToDocumentSpy)
-      .calledWith(
-        { uri: documents[0].uri, contentHash: documents[0].contentHash, name: documents[0].name },
-        mockContext
-      )
-      .mockReturnValue(rawDocuments[0]);
+      .calledWith(documents[0]!, mockContext)
+      .mockReturnValue(rawDocuments[0]!);
 
     when(mockContext.getProtocolFees)
       .calledWith({ tags: [TxTags.asset.CreateAsset] })
-      .mockResolvedValue([{ tag: TxTags.asset.CreateAsset, fees: protocolFees[1] }]);
+      .mockResolvedValue([{ tag: TxTags.asset.CreateAsset, fees: protocolFees[1]! }]);
     when(mockContext.getProtocolFees)
       .calledWith({ tags: [TxTags.asset.RegisterCustomAssetType] })
-      .mockResolvedValue([{ tag: TxTags.asset.RegisterCustomAssetType, fees: protocolFees[2] }]);
+      .mockResolvedValue([{ tag: TxTags.asset.RegisterCustomAssetType, fees: protocolFees[2]! }]);
   });
 
   afterEach(() => {
@@ -298,7 +295,6 @@ describe('createNftCollection procedure', () => {
         expect.arrayContaining([
           expect.objectContaining({
             transaction: createAssetTransactionTx,
-            fee: undefined,
             args: [rawName, rawDivisible, rawAssetType, ['fakeId'], null],
           }),
           expect.objectContaining({
@@ -339,7 +335,6 @@ describe('createNftCollection procedure', () => {
         expect.arrayContaining([
           expect.objectContaining({
             transaction: createAssetTransactionTx,
-            fee: undefined,
             args: [rawName, rawDivisible, rawAssetType, [], null],
           }),
           expect.objectContaining({
@@ -373,7 +368,6 @@ describe('createNftCollection procedure', () => {
         expect.arrayContaining([
           expect.objectContaining({
             transaction: createAssetTransactionTx,
-            fee: undefined,
             args: [rawSomeName, rawDivisible, rawAssetType, [], null],
           }),
         ])
@@ -452,7 +446,6 @@ describe('createNftCollection procedure', () => {
       const nftTransactions = [
         expect.objectContaining({
           transaction: createAssetTransactionTx,
-          fee: undefined,
           args: [rawName, rawDivisible, rawAssetType, [], null],
         }),
         expect.objectContaining({

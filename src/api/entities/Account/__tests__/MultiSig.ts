@@ -298,7 +298,7 @@ describe('MultiSig class', () => {
         rejectionAmount: new BigNumber(0),
         expiry: null,
         txTag: AssetTx.CreateAsset,
-        args: mockHistoricalMultisig.params.proposals[0].args,
+        args: mockHistoricalMultisig.params.proposals[0]!.args,
       });
     });
 
@@ -360,11 +360,11 @@ describe('MultiSig class', () => {
         args: [
           {
             txTag: BalancesTx.Transfer,
-            args: mockHistoricalMultisig.params.proposals[0].args,
+            args: mockHistoricalMultisig.params.proposals[0]!.args,
           },
           {
             txTag: BalancesTx.TransferWithMemo,
-            args: mockHistoricalMultisig.params.proposals[1].args,
+            args: mockHistoricalMultisig.params.proposals[1]!.args,
           },
         ],
       });

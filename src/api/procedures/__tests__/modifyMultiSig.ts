@@ -434,7 +434,7 @@ describe('modifyMultiSig procedure', () => {
 
       const boundFunc = prepareStorage.bind(proc);
 
-      const result = await boundFunc({ signers: undefined, multiSig });
+      const result = await boundFunc({ multiSig });
       expect(result).toEqual({
         signersToRemove: [],
         signersToAdd: [],

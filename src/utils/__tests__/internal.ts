@@ -84,6 +84,7 @@ import {
   delay,
   extractProtocol,
   filterEventRecords,
+  getAllowedMajors,
   getApiAtBlock,
   getAssetIdAndTicker,
   getAssetIdForMiddleware,
@@ -570,9 +571,7 @@ describe('requestPaginated', () => {
       entries,
     });
 
-    let res = await requestPaginated(queryMock, {
-      paginationOpts: undefined,
-    });
+    let res = await requestPaginated(queryMock, {});
 
     expect(res.lastKey).toBeNull();
     expect(queryMock.entries).toHaveBeenCalledTimes(1);
@@ -589,7 +588,7 @@ describe('requestPaginated', () => {
     jest.clearAllMocks();
 
     res = await requestPaginated(queryMock, {
-      paginationOpts: { size: new BigNumber(4) },
+      paginationOpts: { size: new BigNumber(4), start: '0' },
       arg: 'something',
     });
 
@@ -2677,5 +2676,43 @@ describe('assertStatIsSet', () => {
     });
 
     expect(() => assertStatIsSet(current, needed)).toThrow(expectedError);
+  });
+});
+
+describe('getAllowedMajors', () => {
+  it('should return the allowed majors for a single version range', () => {
+    const result = getAllowedMajors('1.0.0', '1.0.0');
+    expect(result).toEqual(['1']);
+  });
+
+  it('should return the allowed majors for a multi-version range', () => {
+    const result = getAllowedMajors('7.0 || 7.1 || 7.2', '7.0.0');
+    expect(result).toEqual(['7', '7']);
+  });
+
+  it('should handle empty version ranges (resulting in undefined array access)', () => {
+    // When split by ||, this creates an empty array [], so versions[versions.length - 1] is undefined
+    const result = getAllowedMajors('', '1.0.0');
+    expect(result).toEqual(['1']);
+  });
+
+  it('should handle version ranges with whitespace', () => {
+    const result = getAllowedMajors('  7.0  ||  7.1  ||  7.2  ', '7.0.0');
+    expect(result).toEqual(['7', '7']);
+  });
+
+  it('should handle version ranges with different major versions', () => {
+    const result = getAllowedMajors('7.0 || 8.0', '7.0.0');
+    expect(result).toEqual(['7', '8']);
+  });
+
+  it('should handle version ranges ending with empty version', () => {
+    const result = getAllowedMajors('7.0 || ', '7.0.0');
+    expect(result).toEqual(['1']);
+  });
+
+  it('should handle version ranges with invalid version format', () => {
+    const result = getAllowedMajors('7.0 || invalid', '7.0.0');
+    expect(result).toEqual(['1']);
   });
 });

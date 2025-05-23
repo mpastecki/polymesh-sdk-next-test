@@ -2036,7 +2036,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
       assetIds.forEach((t, i) =>
         when(createTypeMock)
           .calledWith('PolymeshPrimitivesAssetAssetId', t)
-          .mockReturnValue(rawAssetIds[i])
+          .mockReturnValue(rawAssetIds[i]!)
       );
 
       result = permissionsToMeshPermissions(value, context);
@@ -4839,7 +4839,7 @@ describe('corporateActionParamsToMeshCorporateActionArgs', () => {
     const rawTargets = dsMockUtils.createMockTargetIdentities(targets);
     const rawTax = dsMockUtils.createMockPermill(defaultTaxWithholding);
 
-    const { identity, percentage } = taxWithholdings[0];
+    const { identity, percentage } = taxWithholdings[0]!;
     const rawIdentityId = dsMockUtils.createMockIdentityId(identity);
     const rawPermill = dsMockUtils.createMockPermill(percentage);
 
@@ -5217,7 +5217,7 @@ describe('middlewareInstructionToHistoricInstruction', () => {
     expect(resultLeg.amount).toEqual(amount1);
     expect(resultLeg.from.owner.did).toBe(portfolioDid1);
     expect(resultLeg.to.owner.did).toBe(portfolioDid2);
-    expect((result.legs[0].to as NumberedPortfolio).id).toEqual(new BigNumber(portfolioKind2));
+    expect((result.legs[0]!.to as NumberedPortfolio).id).toEqual(new BigNumber(portfolioKind2));
 
     instruction = {
       id: instructionId2.toString(),
@@ -5253,7 +5253,7 @@ describe('middlewareInstructionToHistoricInstruction', () => {
     ]);
     expect(resultLeg.from.owner.did).toBe(portfolioDid2);
     expect(resultLeg.to.owner.did).toBe(portfolioDid1);
-    expect((result.legs[0].from as NumberedPortfolio).id).toEqual(new BigNumber(portfolioKind2));
+    expect((result.legs[0]!.from as NumberedPortfolio).id).toEqual(new BigNumber(portfolioKind2));
 
     instruction = {
       id: instructionId3.toString(),
@@ -5820,18 +5820,18 @@ describe('requirementToComplianceRequirement and complianceRequirementToRequirem
       ];
       const complianceRequirement = dsMockUtils.createMockComplianceRequirement({
         senderConditions: [
-          rawConditions[0],
-          rawConditions[2],
-          rawConditions[2],
-          rawConditions[3],
-          rawConditions[4],
+          rawConditions[0]!,
+          rawConditions[2]!,
+          rawConditions[2]!,
+          rawConditions[3]!,
+          rawConditions[4]!,
         ],
         receiverConditions: [
-          rawConditions[0],
-          rawConditions[1],
-          rawConditions[1],
-          rawConditions[3],
-          rawConditions[5],
+          rawConditions[0]!,
+          rawConditions[1]!,
+          rawConditions[1]!,
+          rawConditions[3]!,
+          rawConditions[5]!,
         ],
         id: dsMockUtils.createMockU32(new BigNumber(1)),
       });
@@ -6534,7 +6534,7 @@ describe('assetComplianceResultToCompliance', () => {
     });
 
     let result = assetComplianceResultToCompliance(assetComplianceResult, context);
-    expect(result.requirements[0].conditions).toEqual(
+    expect(result.requirements[0]!.conditions).toEqual(
       expect.arrayContaining(fakeResult.conditions)
     );
     expect(result.complies).toBe(true);
@@ -6718,7 +6718,7 @@ describe('assetComplianceReportToCompliance', () => {
       }) as unknown as Result<ComplianceReport, DispatchError>,
       context
     );
-    expect(result.requirements[0].conditions).toEqual(
+    expect(result.requirements[0]!.conditions).toEqual(
       expect.arrayContaining(fakeResult.conditions)
     );
     expect(result.complies).toBe(true);
@@ -8324,7 +8324,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
     const defaultTaxWithholding = new BigNumber(10);
     const taxWithholdings = [
       {
-        identity: entityMockUtils.getIdentityInstance({ did: dids[0] }),
+        identity: entityMockUtils.getIdentityInstance({ did: dids[0]! }),
         percentage: new BigNumber(30),
       },
     ];
@@ -8360,7 +8360,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
         treatment: TargetTreatment.Include,
       },
       defaultWithholdingTax: defaultTaxWithholding.shiftedBy(4),
-      withholdingTax: [tuple(dids[0], taxWithholdings[0].percentage.shiftedBy(4))],
+      withholdingTax: [tuple(dids[0], taxWithholdings[0]!.percentage.shiftedBy(4))],
     };
 
     let corporateAction = dsMockUtils.createMockCorporateAction(params);
@@ -8727,7 +8727,7 @@ describe('caTaxWithholdingsToMeshTaxWithholdings', () => {
   it('should convert a set of tax withholding entries to a set of polkadot tax withholding entry', () => {
     const createTypeMock = context.createType;
 
-    const { identity, percentage } = withholdings[0];
+    const { identity, percentage } = withholdings[0]!;
     const rawIdentityId = dsMockUtils.createMockIdentityId(identity);
     const rawPermill = dsMockUtils.createMockPermill(percentage);
     when(createTypeMock)
@@ -8737,7 +8737,7 @@ describe('caTaxWithholdingsToMeshTaxWithholdings', () => {
       .calledWith('Permill', percentage.shiftedBy(4).toString())
       .mockReturnValue(rawPermill);
 
-    expect(caTaxWithholdingsToMeshTaxWithholdings([withholdings[0]], context)).toEqual([
+    expect(caTaxWithholdingsToMeshTaxWithholdings([withholdings[0]!], context)).toEqual([
       [rawIdentityId, rawPermill],
     ]);
   });
@@ -10826,6 +10826,18 @@ describe('middlewareAuthorizationDataToAuthorization', () => {
       middlewareAuthorizationDataToAuthorization(context, AuthTypeEnum.Custom, 'randomData')
     ).toThrow('Unsupported Authorization Type. Please contact the Polymesh team');
   });
+
+  it('should throw an error if incorrect data is passed', () => {
+    const context = dsMockUtils.getContextInstance();
+
+    expect(() =>
+      middlewareAuthorizationDataToAuthorization(
+        context,
+        AuthTypeEnum.AddRelayerPayingKey,
+        'randomData'
+      )
+    ).toThrow('Invalid data string passed.');
+  });
 });
 
 describe('legToFungibleLeg', () => {
@@ -10954,7 +10966,7 @@ describe('datesToScheduleCheckpoints', () => {
 
     const input = [new Date()];
 
-    when(context.createType).calledWith('u64', input[0].getTime()).mockReturnValue(fakeMoment);
+    when(context.createType).calledWith('u64', input[0]!.getTime()).mockReturnValue(fakeMoment);
     when(context.createType)
       .calledWith('BTreeSet<Moment>', [fakeMoment])
       .mockReturnValue(fakeBtree);

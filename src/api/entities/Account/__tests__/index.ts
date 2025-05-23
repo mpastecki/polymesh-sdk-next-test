@@ -280,7 +280,6 @@ describe('Account class', () => {
             address,
             moduleId,
             callId,
-            success: undefined,
           },
           new BigNumber(2),
           new BigNumber(1),
@@ -312,18 +311,18 @@ describe('Account class', () => {
         start: new BigNumber(1),
       });
 
-      expect(result.data[0].blockNumber).toEqual(blockNumber1);
-      expect(result.data[1].blockNumber).toEqual(blockNumber2);
-      expect(result.data[0].blockHash).toEqual(blockHash1);
-      expect(result.data[1].blockHash).toEqual(blockHash2);
-      expect(result.data[0].blockDate).toEqual(blockDate1);
-      expect(result.data[1].blockDate).toEqual(blockDate2);
-      expect(result.data[0].address).toEqual(address);
-      expect(result.data[1].address).toBeUndefined();
-      expect(result.data[0].nonce).toEqual(new BigNumber(1));
-      expect(result.data[1].nonce).toBeNull();
-      expect(result.data[0].success).toBeFalsy();
-      expect(result.data[1].success).toBeTruthy();
+      expect(result.data[0]!.blockNumber).toEqual(blockNumber1);
+      expect(result.data[1]!.blockNumber).toEqual(blockNumber2);
+      expect(result.data[0]!.blockHash).toEqual(blockHash1);
+      expect(result.data[1]!.blockHash).toEqual(blockHash2);
+      expect(result.data[0]!.blockDate).toEqual(blockDate1);
+      expect(result.data[1]!.blockDate).toEqual(blockDate2);
+      expect(result.data[0]!.address).toEqual(address);
+      expect(result.data[1]!.address).toBeUndefined();
+      expect(result.data[0]!.nonce).toEqual(new BigNumber(1));
+      expect(result.data[1]!.nonce).toBeNull();
+      expect(result.data[0]!.success).toBeFalsy();
+      expect(result.data[1]!.success).toBeTruthy();
       expect(result.count).toEqual(new BigNumber(20));
       expect(result.next).toEqual(new BigNumber(3));
 
@@ -354,16 +353,16 @@ describe('Account class', () => {
         start: new BigNumber(1),
       });
 
-      expect(result.data[0].blockNumber).toEqual(blockNumber1);
-      expect(result.data[1].blockNumber).toEqual(blockNumber2);
-      expect(result.data[0].blockHash).toEqual(blockHash1);
-      expect(result.data[1].blockHash).toEqual(blockHash2);
-      expect(result.data[0].blockDate).toEqual(blockDate1);
-      expect(result.data[1].blockDate).toEqual(blockDate2);
-      expect(result.data[0].address).toEqual(address);
-      expect(result.data[1].address).toBeUndefined();
-      expect(result.data[0].success).toBeFalsy();
-      expect(result.data[1].success).toBeTruthy();
+      expect(result.data[0]!.blockNumber).toEqual(blockNumber1);
+      expect(result.data[1]!.blockNumber).toEqual(blockNumber2);
+      expect(result.data[0]!.blockHash).toEqual(blockHash1);
+      expect(result.data[1]!.blockHash).toEqual(blockHash2);
+      expect(result.data[0]!.blockDate).toEqual(blockDate1);
+      expect(result.data[1]!.blockDate).toEqual(blockDate2);
+      expect(result.data[0]!.address).toEqual(address);
+      expect(result.data[1]!.address).toBeUndefined();
+      expect(result.data[0]!.success).toBeFalsy();
+      expect(result.data[1]!.success).toBeTruthy();
       expect(result.count).toEqual(new BigNumber(20));
       expect(result.next).toEqual(new BigNumber(3));
 
@@ -371,10 +370,7 @@ describe('Account class', () => {
         extrinsicsByArgs(
           false,
           {
-            blockId: undefined,
             address,
-            moduleId: undefined,
-            callId: undefined,
             success: 1,
           },
           undefined,
@@ -391,9 +387,9 @@ describe('Account class', () => {
         orderBy: ExtrinsicsOrderBy.ModuleIdAsc,
       });
 
-      expect(result.data[0].blockNumber).toEqual(blockNumber1);
-      expect(result.data[0].address).toEqual(address);
-      expect(result.data[0].success).toBeFalsy();
+      expect(result.data[0]!.blockNumber).toEqual(blockNumber1);
+      expect(result.data[0]!.address).toEqual(address);
+      expect(result.data[0]!.success).toBeFalsy();
       expect(result.count).toEqual(new BigNumber(20));
       expect(result.next).toEqual(new BigNumber(result.data.length));
 
@@ -401,11 +397,7 @@ describe('Account class', () => {
         extrinsicsByArgs(
           false,
           {
-            blockId: undefined,
             address,
-            moduleId: undefined,
-            callId: undefined,
-            success: undefined,
           },
           undefined,
           undefined,

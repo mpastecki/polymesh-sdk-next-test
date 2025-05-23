@@ -234,7 +234,7 @@ describe('Assets Class', () => {
       const tickerReservations = await assets.getTickerReservations({ owner: did });
 
       expect(tickerReservations).toHaveLength(1);
-      expect(tickerReservations[0].ticker).toBe(fakeTicker);
+      expect(tickerReservations[0]!.ticker).toBe(fakeTicker);
     });
 
     it('should return a list of ticker reservations owned by the Identity', async () => {
@@ -259,7 +259,7 @@ describe('Assets Class', () => {
       const tickerReservations = await assets.getTickerReservations();
 
       expect(tickerReservations).toHaveLength(1);
-      expect(tickerReservations[0].ticker).toBe(fakeTicker);
+      expect(tickerReservations[0]!.ticker).toBe(fakeTicker);
     });
 
     it('should filter out tickers with unreadable characters', async () => {
@@ -299,7 +299,7 @@ describe('Assets Class', () => {
       const tickerReservations = await assets.getTickerReservations();
 
       expect(tickerReservations).toHaveLength(1);
-      expect(tickerReservations[0].ticker).toBe(fakeTicker);
+      expect(tickerReservations[0]!.ticker).toBe(fakeTicker);
     });
   });
 
@@ -391,7 +391,7 @@ describe('Assets Class', () => {
       const asset = await assets.getAssets({ owner: 'someDid' });
 
       expect(asset).toHaveLength(1);
-      expect(asset[0].id).toBe(hexToUuid(fakeAssetId));
+      expect(asset[0]!.id).toBe(hexToUuid(fakeAssetId));
     });
 
     it('should return a list of Assets owned by the signing Identity if no did is supplied', async () => {
@@ -423,7 +423,7 @@ describe('Assets Class', () => {
       const assetResults = await assets.getAssets();
 
       expect(assetResults).toHaveLength(1);
-      expect(assetResults[0].id).toBe(hexToUuid(assetId));
+      expect(assetResults[0]!.id).toBe(hexToUuid(assetId));
     });
   });
 
@@ -583,9 +583,9 @@ describe('Assets Class', () => {
       const entries = [
         tuple(
           {
-            args: [dsMockUtils.createMockAssetId(uuidToHex(expectedAssets[0].id))],
+            args: [dsMockUtils.createMockAssetId(uuidToHex(expectedAssets[0]!.id))],
           } as unknown as StorageKey,
-          dsMockUtils.createMockBytes(expectedAssets[0].name)
+          dsMockUtils.createMockBytes(expectedAssets[0]!.name)
         ),
       ];
 
@@ -607,7 +607,7 @@ describe('Assets Class', () => {
       const result = await assets.get({ size: new BigNumber(1) });
 
       expect(result).toEqual({
-        data: [expect.objectContaining({ id: expectedAssets[0].id })],
+        data: [expect.objectContaining({ id: expectedAssets[0]!.id })],
         next: 'someKey',
       });
     });

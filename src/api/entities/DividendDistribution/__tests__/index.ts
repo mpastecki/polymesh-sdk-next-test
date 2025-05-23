@@ -376,7 +376,7 @@ describe('DividendDistribution class', () => {
 
       let result = await dividendDistribution.getParticipants();
 
-      const amount = balances[0].balance.multipliedBy(dividendDistribution.perShare);
+      const amount = balances[0]!.balance.multipliedBy(dividendDistribution.perShare);
       const amountAfterTax = amount
         .minus(
           amount.multipliedBy(defaultTaxWithholding).dividedBy(100).decimalPlaces(MAX_DECIMALS)
@@ -385,7 +385,7 @@ describe('DividendDistribution class', () => {
 
       expect(result).toEqual([
         {
-          identity: balances[0].identity,
+          identity: balances[0]!.identity,
           amount,
           taxWithholdingPercentage: defaultTaxWithholding,
           amountAfterTax,
@@ -393,15 +393,15 @@ describe('DividendDistribution class', () => {
         },
       ]);
 
-      expect(result[0].amountAfterTax.decimalPlaces()).toBeLessThanOrEqual(MAX_DECIMALS);
+      expect(result[0]!.amountAfterTax.decimalPlaces()).toBeLessThanOrEqual(MAX_DECIMALS);
 
       dividendDistribution.paymentDate = new Date('10/14/1987');
 
-      balances[0].identity = entityMockUtils.getIdentityInstance({
+      balances[0]!.identity = entityMockUtils.getIdentityInstance({
         did: 'targetDid',
         isEqual: false,
       });
-      balances[0].identity.isEqual.mockReturnValueOnce(false).mockReturnValue(true);
+      balances[0]!.identity.isEqual.mockReturnValueOnce(false).mockReturnValue(true);
 
       allBalancesMock.mockResolvedValue({ data: balances, next: null });
 
@@ -409,13 +409,13 @@ describe('DividendDistribution class', () => {
 
       expect(result).toEqual([
         expect.objectContaining({
-          identity: balances[0].identity,
+          identity: balances[0]!.identity,
           amount,
           taxWithholdingPercentage: new BigNumber(5),
           paid: false,
         }),
       ]);
-      expect(result[0].amountAfterTax.decimalPlaces()).toBeLessThanOrEqual(MAX_DECIMALS);
+      expect(result[0]!.amountAfterTax.decimalPlaces()).toBeLessThanOrEqual(MAX_DECIMALS);
     });
 
     it("should return an empty array if the distribution checkpoint hasn't been created yet", async () => {
@@ -598,12 +598,12 @@ describe('DividendDistribution class', () => {
         start,
       });
 
-      expect(result.blockNumber).toEqual(blockId);
-      expect(result.blockHash).toEqual(blockHash);
-      expect(result.date).toEqual(new Date(`${datetime}Z`));
-      expect(result.target.did).toBe(eventDid);
-      expect(result.amount).toEqual(balance.shiftedBy(-6));
-      expect(result.withheldTax).toEqual(tax.shiftedBy(-4));
+      expect(result!.blockNumber).toEqual(blockId);
+      expect(result!.blockHash).toEqual(blockHash);
+      expect(result!.date).toEqual(new Date(`${datetime}Z`));
+      expect(result!.target.did).toBe(eventDid);
+      expect(result!.amount).toEqual(balance.shiftedBy(-6));
+      expect(result!.withheldTax).toEqual(tax.shiftedBy(-4));
     });
 
     it('should return null if the query result is empty', async () => {

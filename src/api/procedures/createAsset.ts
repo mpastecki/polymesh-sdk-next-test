@@ -140,13 +140,6 @@ async function getCreateAssetTransaction(
        */
       fee = await addManualFees(fee, [TxTags.asset.RegisterCustomAssetType], context);
 
-      if (!fee) {
-        throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Failed to add fees',
-        });
-      }
-
       return checkTxType({
         transaction: tx.asset.createAssetWithCustomType,
         fee,
@@ -157,7 +150,7 @@ async function getCreateAssetTransaction(
 
       return checkTxType({
         transaction: tx.asset.createAsset,
-        ...(fee && { fee }),
+        fee,
         args: [rawName, rawIsDivisible, rawType, rawIdentifiers, rawFundingRound],
       });
     }
@@ -166,7 +159,7 @@ async function getCreateAssetTransaction(
 
     return checkTxType({
       transaction: tx.asset.createAsset,
-      ...(fee && { fee }),
+      fee,
       args: [rawName, rawIsDivisible, rawType, rawIdentifiers, rawFundingRound],
     });
   }

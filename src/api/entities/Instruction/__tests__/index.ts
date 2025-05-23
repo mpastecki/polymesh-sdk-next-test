@@ -977,8 +977,8 @@ describe('Instruction class', () => {
       const { data } = await instruction.getAffirmations();
 
       expect(data).toHaveLength(1);
-      expect(data[0].identity.did).toEqual(did);
-      expect(data[0].status).toEqual(status);
+      expect(data[0]!.identity.did).toEqual(did);
+      expect(data[0]!.status).toEqual(status);
     });
 
     describe('querying from middleware', () => {
@@ -1014,8 +1014,8 @@ describe('Instruction class', () => {
         });
 
         expect(data).toHaveLength(1);
-        expect(data[0].identity.did).toEqual(did);
-        expect(data[0].status).toEqual(status);
+        expect(data[0]!.identity.did).toEqual(did);
+        expect(data[0]!.status).toEqual(status);
 
         expect(next).toBeNull();
         expect(count).toEqual(new BigNumber(1));
@@ -2373,22 +2373,14 @@ describe('Instruction class', () => {
 
         const result = await instruction.getMediators();
 
-        expect(result).toEqual([
-          {
-            identity: expect.objectContaining({ did: mediatorDid1 }),
-            status: AffirmationStatus.Pending,
-          },
-          {
-            identity: expect.objectContaining({ did: mediatorDid2 }),
-            status: AffirmationStatus.Affirmed,
-            expiry,
-          },
-          {
-            identity: expect.objectContaining({ did: mediatorDid3 }),
-            status: AffirmationStatus.Affirmed,
-            expiry: undefined,
-          },
-        ]);
+        expect(result[0]!.identity.did).toEqual(mediatorDid1);
+        expect(result[0]!.status).toEqual(AffirmationStatus.Pending);
+        expect(result[1]!.identity.did).toEqual(mediatorDid2);
+        expect(result[1]!.status).toEqual(AffirmationStatus.Affirmed);
+        expect(result[1]!.expiry).toEqual(expiry);
+        expect(result[2]!.identity.did).toEqual(mediatorDid3);
+        expect(result[2]!.status).toEqual(AffirmationStatus.Affirmed);
+        expect(result[2]!.expiry).toBeUndefined();
       });
     });
 
@@ -2406,13 +2398,9 @@ describe('Instruction class', () => {
 
         const result = await instruction.getMediators();
 
-        expect(result).toEqual([
-          expect.objectContaining({
-            identity: expect.objectContaining({ did: mediatorDid1 }),
-            status: AffirmationStatus.Pending,
-            expiry: undefined,
-          }),
-        ]);
+        expect(result[0]!.status).toEqual(AffirmationStatus.Pending);
+        expect(result[0]!.expiry).toBeUndefined();
+        expect(result[0]!.identity.did).toEqual(mediatorDid1);
       });
     });
   });

@@ -358,7 +358,7 @@ describe('Procedure class', () => {
       );
 
       rawFees.forEach((rawFee, index) =>
-        when(balanceToBigNumberSpy).calledWith(rawFee).mockReturnValue(new BigNumber(fees[index]))
+        when(balanceToBigNumberSpy).calledWith(rawFee).mockReturnValue(new BigNumber(fees[index]!))
       );
     });
 

@@ -17,13 +17,7 @@ export const createMultiSigResolver =
   (receipt: ISubmittableResult): MultiSig => {
     const [record] = filterEventRecords(receipt, 'multiSig', 'MultiSigCreated');
 
-    if (!record?.data) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'MultiSig creation event not found',
-      });
-    }
-    const address = accountIdToString(record.data[1]);
+    const address = accountIdToString(record!.data[1]);
     return new MultiSig({ address }, context);
   };
 

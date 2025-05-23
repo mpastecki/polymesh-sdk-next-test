@@ -155,7 +155,7 @@ describe('castBallotVote procedure', () => {
       expect(() =>
         assertMotionVotes(
           [{ fallback: new BigNumber(0), power: new BigNumber(1) }],
-          ballotDetails.meta.motions[0]
+          ballotDetails.meta.motions[0]!
         )
       ).toThrow('Number of votes must match number of choices in motion');
     });
@@ -168,7 +168,7 @@ describe('castBallotVote procedure', () => {
             { power: new BigNumber(0) },
             { power: new BigNumber(0) },
           ],
-          ballotDetails.meta.motions[0]
+          ballotDetails.meta.motions[0]!
         )
       ).toThrow('Fallback vote must point to a choice in the motion');
     });
@@ -181,7 +181,7 @@ describe('castBallotVote procedure', () => {
             { power: new BigNumber(1) },
             { power: new BigNumber(1) },
           ],
-          ballotDetails.meta.motions[0]
+          ballotDetails.meta.motions[0]!
         )
       ).toThrow('Fallback vote cannot point to the same choice as the vote');
     });

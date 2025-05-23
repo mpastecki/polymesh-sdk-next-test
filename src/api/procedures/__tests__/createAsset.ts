@@ -240,25 +240,29 @@ describe('createAsset procedure', () => {
       .calledWith(assetType as KnownAssetType, mockContext)
       .mockReturnValue(rawType);
     when(securityIdentifierToAssetIdentifierSpy)
-      .calledWith(securityIdentifiers[0], mockContext)
-      .mockReturnValue(rawIdentifiers[0]);
+      .calledWith(securityIdentifiers[0]!, mockContext)
+      .mockReturnValue(rawIdentifiers[0]!);
     when(fundingRoundToAssetFundingRoundSpy)
       .calledWith(fundingRound, mockContext)
       .mockReturnValue(rawFundingRound);
     when(assetDocumentToDocumentSpy)
       .calledWith(
-        { uri: documents[0].uri, contentHash: documents[0].contentHash, name: documents[0].name },
+        {
+          uri: documents[0]!.uri,
+          contentHash: documents[0]!.contentHash,
+          name: documents[0]!.name,
+        } as AssetDocument,
         mockContext
       )
-      .mockReturnValue(rawDocuments[0]);
+      .mockReturnValue(rawDocuments[0]!);
 
     when(mockContext.getProtocolFees)
       .calledWith({ tags: [TxTags.asset.CreateAsset] })
-      .mockResolvedValue([{ tag: TxTags.asset.CreateAsset, fees: protocolFees[1] }]);
+      .mockResolvedValue([{ tag: TxTags.asset.CreateAsset, fees: protocolFees[1]! }]);
 
     when(mockContext.getProtocolFees)
       .calledWith({ tags: [TxTags.asset.RegisterCustomAssetType] })
-      .mockResolvedValue([{ tag: TxTags.asset.RegisterCustomAssetType, fees: protocolFees[2] }]);
+      .mockResolvedValue([{ tag: TxTags.asset.RegisterCustomAssetType, fees: protocolFees[2]! }]);
 
     defaultPortfolioKind = dsMockUtils.createMockPortfolioKind('Default');
     numberedPortfolioKind = dsMockUtils.createMockPortfolioKind({
@@ -368,6 +372,7 @@ describe('createAsset procedure', () => {
       initialSupply: new BigNumber(0),
       securityIdentifiers: undefined,
       fundingRound: undefined,
+      // @ts-expect-error Testing with undefined values and duplicate property
       requireInvestorUniqueness: false,
     });
 
@@ -391,6 +396,7 @@ describe('createAsset procedure', () => {
       initialSupply: new BigNumber(0),
       securityIdentifiers: undefined,
       fundingRound: undefined,
+      // @ts-expect-error Testing with undefined values and duplicate property
       requireInvestorUniqueness: false,
       ticker: undefined,
     });
@@ -799,6 +805,7 @@ describe('createAsset procedure', () => {
       const proc = procedureMockUtils.getInstance<Params, FungibleAsset, Storage>(mockContext);
       const boundFunc = prepareStorage.bind(proc);
 
+      // @ts-expect-error Testing with undefined values and duplicate property
       let result = await boundFunc({
         assetType: KnownAssetType.EquityCommon,
         ticker: undefined,

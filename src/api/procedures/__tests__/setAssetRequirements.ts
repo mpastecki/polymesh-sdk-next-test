@@ -143,8 +143,8 @@ describe('setAssetRequirements procedure', () => {
       .mockReturnValue(rawAssetId);
     requirements.forEach((conditions, index) => {
       const complianceRequirement = dsMockUtils.createMockComplianceRequirement({
-        senderConditions: senderConditions[index],
-        receiverConditions: receiverConditions[index],
+        senderConditions: senderConditions[index]!,
+        receiverConditions: receiverConditions[index]!,
         id: dsMockUtils.createMockU32(new BigNumber(index)),
       });
       rawComplianceRequirements.push(complianceRequirement);

@@ -72,7 +72,7 @@ describe('setVenueFiltering procedure', () => {
       .mockResolvedValue(dsMockUtils.createMockBool(false));
 
     when(booleanToBoolSpy).calledWith(false, mockContext).mockReturnValue(rawFalse);
-    when(bigNumberToU64Spy).calledWith(venues[0], mockContext).mockReturnValue(rawVenues[0]);
+    when(bigNumberToU64Spy).calledWith(venues[0]!, mockContext).mockReturnValue(rawVenues[0]!);
   });
 
   afterEach(() => {

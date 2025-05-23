@@ -276,7 +276,7 @@ describe('createChildIdentities procedure', () => {
 
       const result = createChildIdentityResolver(fakeContext)({} as ISubmittableResult);
 
-      expect(result[0].did).toEqual(childDid);
+      expect(result[0]!.did).toEqual(childDid);
     });
   });
 });

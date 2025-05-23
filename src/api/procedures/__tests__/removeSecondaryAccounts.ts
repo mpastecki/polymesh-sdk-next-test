@@ -60,10 +60,10 @@ describe('removeSecondaryAccounts procedure', () => {
   it('should return a remove secondary items transaction spec', async () => {
     const { accounts } = args;
 
-    const rawAccountId = dsMockUtils.createMockAccountId(accounts[0].address);
+    const rawAccountId = dsMockUtils.createMockAccountId(accounts[0]!.address);
     getSecondaryAccountPermissionsSpy.mockReturnValue(accounts.map(account => ({ account })));
     when(stringToAccountIdSpy)
-      .calledWith(accounts[0].address, mockContext)
+      .calledWith(accounts[0]!.address, mockContext)
       .mockReturnValue(rawAccountId);
 
     const proc = procedureMockUtils.getInstance<RemoveSecondaryAccountsParams, void>(mockContext);
@@ -102,9 +102,9 @@ describe('removeSecondaryAccounts procedure', () => {
   it('should throw an error if at least one of the secondary Accounts to remove is not present in the secondary Accounts list', () => {
     const { accounts } = args;
     const account = entityMockUtils.getAccountInstance({ address: 'primaryAccount' });
-    const signerValue = { type: SignerType.Account, value: accounts[0].address };
+    const signerValue = { type: SignerType.Account, value: accounts[0]!.address };
 
-    when(signerToSignerValueSpy).calledWith(accounts[0]).mockReturnValue(signerValue);
+    when(signerToSignerValueSpy).calledWith(accounts[0]!).mockReturnValue(signerValue);
     getSecondaryAccountPermissionsSpy.mockReturnValue([]);
     mockContext.getSigningIdentity = jest
       .fn()

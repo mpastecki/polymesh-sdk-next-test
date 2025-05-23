@@ -37,14 +37,7 @@ export const createGroupAndAuthorizationResolver =
   (receipt: ISubmittableResult): Promise<AuthorizationRequest> => {
     const [record] = filterEventRecords(receipt, 'identity', 'AuthorizationAdded');
 
-    if (!record?.data) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Authorization addition event not found',
-      });
-    }
-
-    const id = u64ToBigNumber(record.data[3]);
+    const id = u64ToBigNumber(record!.data[3]);
 
     return target.authorizations.getOne({ id });
   };

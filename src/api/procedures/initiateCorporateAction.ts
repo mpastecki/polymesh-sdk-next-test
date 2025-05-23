@@ -38,7 +38,9 @@ export const initiateCorporateActionResolver =
   (asset: FungibleAsset, context: Context) =>
   async (receipt: ISubmittableResult): Promise<CorporateAction> => {
     const [record] = filterEventRecords(receipt, 'corporateAction', 'CAInitiated');
-    const [, caId] = record!.data;
+
+    const { data } = record!;
+    const [, caId] = data;
 
     const id = u32ToBigNumber(caId.localId);
     const assetId = assetIdToString(caId.assetId);

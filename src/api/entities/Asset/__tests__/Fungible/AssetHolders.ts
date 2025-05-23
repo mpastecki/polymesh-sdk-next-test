@@ -122,7 +122,7 @@ describe('AssetHolder class', () => {
 
       const context = dsMockUtils.getContextInstance();
 
-      const { identity, value } = fakeData[0];
+      const { identity, value } = fakeData[0]!;
       const identityId = dsMockUtils.createMockIdentityId(identity);
       const fakeBalance = dsMockUtils.createMockBalance(value);
       const balance = new BigNumber(value);

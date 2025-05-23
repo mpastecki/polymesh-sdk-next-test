@@ -170,6 +170,6 @@ describe('createPortfoliosResolver', () => {
 
     const [result] = createPortfoliosResolver(fakeContext)({} as ISubmittableResult);
 
-    expect(result.id).toEqual(id);
+    expect(result!.id).toEqual(id);
   });
 });

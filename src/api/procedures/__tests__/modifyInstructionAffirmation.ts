@@ -13,6 +13,7 @@ import { when } from 'jest-when';
 
 import {
   getAuthorization,
+  isParam,
   prepareModifyInstructionAffirmation,
   prepareStorage,
   Storage,
@@ -32,6 +33,7 @@ import {
   Identity,
   InstructionAffirmationOperation,
   ModifyInstructionAffirmationParams,
+  NumberedPortfolio,
   OffChainAffirmationReceipt,
   PortfolioId,
   PortfolioLike,
@@ -442,9 +444,7 @@ describe('modifyInstructionAffirmation procedure', () => {
 
       entityMockUtils.configureMocks({
         instructionOptions: {
-          detailsFromChain: {
-            venue: undefined,
-          },
+          detailsFromChain: {},
         },
       });
       await expect(
@@ -1259,5 +1259,69 @@ describe('modifyInstructionAffirmation procedure', () => {
         instructionInfo: mockExecuteInfo,
       });
     });
+  });
+});
+
+describe('isParam', () => {
+  let defaultPortfolio: DefaultPortfolio;
+  let numberedPortfolio: NumberedPortfolio;
+
+  beforeEach(() => {
+    defaultPortfolio = entityMockUtils.getDefaultPortfolioInstance({ did: 'someDid' });
+    numberedPortfolio = entityMockUtils.getNumberedPortfolioInstance({
+      did: 'someDid',
+      id: new BigNumber(1),
+    });
+  });
+
+  it('should return true when there are no portfolio parameters', () => {
+    const result = isParam(defaultPortfolio, []);
+    expect(result).toBe(true);
+  });
+
+  it('should return true when portfolio matches a parameter exactly', () => {
+    const portfolioParams = [{ did: 'someDid' }];
+    const result = isParam(defaultPortfolio, portfolioParams);
+    expect(result).toBe(true);
+
+    const numberedParams = [{ did: 'someDid', number: new BigNumber(1) }];
+    const numberedResult = isParam(numberedPortfolio, numberedParams);
+    expect(numberedResult).toBe(true);
+  });
+
+  it('should return false when portfolio does not match any parameters', () => {
+    const portfolioParams = [{ did: 'otherDid' }];
+    const result = isParam(defaultPortfolio, portfolioParams);
+    expect(result).toBe(false);
+
+    const numberedParams = [{ did: 'someDid', number: new BigNumber(2) }];
+    const numberedResult = isParam(numberedPortfolio, numberedParams);
+    expect(numberedResult).toBe(false);
+  });
+
+  it('should handle default portfolios correctly (number is null/0)', () => {
+    const portfolioParams = [{ did: 'someDid', number: new BigNumber(0) }];
+    const result = isParam(defaultPortfolio, portfolioParams);
+    expect(result).toBe(true);
+
+    const zeroNumberParams = [{ did: 'someDid', number: new BigNumber(0) }];
+    const zeroNumberResult = isParam(defaultPortfolio, zeroNumberParams);
+    expect(zeroNumberResult).toBe(true);
+  });
+
+  it('should handle numbered portfolios correctly', () => {
+    const portfolioParams = [
+      { did: 'someDid', number: new BigNumber(1) },
+      { did: 'otherDid', number: new BigNumber(2) },
+    ];
+    const result = isParam(numberedPortfolio, portfolioParams);
+    expect(result).toBe(true);
+
+    const nonMatchingParams = [
+      { did: 'someDid', number: new BigNumber(2) },
+      { did: 'otherDid', number: new BigNumber(1) },
+    ];
+    const nonMatchingResult = isParam(numberedPortfolio, nonMatchingParams);
+    expect(nonMatchingResult).toBe(false);
   });
 });

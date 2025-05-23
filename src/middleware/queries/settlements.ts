@@ -464,9 +464,9 @@ export async function historicalInstructionsQuery(
 
 export interface QuerySettlementFilters {
   identityId: string;
-  portfolioId?: BigNumber;
-  assetId?: string;
-  address?: string;
+  portfolioId?: BigNumber | undefined;
+  assetId?: string | undefined;
+  address?: string | undefined;
 }
 
 type LegArgs = 'from' | 'fromPortfolio' | 'to' | 'toPortfolio' | 'assetId' | 'addresses';

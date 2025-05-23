@@ -140,14 +140,7 @@ export async function prepareInvestInSto(
     assets: [raisingCurrency],
   });
 
-  if (!balanceResult) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Free balance not found',
-    });
-  }
-
-  const { free: freeAssetBalance } = balanceResult;
+  const { free: freeAssetBalance } = balanceResult!;
 
   if (sale !== OfferingSaleStatus.Live || timing !== OfferingTimingStatus.Started) {
     throw new PolymeshError({

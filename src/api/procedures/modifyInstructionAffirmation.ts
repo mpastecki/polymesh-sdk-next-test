@@ -639,7 +639,7 @@ function extractPortfolioParams(params: ModifyInstructionAffirmationParams): Por
 /**
  * @hidden
  */
-const isParam = (
+export const isParam = (
   legPortfolio: DefaultPortfolio | NumberedPortfolio,
   portfolioIdParams: PortfolioId[]
 ): boolean => {
@@ -650,7 +650,7 @@ const isParam = (
     portfolioIdParams.some(
       ({ did, number }) =>
         did === legPortfolioDid &&
-        new BigNumber(legPortfolioNumber || 0).eq(new BigNumber(number || 0))
+        new BigNumber(legPortfolioNumber ?? 0).eq(new BigNumber(number ?? 0))
     )
   );
 };

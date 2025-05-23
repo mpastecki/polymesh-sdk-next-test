@@ -592,8 +592,8 @@ describe('Identity class', () => {
 
       const result = await identity.getTrustingAssets();
 
-      expect(result[0].id).toBe(assetIds[0]);
-      expect(result[1].id).toBe(assetIds[1]);
+      expect(result[0]!.id).toBe(assetIds[0]);
+      expect(result[1]!.id).toBe(assetIds[1]);
     });
   });
 
@@ -616,8 +616,8 @@ describe('Identity class', () => {
 
       let result = await identity.getHeldAssets();
 
-      expect(result.data[0].id).toBe(assetIds[0]);
-      expect(result.data[1].id).toBe(assetIds[1]);
+      expect(result.data[0]!.id).toBe(assetIds[0]);
+      expect(result.data[1]!.id).toBe(assetIds[1]);
 
       dsMockUtils.createApolloQueryMock(
         assetHoldersQuery(
@@ -641,8 +641,8 @@ describe('Identity class', () => {
         order: AssetHoldersOrderBy.CreatedBlockIdAsc,
       });
 
-      expect(result.data[0].id).toBe(assetIds[0]);
-      expect(result.data[1].id).toBe(assetIds[1]);
+      expect(result.data[0]!.id).toBe(assetIds[0]);
+      expect(result.data[1]!.id).toBe(assetIds[1]);
     });
   });
 
@@ -666,8 +666,8 @@ describe('Identity class', () => {
 
       let result = await identity.getHeldNfts();
 
-      expect(result.data[0].collection.id).toBe(assetIds[0]);
-      expect(result.data[1].collection.id).toBe(assetIds[1]);
+      expect(result.data[0]!.collection.id).toBe(assetIds[0]);
+      expect(result.data[1]!.collection.id).toBe(assetIds[1]);
 
       dsMockUtils.createApolloQueryMock(
         nftHoldersQuery(
@@ -691,9 +691,9 @@ describe('Identity class', () => {
         order: NftHoldersOrderBy.CreatedBlockIdAsc,
       });
 
-      expect(result.data[0].collection.id).toBe(assetIds[0]);
-      expect(result.data[1].collection.id).toBe(assetIds[1]);
-      expect(result.data[0].nfts).toEqual(
+      expect(result.data[0]!.collection.id).toBe(assetIds[0]);
+      expect(result.data[1]!.collection.id).toBe(assetIds[1]);
+      expect(result.data[0]!.nfts).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: new BigNumber(1) }),
           expect.objectContaining({ id: new BigNumber(3) }),
@@ -735,7 +735,7 @@ describe('Identity class', () => {
       const identity = new Identity({ did }, context);
 
       const result = await identity.getVenues();
-      expect(result[0].id).toEqual(venueId);
+      expect(result[0]!.id).toEqual(venueId);
     });
   });
 
@@ -1128,8 +1128,8 @@ describe('Identity class', () => {
 
       const heldAssetsSpy = jest.spyOn(identity, 'getHeldAssets');
       heldAssetsSpy
-        .mockResolvedValueOnce({ data: [assets[0]], next: new BigNumber(1) })
-        .mockResolvedValue({ data: [assets[1]], next: null });
+        .mockResolvedValueOnce({ data: [assets[0]!], next: new BigNumber(1) })
+        .mockResolvedValue({ data: [assets[1]!], next: null });
 
       const result = await identity.getPendingDistributions();
 
@@ -1302,8 +1302,8 @@ describe('Identity class', () => {
       const children = ['someChild', 'someOtherChild'];
       const rawChildren = children.map(child => dsMockUtils.createMockIdentityId(child));
 
-      when(identityIdToStringSpy).calledWith(rawChildren[0]).mockReturnValue(children[0]);
-      when(identityIdToStringSpy).calledWith(rawChildren[1]).mockReturnValue(children[1]);
+      when(identityIdToStringSpy).calledWith(rawChildren[0]!).mockReturnValue(children[0]!);
+      when(identityIdToStringSpy).calledWith(rawChildren[1]!).mockReturnValue(children[1]!);
 
       dsMockUtils.createQueryMock('identity', 'parentDid', {
         entries: rawChildren.map(child =>

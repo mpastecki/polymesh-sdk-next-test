@@ -2,6 +2,7 @@ import { Bytes, Option } from '@polkadot/types';
 import { PalletStoFundraiser, PolymeshPrimitivesAssetAssetId } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
+import lodash from 'lodash';
 
 import { Offerings } from '~/api/entities/Asset/Fungible/Offerings';
 import { Context, FungibleAsset, Namespace, Offering, PolymeshTransaction } from '~/internal';
@@ -173,8 +174,8 @@ describe('Offerings class', () => {
             timing: OfferingTimingStatus.Started,
             balance: OfferingBalanceStatus.Available,
           },
-          totalAmount: tiers[0].amount,
-          totalRemaining: tiers[0].remaining,
+          totalAmount: tiers[0]!.amount,
+          totalRemaining: tiers[0]!.remaining,
         },
         {
           creator,
@@ -192,8 +193,8 @@ describe('Offerings class', () => {
             timing: OfferingTimingStatus.Started,
             balance: OfferingBalanceStatus.Available,
           },
-          totalAmount: tiers[0].amount,
-          totalRemaining: tiers[0].remaining,
+          totalAmount: tiers[0]!.amount,
+          totalRemaining: tiers[0]!.remaining,
         },
       ];
       fundraisers = [
@@ -212,9 +213,9 @@ describe('Offerings class', () => {
           venueId: dsMockUtils.createMockU64(venue.id),
           tiers: [
             dsMockUtils.createMockFundraiserTier({
-              total: dsMockUtils.createMockBalance(tiers[0].amount),
-              price: dsMockUtils.createMockBalance(tiers[0].price),
-              remaining: dsMockUtils.createMockBalance(tiers[0].remaining),
+              total: dsMockUtils.createMockBalance(tiers[0]!.amount),
+              price: dsMockUtils.createMockBalance(tiers[0]!.price),
+              remaining: dsMockUtils.createMockBalance(tiers[0]!.remaining),
             }),
           ],
           start: dsMockUtils.createMockMoment(new BigNumber(start.getTime())),
@@ -239,9 +240,9 @@ describe('Offerings class', () => {
           venueId: dsMockUtils.createMockU64(venue.id),
           tiers: [
             dsMockUtils.createMockFundraiserTier({
-              total: dsMockUtils.createMockBalance(tiers[0].amount),
-              price: dsMockUtils.createMockBalance(tiers[0].price),
-              remaining: dsMockUtils.createMockBalance(tiers[0].remaining),
+              total: dsMockUtils.createMockBalance(tiers[0]!.amount),
+              price: dsMockUtils.createMockBalance(tiers[0]!.price),
+              remaining: dsMockUtils.createMockBalance(tiers[0]!.remaining),
             }),
           ],
           start: dsMockUtils.createMockMoment(new BigNumber(start.getTime())),
@@ -257,11 +258,11 @@ describe('Offerings class', () => {
     beforeEach(() => {
       when(stringToAssetIdSpy).calledWith(assetId, context).mockReturnValue(rawAssetId);
       when(fundraiserToOfferingDetailsSpy)
-        .calledWith(fundraisers[0], rawName.unwrap(), context)
-        .mockReturnValue(details[0]);
+        .calledWith(fundraisers[0]!, rawName.unwrap(), context)
+        .mockReturnValue(details[0]!);
       when(fundraiserToOfferingDetailsSpy)
-        .calledWith(fundraisers[1], rawName.unwrap(), context)
-        .mockReturnValue(details[1]);
+        .calledWith(fundraisers[1]!, rawName.unwrap(), context)
+        .mockReturnValue(details[1]!);
 
       dsMockUtils.createQueryMock('sto', 'fundraisers', {
         entries: [
@@ -290,10 +291,10 @@ describe('Offerings class', () => {
     it('should return all Offerings associated to the Asset', async () => {
       const result = await offerings.get();
 
-      expect(result[0].offering.id).toEqual(new BigNumber(1));
-      expect(result[0].details).toEqual(details[0]);
-      expect(result[1].offering.id).toEqual(new BigNumber(2));
-      expect(result[1].details).toEqual(details[1]);
+      expect(result[0]!.offering.id).toEqual(new BigNumber(1));
+      expect(result[0]!.details).toEqual(details[0]);
+      expect(result[1]!.offering.id).toEqual(new BigNumber(2));
+      expect(result[1]!.details).toEqual(details[1]);
 
       expect(result.length).toBe(2);
     });
@@ -307,10 +308,17 @@ describe('Offerings class', () => {
         },
       });
 
-      expect(result[0].offering.id).toEqual(new BigNumber(2));
-      expect(result[0].details).toEqual(details[1]);
+      expect(result[0]!.offering.id).toEqual(new BigNumber(2));
+      expect(result[0]!.details).toEqual(details[1]);
 
       expect(result.length).toBe(1);
+    });
+
+    it('should throw if named entry not found in fundraiserEntries', () => {
+      const removeSpy = jest.spyOn(lodash, 'remove');
+      removeSpy.mockReturnValue([]);
+
+      return expect(offerings.get()).rejects.toThrow('Named entry not found in fundraiserEntries');
     });
   });
 });

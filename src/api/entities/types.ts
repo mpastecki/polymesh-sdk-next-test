@@ -310,7 +310,7 @@ export interface IdentityWithClaims {
 
 export interface ClaimScope {
   scope: Scope | null;
-  assetId?: string;
+  assetId?: string | undefined;
 }
 
 export type TrustedFor =

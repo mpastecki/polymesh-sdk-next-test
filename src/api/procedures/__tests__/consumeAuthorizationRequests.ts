@@ -283,11 +283,11 @@ describe('consumeAuthorizationRequests procedure', () => {
         },
       });
 
-      args.authRequests[0].target = entityMockUtils.getIdentityInstance({
+      args.authRequests[0]!.target = entityMockUtils.getIdentityInstance({
         isEqual: false,
         did: 'someoneElse',
       });
-      args.authRequests[0].issuer = entityMockUtils.getIdentityInstance({
+      args.authRequests[0]!.issuer = entityMockUtils.getIdentityInstance({
         isEqual: false,
         did: 'someoneElse',
       });
@@ -304,7 +304,7 @@ describe('consumeAuthorizationRequests procedure', () => {
         },
       });
 
-      args.authRequests[0].target = entityMockUtils.getAccountInstance({ isEqual: false });
+      args.authRequests[0]!.target = entityMockUtils.getAccountInstance({ isEqual: false });
 
       result = await boundFunc(args);
       expect(result).toEqual({

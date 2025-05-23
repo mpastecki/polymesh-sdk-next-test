@@ -447,7 +447,7 @@ describe('assertSecondaryAccounts', () => {
     }
 
     expect(error.message).toBe('One of the Accounts is not a secondary Account for the Identity');
-    expect(error.data.missing).toEqual([accounts[0].address]);
+    expect(error.data.missing).toEqual([accounts[0]!.address]);
   });
 });
 

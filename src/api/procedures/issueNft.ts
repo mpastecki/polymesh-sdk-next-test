@@ -25,14 +25,7 @@ export const issueNftResolver =
   (receipt: ISubmittableResult): Nft => {
     const [record] = filterEventRecords(receipt, 'nft', 'NFTPortfolioUpdated');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'NFT issuance event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
     const { assetId, ids } = meshNftToNftId(data[1]);
 
     const id = ids[0] as BigNumber;

@@ -117,13 +117,33 @@ describe('Documents class', () => {
         )
       );
 
-      requestPaginatedSpy.mockResolvedValue({ entries, lastKey: null });
+      const size = new BigNumber(1);
+      const start = '0';
 
       const context = dsMockUtils.getContextInstance();
+      when(requestPaginatedSpy)
+        .calledWith(context.polymeshApi.query.asset.assetDocuments, { arg: undefined })
+        .mockResolvedValue({ entries, lastKey: null });
+
+      when(requestPaginatedSpy)
+        .calledWith(context.polymeshApi.query.asset.assetDocuments, {
+          arg: undefined,
+          paginationOpts: { size, start },
+        })
+        .mockResolvedValue({ entries: entries.slice(1), lastKey: null });
       const documents = new Documents(asset, context);
-      const result = await documents.get();
+      let result = await documents.get();
+
+      expect(requestPaginatedSpy).toHaveBeenCalledWith(
+        context.polymeshApi.query.asset.assetDocuments,
+        { arg: undefined }
+      );
 
       expect(result).toEqual({ data: expectedDocuments, next: null });
+
+      result = await documents.get({ size, start });
+
+      expect(result).toEqual({ data: expectedDocuments.slice(1), next: null });
     });
   });
 });

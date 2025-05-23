@@ -168,7 +168,6 @@ describe('Claims Class', () => {
       dsMockUtils.createApolloQueryMock(
         claimsQuery(false, {
           dids: [targetDid],
-          scope: undefined,
           trustedClaimIssuers: [issuerDid],
           claimTypes: [ClaimTypeEnum.CustomerDueDiligence],
           includeExpired: false,
@@ -194,9 +193,6 @@ describe('Claims Class', () => {
       dsMockUtils.createApolloMultipleQueriesMock([
         {
           query: claimsGroupingQuery({
-            scope: undefined,
-            trustedClaimIssuers: undefined,
-            claimTypes: undefined,
             includeExpired: true,
           }),
           returnData: {
@@ -212,9 +208,6 @@ describe('Claims Class', () => {
         {
           query: claimsQuery(false, {
             dids: [targetDid],
-            scope: undefined,
-            trustedClaimIssuers: undefined,
-            claimTypes: undefined,
             includeExpired: true,
           }),
           returnData: {
@@ -541,8 +534,8 @@ describe('Claims Class', () => {
 
       let result = await claims.getClaimScopes({ target });
 
-      expect(result[0].assetId).toBeUndefined();
-      expect(result[0].scope).toEqual({ type: ScopeType.Identity, value: someDid });
+      expect(result[0]!.assetId).toBeUndefined();
+      expect(result[0]!.scope).toEqual({ type: ScopeType.Identity, value: someDid });
 
       result = await claims.getClaimScopes();
 
@@ -733,10 +726,10 @@ describe('Claims Class', () => {
 
       const result = await claims.getClaimScopes({ target });
 
-      expect(result[0].assetId).toBeUndefined();
-      expect(result[0].scope).toEqual({ type: ScopeType.Identity, value: someDid });
-      expect(result[1].assetId).toEqual(assetId);
-      expect(result[1].scope).toEqual({ type: ScopeType.Asset, value: assetId });
+      expect(result[0]!.assetId).toBeUndefined();
+      expect(result[0]!.scope).toEqual({ type: ScopeType.Identity, value: someDid });
+      expect(result[1]!.assetId).toEqual(assetId);
+      expect(result[1]!.scope).toEqual({ type: ScopeType.Asset, value: assetId });
       expect(result.length).toEqual(2);
       expect(getIdentitiesWithClaimsSpy).toHaveBeenCalledTimes(2);
     });
@@ -829,7 +822,6 @@ describe('Claims Class', () => {
           query: claimsGroupingQuery(
             {
               dids: ['someDid'],
-              scope: undefined,
               includeExpired: true,
             },
             ClaimsOrderBy.IssuerIdAsc,
@@ -848,7 +840,6 @@ describe('Claims Class', () => {
         {
           query: claimsQuery(false, {
             dids: ['someDid'],
-            scope: undefined,
             trustedClaimIssuers: [issuerDid],
             includeExpired: true,
           }),
@@ -933,13 +924,13 @@ describe('Claims Class', () => {
       });
 
       expect(result.data.length).toEqual(2);
-      expect(result.data[0].identity.did).toEqual(issuer);
-      expect(result.data[0].claims.length).toEqual(2);
-      expect(result.data[0].claims[0].claim).toEqual(identityClaims[0].claim);
-      expect(result.data[0].claims[1].claim).toEqual(identityClaims[1].claim);
-      expect(result.data[1].identity.did).toEqual(otherIssuer);
-      expect(result.data[1].claims.length).toEqual(1);
-      expect(result.data[1].claims[0].claim).toEqual(identityClaims[2].claim);
+      expect(result.data[0]!.identity.did).toEqual(issuer);
+      expect(result.data[0]!.claims.length).toEqual(2);
+      expect(result.data[0]!.claims[0]!.claim).toEqual(identityClaims[0]!.claim);
+      expect(result.data[0]!.claims[1]!.claim).toEqual(identityClaims[1]!.claim);
+      expect(result.data[1]!.identity.did).toEqual(otherIssuer);
+      expect(result.data[1]!.claims.length).toEqual(1);
+      expect(result.data[1]!.claims[0]!.claim).toEqual(identityClaims[2]!.claim);
 
       result = await claims.getTargetingClaims({
         target,

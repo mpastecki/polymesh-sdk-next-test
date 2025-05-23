@@ -26,14 +26,7 @@ export const createCheckpointScheduleResolver =
   (receipt: ISubmittableResult): CheckpointSchedule => {
     const [record] = filterEventRecords(receipt, 'checkpoint', 'ScheduleCreated');
 
-    if (!record?.data) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Checkpoint schedule creation event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
 
     const rawId = data[2];
     const id = u64ToBigNumber(rawId);

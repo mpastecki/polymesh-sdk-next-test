@@ -173,8 +173,8 @@ export class Claims {
     return context.getIdentityClaimsFromMiddleware({
       trustedClaimIssuers: [did],
       includeExpired,
-      ...(size && { size }),
-      ...(start && { start }),
+      size,
+      start,
     });
   }
 
@@ -219,14 +219,10 @@ export class Claims {
 
     const filters = {
       ...(scope && { scope: await scopeToMiddlewareScope(scope, context) }),
-      ...(trustedClaimIssuers?.length && {
-        trustedClaimIssuers: trustedClaimIssuers.map(trustedClaimIssuer =>
-          signerToString(trustedClaimIssuer)
-        ),
-      }),
-      ...(Array.isArray(claimTypes) && {
-        claimTypes: claimTypes.map(ct => ClaimTypeEnum[ct]),
-      }),
+      trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
+        signerToString(trustedClaimIssuer)
+      ),
+      claimTypes: Array.isArray(claimTypes) ? claimTypes.map(ct => ClaimTypeEnum[ct]) : undefined,
       includeExpired,
     };
 
@@ -260,7 +256,7 @@ export class Claims {
       },
     } = await context.queryMiddleware<Ensured<Query, 'claims'>>(
       claimsQuery(context.isSqIdPadded, {
-        ...(targetIssuers?.length && { dids: targetIssuers }),
+        dids: targetIssuers,
         ...filters,
       })
     );
@@ -382,14 +378,18 @@ export class Claims {
           scope: { type, value },
         } = claim as ScopedClaim;
 
-        const scope = {
-          type,
-          value: type === ScopeType.Asset ? value : value,
-        };
+        let assetId: string | undefined;
+
+        if (type === ScopeType.Asset) {
+          assetId = value;
+        }
 
         return {
-          scope,
-          ...(type === ScopeType.Asset && { assetId: value }),
+          scope: {
+            type,
+            value,
+          },
+          ...(assetId && { assetId }),
         };
       });
 

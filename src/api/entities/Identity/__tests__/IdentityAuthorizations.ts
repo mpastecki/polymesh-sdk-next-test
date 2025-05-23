@@ -99,7 +99,7 @@ describe('IdentityAuthorizations class', () => {
           tuple(
             { args: [issuer, authId] } as unknown as StorageKey,
             dsMockUtils.createMockSignatory({
-              Identity: dsMockUtils.createMockIdentityId(authParams[index].target.did),
+              Identity: dsMockUtils.createMockIdentityId(authParams[index]!.target.did),
             })
           )
       );
@@ -137,7 +137,7 @@ describe('IdentityAuthorizations class', () => {
           target: expectedTarget,
           expiry: expectedExpiry,
           data: expectedData,
-        } = expectedAuthorizations[index];
+        } = expectedAuthorizations[index]!;
 
         expect(issuer.did).toBe(expectedIssuer.did);
         expect(utilsConversionModule.signerToString(target)).toBe(
@@ -148,6 +148,17 @@ describe('IdentityAuthorizations class', () => {
         expect(data).toEqual(expectedData);
       });
       expect(result.next).toBeNull();
+
+      await authsNamespace.getSent({ size: new BigNumber(1) });
+      expect(requestPaginatedSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          arg: undefined,
+          paginationOpts: expect.objectContaining({
+            size: new BigNumber(1),
+          }),
+        })
+      );
     });
   });
 

@@ -117,7 +117,7 @@ export function createArgsAndFilters(
 
   Object.keys(filters).forEach(attribute => {
     if (filters[attribute]) {
-      const type = typeMap[attribute] || 'String';
+      const type = typeMap[attribute] ?? 'String';
       args.push(`$${attribute}: ${type}!`);
       gqlFilters.push(`${attribute}: { equalTo: $${attribute} }`);
     }
@@ -142,8 +142,8 @@ export function getSizeAndOffset(
   start?: BigNumber
 ): { size: number; start: number } {
   return {
-    size: size?.toNumber() || DEFAULT_GQL_PAGE_SIZE,
-    start: start?.toNumber() || 0,
+    size: size?.toNumber() ?? DEFAULT_GQL_PAGE_SIZE,
+    start: start?.toNumber() ?? 0,
   };
 }
 

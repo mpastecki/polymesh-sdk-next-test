@@ -366,9 +366,9 @@ export class NftCollection extends BaseAsset {
         event: eventId,
         to: optionize(middlewarePortfolioToPortfolio)(toPortfolio, context),
         from: optionize(middlewarePortfolioToPortfolio)(fromPortfolio, context),
-        ...(fundingRound ? { fundingRound } : {}),
-        ...(instructionId ? { instructionId: new BigNumber(instructionId) } : {}),
-        ...(instructionMemo ? { instructionMemo } : {}),
+        fundingRound,
+        ...(instructionId && { instructionId: new BigNumber(instructionId) }),
+        instructionMemo,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         extrinsicIndex: new BigNumber(extrinsicIdx!),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -217,9 +217,6 @@ describe('Network Class', () => {
           false,
           {
             ...variables,
-            eventArg0: undefined,
-            eventArg1: undefined,
-            eventArg2: undefined,
           },
           new BigNumber(1)
         ),
@@ -250,8 +247,6 @@ describe('Network Class', () => {
           {
             ...variables,
             eventArg0: 'someDid',
-            eventArg1: undefined,
-            eventArg2: undefined,
           },
           new BigNumber(1)
         ),
@@ -288,9 +283,6 @@ describe('Network Class', () => {
           false,
           {
             ...variables,
-            eventArg0: undefined,
-            eventArg1: undefined,
-            eventArg2: undefined,
           },
           size,
           start
@@ -324,8 +316,6 @@ describe('Network Class', () => {
         eventsByArgs(false, {
           ...variables,
           eventArg0: 'someDid',
-          eventArg1: undefined,
-          eventArg2: undefined,
         }),
         {
           events: { nodes: [] },
@@ -553,7 +543,7 @@ describe('Network Class', () => {
     beforeEach(() => {
       [extrinsic] = dsMockUtils.createMockExtrinsics([
         { toHex: (): string => '0x', hash: dsMockUtils.createMockHash('0x01') },
-      ]);
+      ]) as unknown as [GenericExtrinsic];
 
       dsMockUtils.configureMocks();
       when(context.createType)

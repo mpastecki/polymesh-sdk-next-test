@@ -91,9 +91,9 @@ describe('Subsidies Class', () => {
       const beneficiaries = await subsidies.getBeneficiaries();
 
       expect(beneficiaries).toHaveLength(1);
-      expect(beneficiaries[0].allowance).toEqual(allowance);
-      expect(beneficiaries[0].subsidy.beneficiary.address).toEqual(beneficiary);
-      expect(beneficiaries[0].subsidy.subsidizer.address).toEqual(address);
+      expect(beneficiaries[0]!.allowance).toEqual(allowance);
+      expect(beneficiaries[0]!.subsidy.beneficiary.address).toEqual(beneficiary);
+      expect(beneficiaries[0]!.subsidy.subsidizer.address).toEqual(address);
     });
   });
 

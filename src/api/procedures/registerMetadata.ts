@@ -29,14 +29,7 @@ export const createMetadataResolver =
   (receipt: ISubmittableResult): MetadataEntry => {
     const [record] = filterEventRecords(receipt, 'asset', 'RegisterAssetMetadataLocalType');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'Expected at least one metadata record',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
 
     const id = u64ToBigNumber(data[3]);
 

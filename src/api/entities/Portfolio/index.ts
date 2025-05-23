@@ -41,12 +41,12 @@ import {
 
 export interface UniqueIdentifiers {
   did: string;
-  id: BigNumber;
+  id?: BigNumber | undefined;
 }
 
 export interface HumanReadable {
   did: string;
-  id: string;
+  id?: string | undefined;
 }
 
 const notExistsMessage = "The Portfolio doesn't exist or was removed by its owner";
@@ -73,7 +73,7 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
   /**
    * internal Portfolio identifier (unused for default Portfolio)
    */
-  protected _id: BigNumber;
+  protected _id?: BigNumber | undefined;
 
   /**
    * @hidden
@@ -177,14 +177,10 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
       const locked = balanceToBigNumber(balance);
 
       if (!locked.isZero()) {
-        const tickerBalance = assetBalances[assetId];
-
-        if (!tickerBalance) {
-          return;
-        }
+        const tickerBalance = assetBalances[assetId]!;
 
         tickerBalance.locked = locked;
-        tickerBalance.free = tickerBalance.total.minus(locked);
+        tickerBalance.free = assetBalances[assetId]!.total.minus(locked);
       }
     });
 
@@ -273,12 +269,10 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
         seenAssetIds.add(assetId);
         const nft = new Nft({ id: heldId, assetId }, context);
 
-        const collection = collectionRecord[assetId];
-
-        if (collection !== undefined && Array.isArray(collection)) {
-          collection.push(nft);
-        } else {
+        if (!collectionRecord[assetId]) {
           collectionRecord[assetId] = [nft];
+        } else {
+          collectionRecord[assetId]!.push(nft);
         }
       }
 
@@ -297,8 +291,8 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
 
     const collections: PortfolioCollection[] = [];
     seenAssetIds.forEach(assetId => {
-      const held = heldCollections[assetId] ?? [];
-      const locked = lockedCollections[assetId] ?? [];
+      const held = heldCollections[assetId]!;
+      const locked = lockedCollections[assetId] || [];
       // calculate free NFTs by filtering held NFTs by locked NFT IDs
       const lockedIds = new Set(locked.map(({ id }) => id.toString()));
       const free = held.filter(({ id }) => !lockedIds.has(id.toString()));
@@ -404,8 +398,8 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
       settlementsQuery(context.isSqIdPadded, {
         identityId,
         portfolioId,
-        ...(account ? { address: account } : {}),
-        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
+        address: account,
+        assetId: middlewareAssetId,
       })
     );
 
@@ -413,8 +407,8 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
       portfolioMovementsQuery(context.isSqIdPadded, {
         identityId,
         portfolioId,
-        ...(account ? { address: account } : {}),
-        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
+        address: account,
+        assetId: middlewareAssetId,
       })
     );
 
@@ -459,10 +453,10 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
       owner: { did },
     } = this;
 
-    const result = {
+    const result: HumanReadable = {
       did,
     };
 
-    return toHumanReadable({ ...result, id: id.toString() });
+    return id ? toHumanReadable({ ...result, id }) : result;
   }
 }

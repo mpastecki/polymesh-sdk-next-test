@@ -164,18 +164,7 @@ export async function prepareCastBallotVote(
   const rawVotes: PalletCorporateActionsBallotBallotVote[] = [];
 
   motions.forEach((motion, motionIndex) => {
-    const motionVotes = votes[motionIndex];
-
-    if (!motionVotes) {
-      throw new PolymeshError({
-        code: ErrorCode.ValidationError,
-        message: 'Missing votes for motion',
-        data: {
-          motion: motion.title,
-          motionIndex,
-        },
-      });
-    }
+    const motionVotes = votes[motionIndex]!;
 
     assertMotionVotes(motionVotes, motion);
 

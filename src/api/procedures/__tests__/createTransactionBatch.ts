@@ -206,8 +206,8 @@ describe('createTransactionBatch procedure', () => {
 
       jest.spyOn(utilsInternalModule, 'sliceBatchReceipt').mockImplementation();
 
-      await expect(result.resolvers[0]({} as ISubmittableResult)).resolves.toBe(1);
-      await expect(result.resolvers[1]({} as ISubmittableResult)).resolves.toBe(4);
+      await expect(result.resolvers[0]!({} as ISubmittableResult)).resolves.toBe(1);
+      await expect(result.resolvers[1]!({} as ISubmittableResult)).resolves.toBe(4);
     });
   });
 
@@ -254,7 +254,7 @@ describe('createTransactionBatch procedure', () => {
 
     jest.spyOn(utilsInternalModule, 'sliceBatchReceipt').mockImplementation();
 
-    await expect(result.resolvers[0]({} as ISubmittableResult)).resolves.toBe(4);
+    await expect(result.resolvers[0]!({} as ISubmittableResult)).resolves.toBe(4);
   });
 
   it('should handle a single transaction in batch without resolver function', async () => {
@@ -299,7 +299,7 @@ describe('createTransactionBatch procedure', () => {
 
     jest.spyOn(utilsInternalModule, 'sliceBatchReceipt').mockImplementation();
 
-    await expect(result.resolvers[0]({} as ISubmittableResult)).resolves.toBe(5);
+    await expect(result.resolvers[0]!({} as ISubmittableResult)).resolves.toBe(5);
   });
 
   it('should handle a single transaction in batch with identity transformer', async () => {
@@ -309,7 +309,6 @@ describe('createTransactionBatch procedure', () => {
           transaction: tx3,
           args: ['baz'] as unknown[],
           resolver: (): number => 3,
-          transformer: undefined,
           signingAddress: 'someAddress',
           signer: {} as PolkadotSigner,
           mortality: { immortal: false },
@@ -345,6 +344,6 @@ describe('createTransactionBatch procedure', () => {
 
     jest.spyOn(utilsInternalModule, 'sliceBatchReceipt').mockImplementation();
 
-    await expect(result.resolvers[0]({} as ISubmittableResult)).resolves.toBe(3);
+    await expect(result!.resolvers[0]!({} as ISubmittableResult)).resolves.toBe(3);
   });
 });

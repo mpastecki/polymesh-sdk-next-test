@@ -27,14 +27,7 @@ export const createChildIdentityResolver =
   (receipt: ISubmittableResult): ChildIdentity => {
     const [record] = filterEventRecords(receipt, 'identity', 'ChildDidCreated');
 
-    if (!record) {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: 'Child Identity creation event not found',
-      });
-    }
-
-    const { data } = record;
+    const { data } = record!;
     const did = identityIdToString(data[1]);
 
     return new ChildIdentity({ did }, context);

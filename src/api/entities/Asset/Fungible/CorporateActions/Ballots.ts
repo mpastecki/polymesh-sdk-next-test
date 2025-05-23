@@ -103,12 +103,8 @@ export class Ballots extends Namespace<FungibleAsset> {
     const result: CorporateBallotWithDetails[] = [];
 
     ballotDetails.forEach((details, index) => {
-      const corporateActionEntry = corporateActions[index];
-      const caDetailsEntry = caDetails[index];
-
-      if (!corporateActionEntry || !caDetailsEntry) {
-        return;
-      }
+      const corporateActionEntry = corporateActions[index]!;
+      const caDetailsEntry = caDetails[index]!;
 
       if (details) {
         result.push({

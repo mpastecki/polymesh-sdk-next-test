@@ -82,6 +82,7 @@ describe('investInOffering procedure', () => {
     );
     portfolioLikeToPortfolioIdSpy = jest.spyOn(utilsConversionModule, 'portfolioLikeToPortfolioId');
     bigNumberToU64Spy = jest.spyOn(utilsConversionModule, 'bigNumberToU64');
+    // @ts-expect-error - mock
     bigNumberToBalanceSpy = jest.spyOn(utilsConversionModule, 'bigNumberToBalance');
     fundingToRawFundingSpy = jest.spyOn(utilsConversionModule, 'fundingToRawFunding');
     id = new BigNumber(id);
@@ -388,10 +389,10 @@ describe('investInOffering procedure', () => {
       ];
       when(portfolioIdToPortfolioSpy)
         .calledWith(purchasePortfolioId, mockContext)
-        .mockReturnValue(portfolios[0]);
+        .mockReturnValue(portfolios[0]!);
       when(portfolioIdToPortfolioSpy)
         .calledWith(fundingPortfolioId, mockContext)
-        .mockReturnValue(portfolios[1]);
+        .mockReturnValue(portfolios[1]!);
 
       const roles = [
         { type: RoleType.PortfolioCustodian, portfolioId: purchasePortfolioId },

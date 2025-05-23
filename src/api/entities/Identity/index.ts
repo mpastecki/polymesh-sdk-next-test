@@ -613,18 +613,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
       uniqueEntries.forEach(({ id, status: affirmationStatus }, index) => {
         const instruction = new Instruction({ id: u64ToBigNumber(id) }, context);
-        const status = instructionStatuses[index];
-
-        if (!status) {
-          throw new PolymeshError({
-            code: ErrorCode.UnexpectedError,
-            message: 'Instruction status not found',
-            data: {
-              id,
-              status,
-            },
-          });
-        }
+        const status = instructionStatuses[index]!;
 
         if (status.isFailed) {
           failed.push(instruction);
@@ -662,14 +651,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     );
 
     custodies.forEach((custody, index) => {
-      const portfolio = allPortfolios[index];
-
-      if (!portfolio) {
-        throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Portfolio not found',
-        });
-      }
+      const portfolio = allPortfolios[index]!;
 
       if (custody) {
         ownedCustodiedPortfolios.push(portfolio);
@@ -1008,7 +990,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const { entries, lastKey: next } = await requestPaginated(asset.preApprovedAsset, {
       arg: rawDid,
-      ...(paginationOpts ? { paginationOpts } : {}),
+      paginationOpts,
     });
 
     const data = await Promise.all(
@@ -1125,7 +1107,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     return multiSigs.map((multiSig, i) => ({
       signerFor: multiSig,
-      signers: signers[i] ?? [],
+      signers: signers[i]!,
       isAdmin: adminForMultiSigs.some(address => address === multiSig.address),
       isPayer: payerForMultiSigs.some(address => address === multiSig.address),
     }));

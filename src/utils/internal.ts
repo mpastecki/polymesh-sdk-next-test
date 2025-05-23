@@ -187,7 +187,7 @@ export function unserialize<UniqueIdentifiers>(id: string): UniqueIdentifiers {
 
   const errorMsg = 'Wrong ID format';
 
-  if (!matched || !matched[1]) {
+  if (!matched?.[1]) {
     throw new Error(errorMsg);
   }
 
@@ -464,13 +464,6 @@ export function mergeReceipts(
   receipts: ISubmittableResult[],
   context: Context
 ): ISubmittableResult {
-  if (!receipts.length) {
-    throw new PolymeshError({
-      code: ErrorCode.ValidationError,
-      message: 'Cannot merge empty receipts array',
-    });
-  }
-
   const eventsPerTransaction: u32[] = [];
   const allEvents: EventRecord[] = [];
 
@@ -479,7 +472,7 @@ export function mergeReceipts(
     allEvents.push(...events);
   });
 
-  const lastReceipt = receipts[receipts.length - 1];
+  const lastReceipt = receipts[receipts.length - 1]!;
 
   /*
    * Here we simulate a `BatchCompleted` event with the amount of events of
@@ -492,12 +485,7 @@ export function mergeReceipts(
    * in the future though. It's also worth considering that this is an extreme edge case, since (hopefully) no one
    * in their right mind would create a batch only to split it back up again
    */
-  if (!lastReceipt) {
-    throw new PolymeshError({
-      code: ErrorCode.UnexpectedError,
-      message: 'Last receipt is undefined',
-    });
-  }
+
   return cloneReceipt(lastReceipt, [
     ...allEvents,
     {
@@ -553,7 +541,7 @@ export function isAllowedCharacters(value: string): boolean {
 export async function requestPaginated<F extends AnyFunction, T extends AnyTuple>(
   query: AugmentedQuery<'promise', F, T> | AugmentedQueryDoubleMap<'promise', F, T>,
   opts: {
-    paginationOpts?: PaginationOptions;
+    paginationOpts?: PaginationOptions | undefined;
     arg?: Parameters<F>[0];
   }
 ): Promise<{
@@ -872,11 +860,11 @@ export function createProcedureMethod<
   const prepareArgs = (
     procArgs: ProcedureArgs
   ): {
-    transformer?: (value: ProcedureReturnValue) => ReturnValue | Promise<ReturnValue>;
     args: ProcedureArgs;
+    transformer?: (value: ProcedureReturnValue) => ReturnValue | Promise<ReturnValue>;
   } => ({
     args: procArgs,
-    ...(transformer ? { transformer } : {}),
+    ...(transformer && { transformer }),
   });
 
   if (voidArgs) {
@@ -1063,18 +1051,13 @@ export async function getAssetIdAndTicker(
   assetId: string,
   context: Context
 ): Promise<{
-  ticker?: string;
+  ticker?: string | undefined;
   assetId: string;
 }> {
   const ticker = await getTickerForAsset(assetId, context);
 
-  if (ticker) {
-    return {
-      ticker,
-      assetId,
-    };
-  }
   return {
+    ticker,
     assetId,
   };
 }
@@ -1451,13 +1434,18 @@ export function getExemptedIds(identities: (string | Identity)[], context: Conte
   return exemptedIds;
 }
 
-const getAllowedMajors = (range: string, supportedSpecSemver: string): string[] => {
+/**
+ * @hidden
+ *
+ * Get the allowed majors for a given range and supported spec semver
+ */
+export const getAllowedMajors = (range: string, supportedSpecSemver: string): string[] => {
   const lowMajor = major(supportedSpecSemver).toString();
   const versions = range.split('||');
   if (versions.length === 1) {
     return [lowMajor];
   }
-  const higherAllowedSpec = versions[versions.length - 1]?.trim();
+  const higherAllowedSpec = versions[versions.length - 1]!.trim();
   if (!higherAllowedSpec) {
     return [lowMajor];
   }
@@ -1744,7 +1732,7 @@ export function neededStatTypeForRestrictionInput(
   return statisticsOpTypeToStatType(
     {
       operationType: rawOp,
-      ...(rawIssuer ? { claimIssuer: rawIssuer } : {}),
+      claimIssuer: rawIssuer,
     },
     context
   );
@@ -1904,14 +1892,7 @@ export function assembleAssetQuery(
   context: Context
 ): Asset[] {
   return assetDetails.map((rawDetails, index) => {
-    const assetId = assetIds[index];
-    if (!assetId) {
-      throw new PolymeshError({
-        code: ErrorCode.ValidationError,
-        message: 'Missing asset ID',
-        data: { index },
-      });
-    }
+    const assetId = assetIds[index]!;
     const detail = rawDetails.unwrap();
 
     if (detail.assetType.isNonFungible) {

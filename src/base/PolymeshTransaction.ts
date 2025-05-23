@@ -78,22 +78,13 @@ export class PolymeshTransaction<
       TransactionConstructionData,
     context: Context
   ) {
-    const {
-      args = [],
-      feeMultiplier,
-      transaction,
-      fee,
-      paidForBy,
-      multiSig,
-      transformer,
-      ...rest
-    } = transactionSpec;
+    const { args = [], feeMultiplier, transaction, fee, paidForBy, ...rest } = transactionSpec;
 
     super(
       {
         ...rest,
-        multiSig: multiSig ?? null,
-        ...(transformer ? { transformer } : {}),
+        multiSig: transactionSpec.multiSig ?? null,
+        ...(transactionSpec.transformer ? { transformer: transactionSpec.transformer } : {}),
       },
       context
     );
@@ -130,14 +121,7 @@ export class PolymeshTransaction<
       const { tag } = this;
       const [result] = await this.context.getProtocolFees({ tags: [tag] });
 
-      if (!result) {
-        throw new PolymeshError({
-          code: ErrorCode.UnexpectedError,
-          message: 'Failed to get protocol fees',
-        });
-      }
-
-      fees = result.fees;
+      fees = result!.fees;
     }
 
     return fees.multipliedBy(feeMultiplier);

@@ -241,7 +241,7 @@ describe('Requirements class', () => {
       queryMultiMock = dsMockUtils.getQueryMultiMock();
 
       trustedIssuerToTrustedClaimIssuerSpy.mockReturnValue({
-        identity: defaultClaimIssuers[0].identity,
+        identity: defaultClaimIssuers[0]!.identity,
         trustedFor: null,
       });
 
@@ -387,7 +387,7 @@ describe('Requirements class', () => {
               id: new BigNumber(1),
               conditions: [
                 {
-                  ...expected.requirements[0].conditions[0],
+                  ...expected.requirements[0]!.conditions[0],
                   trustedClaimIssuers: [
                     {
                       identity: expect.objectContaining({
@@ -401,7 +401,7 @@ describe('Requirements class', () => {
             },
             {
               id: new BigNumber(2),
-              conditions: expected.requirements[1].conditions,
+              conditions: expected.requirements[1]!.conditions,
             },
           ],
           defaultTrustedClaimIssuers: [

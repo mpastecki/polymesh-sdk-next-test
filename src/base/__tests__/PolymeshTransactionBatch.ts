@@ -329,8 +329,8 @@ describe('Polymesh Transaction Batch class', () => {
 
       expect(splitTransactions1.length).toBe(2);
 
-      const result1a = await splitTransactions1[0].run();
-      const result1b = await splitTransactions1[1].run();
+      const result1a = await splitTransactions1[0]!.run();
+      const result1b = await splitTransactions1[1]!.run();
 
       expect(result1a).toBe(undefined);
       expect(result1b).toBe(1);
@@ -340,6 +340,7 @@ describe('Polymesh Transaction Batch class', () => {
           ...txSpec,
           transactions,
           resolver: 'foo',
+          transformer: (): string => 'bar',
         },
         context
       );
@@ -348,11 +349,11 @@ describe('Polymesh Transaction Batch class', () => {
 
       expect(splitTransactions2.length).toBe(2);
 
-      const result2a = await splitTransactions2[0].run();
-      const result2b = await splitTransactions2[1].run();
+      const result2a = await splitTransactions2[0]!.run();
+      const result2b = await splitTransactions2[1]!.run();
 
       expect(result2a).toBe(undefined);
-      expect(result2b).toBe('foo');
+      expect(result2b).toBe('bar');
     });
 
     it('should ensure transactions are run in the same order as they come in the batch', () => {
@@ -382,7 +383,7 @@ describe('Polymesh Transaction Batch class', () => {
 
       const splitTransactions = batch.splitTransactions();
 
-      expect(() => splitTransactions[1].run()).toThrow(
+      expect(() => splitTransactions[1]!.run()).toThrow(
         'Transactions resulting from splitting a batch must be run in order'
       );
     });

@@ -423,74 +423,28 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
         signingAddress,
         mortality,
         transformer,
-        multiSig: this._signerMultiSig ?? undefined,
+        multiSig: this._signerMultiSig ?? null,
       };
 
       if (!('transactions' in spec)) {
-        const {
-          multiSig: multiSigSpec,
-          transformer: transformerSpec,
-          signer: signerSpec,
-          ...rest
-        } = spec;
-
-        return new PolymeshTransaction<ReturnValue, TransformedReturnValue>(
-          {
-            ...rest,
-            ...(multiSigSpec && { multiSig: multiSigSpec }),
-            ...(transformerSpec && { transformer: transformerSpec }),
-            ...(signerSpec && { signer: signerSpec }),
-          },
-          ctx
-        );
+        return new PolymeshTransaction<ReturnValue, TransformedReturnValue>(spec, ctx);
       } else if (spec.transactions.length === 1) {
-        const [firstTx] = spec.transactions;
-
-        if (!firstTx) {
-          throw new PolymeshError({
-            code: ErrorCode.FatalError,
-            message: 'No transaction found in the prepared queue',
-          });
-        }
+        const firstTx = spec.transactions[0]!;
 
         const { transaction, args: txArgs, fee, feeMultiplier } = firstTx;
-        const {
-          multiSig: multiSigSpec,
-          transformer: transformerSpec,
-          signer: signerSpec,
-          ...rest
-        } = spec;
 
         return new PolymeshTransaction<ReturnValue, TransformedReturnValue>(
           {
-            ...(multiSigSpec && { multiSig: multiSigSpec }),
-            ...(transformerSpec && { transformer: transformerSpec }),
-            ...(signerSpec && { signer: signerSpec }),
-            ...rest,
+            ...spec,
             transaction,
-            ...(fee && { fee }),
-            ...(feeMultiplier && { feeMultiplier }),
+            fee,
+            feeMultiplier,
             args: txArgs,
           },
           ctx
         );
       } else {
-        const {
-          multiSig: multiSigSpec,
-          transformer: transformerSpec,
-          signer: signerSpec,
-          ...rest
-        } = spec;
-
-        return new PolymeshTransactionBatch<ReturnValue, TransformedReturnValue>(
-          {
-            ...(multiSigSpec && { multiSig: multiSigSpec }),
-            ...(transformerSpec && { transformer: transformerSpec }),
-            ...(signerSpec && { signer: signerSpec }),
-            ...rest,
-          },
-          ctx
-        );
+        return new PolymeshTransactionBatch<ReturnValue, TransformedReturnValue>(spec, ctx);
       }
     } finally {
       this.cleanup();

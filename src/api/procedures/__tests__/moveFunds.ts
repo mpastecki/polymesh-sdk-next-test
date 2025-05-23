@@ -498,11 +498,11 @@ describe('moveFunds procedure', () => {
       .mockReturnValue(rawToMeshPortfolioId);
 
     const rawMovePortfolioItem = dsMockUtils.createMockMovePortfolioItemAsFungible({
-      assetId: dsMockUtils.createMockAssetId((items[0].asset as FungibleAsset).id),
-      amount: dsMockUtils.createMockBalance(items[0].amount),
+      assetId: dsMockUtils.createMockAssetId((items[0]!.asset as FungibleAsset).id),
+      amount: dsMockUtils.createMockBalance(items[0]!.amount),
     });
     when(fungiblePortfolioMovementToMovePortfolioFundSpy)
-      .calledWith(items[0], mockContext)
+      .calledWith(items[0]!, mockContext)
       .mockResolvedValue(rawMovePortfolioItem);
 
     const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
@@ -667,7 +667,7 @@ describe('moveFunds procedure', () => {
 
     const rawMovePortfolioItem = 'mockItem' as unknown as PolymeshPrimitivesPortfolioFund;
     when(nftMovementToMovePortfolioFundSpy)
-      .calledWith(items[0], mockContext)
+      .calledWith(items[0]!, mockContext)
       .mockResolvedValue(rawMovePortfolioItem);
 
     const proc = procedureMockUtils.getInstance<Params, void>(mockContext);

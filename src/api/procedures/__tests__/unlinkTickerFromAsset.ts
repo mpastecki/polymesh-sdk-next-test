@@ -115,9 +115,7 @@ describe('unlinkTickerFromAsset procedure', () => {
       return expect(
         boundFunc({
           asset: entityMockUtils.getFungibleAssetInstance({
-            details: {
-              ticker: undefined,
-            },
+            details: {},
           }),
         })
       ).rejects.toThrowError(PolymeshError);

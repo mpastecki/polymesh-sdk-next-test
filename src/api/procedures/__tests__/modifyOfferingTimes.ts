@@ -116,6 +116,7 @@ describe('modifyOfferingTimes procedure', () => {
       resolver: undefined,
     });
 
+    // @ts-expect-error Testing with undefined values
     result = await prepareModifyOfferingTimes.call(proc, { ...args, start: undefined } as Params);
 
     expect(result).toEqual({
@@ -132,6 +133,7 @@ describe('modifyOfferingTimes procedure', () => {
       resolver: undefined,
     });
 
+    // @ts-expect-error Testing with undefined values
     result = await prepareModifyOfferingTimes.call(proc, { ...args, end: undefined } as Params);
 
     expect(result).toEqual({
@@ -154,6 +156,7 @@ describe('modifyOfferingTimes procedure', () => {
       },
     });
 
+    // @ts-expect-error Testing with undefined values
     result = await prepareModifyOfferingTimes.call(proc, { ...args, end: undefined } as Params);
 
     expect(result).toEqual({
@@ -181,6 +184,7 @@ describe('modifyOfferingTimes procedure', () => {
     err = undefined;
 
     try {
+      // @ts-expect-error Testing with undefined values
       await prepareModifyOfferingTimes.call(proc, { ...args, start: undefined, end });
     } catch (error) {
       err = error;
@@ -189,6 +193,7 @@ describe('modifyOfferingTimes procedure', () => {
     expect(err?.message).toBe(message);
 
     try {
+      // @ts-expect-error Testing with undefined values
       await prepareModifyOfferingTimes.call(proc, { ...args, start, end: undefined });
     } catch (error) {
       err = error;

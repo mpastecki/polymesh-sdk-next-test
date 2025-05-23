@@ -15,6 +15,7 @@ import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
 import {
+  addInstruction,
   createAddInstructionResolver,
   getAuthorization,
   Params,
@@ -29,6 +30,7 @@ import {
   Instruction,
   NumberedPortfolio,
   PolymeshError,
+  Procedure,
 } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
@@ -557,7 +559,7 @@ describe('addInstruction procedure', () => {
     } as OffChainLeg);
 
     try {
-      await prepareAddInstruction.call(proc, { venueId: undefined, instructions: [{ legs }] });
+      await prepareAddInstruction.call(proc, { instructions: [{ legs }] });
     } catch (err) {
       error = err;
     }
@@ -931,7 +933,7 @@ describe('addInstruction procedure', () => {
 
     await expect(
       prepareAddInstruction.call(proc, {
-        venueId: args.venueId,
+        venueId: args.venueId as BigNumber,
         instructions: [{ legs: [{ from, to, asset, nfts: [new BigNumber(1)] }] }],
       })
     ).rejects.toThrow(expectedError);
@@ -962,7 +964,7 @@ describe('addInstruction procedure', () => {
 
     await expect(
       prepareAddInstruction.call(proc, {
-        venueId: args.venueId,
+        venueId: args.venueId as BigNumber,
         instructions: [{ legs: [{ from, to, asset, amount: new BigNumber(1) }] }],
       })
     ).rejects.toThrow(expectedError);
@@ -984,7 +986,7 @@ describe('addInstruction procedure', () => {
     });
 
     const result = await prepareAddInstruction.call(proc, {
-      venueId: args.venueId,
+      venueId: args.venueId as BigNumber,
       instructions: [{ legs: [{ from, to, asset, nfts: [new BigNumber(1)] }] }],
     });
 
@@ -1134,7 +1136,7 @@ describe('addInstruction procedure', () => {
     });
 
     const result = await prepareAddInstruction.call(proc, {
-      venueId: args.venueId,
+      venueId: args.venueId as BigNumber,
       instructions: [
         {
           legs: [
@@ -1301,6 +1303,12 @@ describe('createAddInstructionResolver', () => {
 
     const result = createAddInstructionResolver(fakeContext)({} as ISubmittableResult);
 
-    expect(result[0].id).toEqual(id);
+    expect(result[0]!.id).toEqual(id);
+  });
+});
+
+describe('addInstruction', () => {
+  it('should be instance of Procedure', () => {
+    expect(addInstruction()).toBeInstanceOf(Procedure);
   });
 });
