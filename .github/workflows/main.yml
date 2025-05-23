@@ -114,7 +114,34 @@ jobs:
       issues: write
 
     steps:
+      - name: Decide whether to skip the job
+        id: skip-check
+        run: |
+          TARGET_BRANCH="${{ github.base_ref }}"
+          SOURCE_BRANCH="${{ github.head_ref }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          AUTHOR_ASSOCIATION="${{ github.event.pull_request.author_association }}"
+
+          echo "Base: $TARGET_BRANCH"
+          echo "Source: $SOURCE_BRANCH"
+          echo "Author: $PR_AUTHOR ($AUTHOR_ASSOCIATION)"
+
+          SKIP=false
+
+          if [[ "$TARGET_BRANCH" == "next" && "$SOURCE_BRANCH" =~ ^rebase-next-[0-9]+$ ]]; then
+            if [[ "$PR_AUTHOR" == "polymesh-bot" ]]; then
+              echo "Automation bot — Checking if fast forwarding is possible will be skipped"
+              SKIP=true
+            elif [[ "$AUTHOR_ASSOCIATION" == "OWNER" ]]; then
+              echo "PR author is a owner — Checking if fast forwarding is possible will be skipped"
+              SKIP=true
+            fi
+          fi
+
+          echo "skip=$SKIP" >> $GITHUB_OUTPUT
+
       - name: Checking if fast forwarding is possible
+        if: steps.skip-check.outputs.skip == 'false'
         uses: sequoia-pgp/fast-forward@v1
         with:
           merge: false

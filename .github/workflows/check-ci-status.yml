@@ -1,0 +1,46 @@
+name: Check CI Status
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: number
+      required_checks:
+        required: true
+        type: string
+        default: '["check-fast-forward"]'
+    outputs:
+      status:
+        description: 'Status of the CI checks'
+        value: ${{ jobs.check-ci.outputs.status }}
+
+jobs:
+  check-ci:
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.check.outputs.status }}
+    steps:
+      - name: Check CI Status
+        id: check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = ${{ inputs.pr_number }};
+            const requiredChecks = JSON.parse('${{ inputs.required_checks }}');
+
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `pull/${pr}/head`
+            });
+
+            const failedChecks = checks.check_runs.filter(check => 
+              requiredChecks.includes(check.name) && check.conclusion === 'failure'
+            );
+
+            if (failedChecks.length > 0) {
+              core.setFailed(`Cannot proceed: The following checks have failed: ${failedChecks.map(c => c.name).join(', ')}`);
+              core.setOutput('status', 'failed');
+            } else {
+              core.setOutput('status', 'success');
+            }
