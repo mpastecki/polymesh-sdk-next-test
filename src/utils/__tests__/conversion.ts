@@ -84,7 +84,7 @@ import {
   ExtrinsicPermissions,
   Permissions as MeshPermissions,
   TransferCondition,
-} from '@polymeshassociation/polymesh-types/generated-types/polymesh';
+} from '@polymeshassociation/polymesh-types/polkadot/polymesh';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
@@ -1828,20 +1828,18 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
 
       fakeExtrinsicPermissionsResult = {
         These: [
-          /* eslint-disable @typescript-eslint/naming-convention */
           {
-            pallet_name: 'Identity',
-            dispatchable_names: {
+            palletName: 'Identity',
+            dispatchableNames: {
               These: ['add_claim'],
             },
           },
           {
-            pallet_name: 'Sto',
-            dispatchable_names: {
+            palletName: 'Sto',
+            dispatchableNames: {
               These: ['create_fundraiser', 'invest'],
             },
           },
-          /* eslint-enable @typescript-eslint/naming-convention */
         ],
       };
 
@@ -1897,12 +1895,10 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
 
       fakeExtrinsicPermissionsResult = {
         These: [
-          /* eslint-disable @typescript-eslint/naming-convention */
           {
-            pallet_name: 'Sto',
-            dispatchable_names: { Except: ['invest', 'stop'] },
+            palletName: 'Sto',
+            dispatchableNames: { Except: ['invest', 'stop'] },
           },
-          /* eslint-enable @typescript-eslint/naming-convention */
         ],
       };
 
@@ -1936,12 +1932,10 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
 
       fakeExtrinsicPermissionsResult = {
         Except: [
-          /* eslint-disable @typescript-eslint/naming-convention */
           {
-            pallet_name: 'Sto',
-            dispatchable_names: 'Whole',
+            palletName: 'Sto',
+            dispatchableNames: 'Whole',
           },
-          /* eslint-enable @typescript-eslint/naming-convention */
         ],
       };
 
@@ -1984,14 +1978,12 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
 
       fakeExtrinsicPermissionsResult = {
         These: [
-          /* eslint-disable @typescript-eslint/naming-convention */
           {
-            pallet_name: 'Identity',
-            dispatchable_names: {
+            palletName: 'Identity',
+            dispatchableNames: {
               These: ['add_claim'],
             },
           },
-          /* eslint-enable @typescript-eslint/naming-convention */
         ],
       };
 
@@ -2140,7 +2132,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
           These: [dsMockUtils.createMockAssetId(assetId)],
         }),
         extrinsic: dsMockUtils.createMockExtrinsicPermissions({
-          These: dsMockUtils.createMockBTreeMap(permissionsMap),
+          These: dsMockUtils.createMockBtreeMap(permissionsMap),
         }),
         portfolio: dsMockUtils.createMockPortfolioPermissions({
           These: [
@@ -2201,7 +2193,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
           Except: [dsMockUtils.createMockAssetId(assetId)],
         }),
         extrinsic: dsMockUtils.createMockExtrinsicPermissions({
-          Except: dsMockUtils.createMockBTreeMap(exceptPermissionsMap),
+          Except: dsMockUtils.createMockBtreeMap(exceptPermissionsMap),
         }),
         portfolio: dsMockUtils.createMockPortfolioPermissions({
           Except: [
@@ -2275,7 +2267,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
         ),
         dsMockUtils.createMockOption(
           dsMockUtils.createMockExtrinsicPermissions({
-            These: dsMockUtils.createMockBTreeMap(permissionsMap),
+            These: dsMockUtils.createMockBtreeMap(permissionsMap),
           })
         ),
         dsMockUtils.createMockOption(
@@ -2350,7 +2342,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
         ),
         dsMockUtils.createMockOption(
           dsMockUtils.createMockExtrinsicPermissions({
-            Except: dsMockUtils.createMockBTreeMap(exceptPermissionsMap),
+            Except: dsMockUtils.createMockBtreeMap(exceptPermissionsMap),
           })
         ),
         dsMockUtils.createMockOption(
@@ -2409,7 +2401,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
         dsMockUtils.createMockOption(),
         dsMockUtils.createMockOption(
           dsMockUtils.createMockExtrinsicPermissions({
-            These: dsMockUtils.createMockBTreeMap(permissionsMap),
+            These: dsMockUtils.createMockBtreeMap(permissionsMap),
           })
         ),
         dsMockUtils.createMockOption(),
@@ -2462,7 +2454,7 @@ describe('permissionsToMeshPermissions and meshPermissionsToPermissions', () => 
         dsMockUtils.createMockOption(),
         dsMockUtils.createMockOption(
           dsMockUtils.createMockExtrinsicPermissions({
-            These: dsMockUtils.createMockBTreeMap(permissionsMap),
+            These: dsMockUtils.createMockBtreeMap(permissionsMap),
           })
         ),
         dsMockUtils.createMockOption(),
@@ -3837,7 +3829,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
     const context = dsMockUtils.getContextInstance();
     let result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
-        /* eslint-disable @typescript-eslint/naming-convention */
         invalidGranularity: true,
         selfTransfer: true,
         invalidReceiverCdd: true,
@@ -3867,7 +3858,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
           result: false,
         }),
         result: true,
-        /* eslint-enable @typescript-eslint/naming-convention */
       }),
       undefined,
       context
@@ -3903,7 +3893,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
 
     result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
-        /* eslint-disable @typescript-eslint/naming-convention */
         invalidGranularity: false,
         selfTransfer: false,
         invalidReceiverCdd: false,
@@ -3933,7 +3922,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
           result: false,
         }),
         result: false,
-        /* eslint-enable @typescript-eslint/naming-convention */
       }),
       undefined,
       context
@@ -3975,7 +3963,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
 
     const result = granularCanTransferResultToTransferBreakdown(
       dsMockUtils.createMockGranularCanTransferResult({
-        /* eslint-disable @typescript-eslint/naming-convention */
         invalidGranularity: false,
         selfTransfer: false,
         invalidReceiverCdd: false,
@@ -4005,7 +3992,6 @@ describe('granularCanTransferResultToTransferBreakdown', () => {
           result: false,
         }),
         result: true,
-        /* eslint-enable @typescript-eslint/naming-convention */
       }),
       dsMockUtils.createMockDispatchResult({
         Err: { index: createMockU8(), module: createMockU8aFixed() },
@@ -4814,7 +4800,7 @@ describe('corporateActionParamsToMeshCorporateActionArgs', () => {
     const createTypeMock = context.createType;
 
     const rawAssetId = dsMockUtils.createMockAssetId(uuidToHex(assetId));
-    const rawKind = dsMockUtils.createMockCAKind(kind);
+    const rawKind = dsMockUtils.createMockCaKind(kind);
     const rawDeclDate = dsMockUtils.createMockMoment(declarationDateValue);
     const rawRecordDate = dsMockUtils.createMockRecordDateSpec(recordDateValue);
     const rawDetails = dsMockUtils.createMockBytes(description);
@@ -5480,7 +5466,6 @@ describe('toIdentityWithClaimsArray', () => {
         type: customerDueDiligenceType,
       },
     ] as MiddlewareClaim[];
-    /* eslint-enable @typescript-eslint/naming-convention */
 
     const result = toIdentityWithClaimsArray(fakeMiddlewareClaims, context, 'targetId');
 
@@ -5751,7 +5736,7 @@ describe('requirementToComplianceRequirement and complianceRequirementToRequirem
       const scope = dsMockUtils.createMockScope({
         Identity: dsMockUtils.createMockIdentityId(assetDid),
       });
-      /* eslint-disable @typescript-eslint/naming-convention */
+
       const issuers = issuerDids.map(({ identity }) =>
         dsMockUtils.createMockTrustedIssuer({
           issuer: dsMockUtils.createMockIdentityId(identity.did),
@@ -5823,7 +5808,6 @@ describe('requirementToComplianceRequirement and complianceRequirementToRequirem
         ],
         id: dsMockUtils.createMockU32(new BigNumber(1)),
       });
-      /* eslint-enable @typescript-eslint/naming-convention */
 
       const result = complianceRequirementToRequirement(
         complianceRequirement,
@@ -6260,7 +6244,7 @@ describe('complianceRequirementResultToRequirementCompliance', () => {
     const scope = dsMockUtils.createMockScope({
       Identity: dsMockUtils.createMockIdentityId(assetDid),
     });
-    /* eslint-disable @typescript-eslint/naming-convention */
+
     const issuers = issuerDids.map(({ identity: { did } }) =>
       dsMockUtils.createMockTrustedIssuer({
         issuer: dsMockUtils.createMockIdentityId(did),
@@ -6351,7 +6335,6 @@ describe('complianceRequirementResultToRequirementCompliance', () => {
       id: dsMockUtils.createMockU32(new BigNumber(1)),
       result: dsMockUtils.createMockBool(false),
     });
-    /* eslint-enable @typescript-eslint/naming-convention */
 
     const result = complianceRequirementResultToRequirementCompliance(
       complianceRequirement,
@@ -6457,7 +6440,6 @@ describe('assetComplianceResultToCompliance', () => {
     const scope = dsMockUtils.createMockScope({
       Identity: dsMockUtils.createMockIdentityId(assetDid),
     });
-    /* eslint-disable @typescript-eslint/naming-convention */
     const issuers = issuerDids.map(({ identity: { did } }) =>
       dsMockUtils.createMockTrustedIssuer({
         issuer: dsMockUtils.createMockIdentityId(did),
@@ -6637,7 +6619,6 @@ describe('assetComplianceReportToCompliance', () => {
     const scope = dsMockUtils.createMockScope({
       Identity: dsMockUtils.createMockIdentityId(assetDid),
     });
-    /* eslint-disable @typescript-eslint/naming-convention */
     const issuers = issuerDids.map(({ identity: { did } }) =>
       dsMockUtils.createMockTrustedIssuer({
         issuer: dsMockUtils.createMockIdentityId(did),
@@ -8268,19 +8249,17 @@ describe('meshCorporateActionToCorporateActionParams', () => {
       ],
     };
 
-    /* eslint-disable @typescript-eslint/naming-convention */
     const params = {
       kind,
-      decl_date: new BigNumber(declarationDate.getTime()),
-      record_date: null,
+      declDate: new BigNumber(declarationDate.getTime()),
+      recordDate: null,
       targets: {
         identities: dids,
         treatment: TargetTreatment.Include,
       },
-      default_withholding_tax: defaultTaxWithholding.shiftedBy(4),
-      withholding_tax: [tuple(dids[0], taxWithholdings[0].percentage.shiftedBy(4))],
+      defaultWithholdingTax: defaultTaxWithholding.shiftedBy(4),
+      withholdingTax: [tuple(dids[0], taxWithholdings[0].percentage.shiftedBy(4))],
     };
-    /* eslint-enable @typescript-eslint/naming-convention */
 
     let corporateAction = dsMockUtils.createMockCorporateAction(params);
     const details = dsMockUtils.createMockBytes(description);
@@ -8295,7 +8274,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
         identities: dids,
         treatment: TargetTreatment.Exclude,
       },
-      kind: dsMockUtils.createMockCAKind('IssuerNotice'),
+      kind: dsMockUtils.createMockCaKind('IssuerNotice'),
     });
 
     result = meshCorporateActionToCorporateActionParams(corporateAction, details, context);
@@ -8308,7 +8287,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
 
     corporateAction = dsMockUtils.createMockCorporateAction({
       ...params,
-      kind: dsMockUtils.createMockCAKind('PredictableBenefit'),
+      kind: dsMockUtils.createMockCaKind('PredictableBenefit'),
     });
 
     result = meshCorporateActionToCorporateActionParams(corporateAction, details, context);
@@ -8317,7 +8296,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
 
     corporateAction = dsMockUtils.createMockCorporateAction({
       ...params,
-      kind: dsMockUtils.createMockCAKind('Other'),
+      kind: dsMockUtils.createMockCaKind('Other'),
     });
 
     result = meshCorporateActionToCorporateActionParams(corporateAction, details, context);
@@ -8326,7 +8305,7 @@ describe('meshCorporateActionToCorporateActionParams', () => {
 
     corporateAction = dsMockUtils.createMockCorporateAction({
       ...params,
-      kind: dsMockUtils.createMockCAKind('Reorganization'),
+      kind: dsMockUtils.createMockCaKind('Reorganization'),
     });
 
     result = meshCorporateActionToCorporateActionParams(corporateAction, details, context);
@@ -8845,7 +8824,7 @@ describe('agentGroupToPermissionGroup', () => {
     it('should convert Identities to a BTreeSet<IdentityId>', () => {
       const did = 'someDid';
       const context = dsMockUtils.getContextInstance();
-      const mockSet = dsMockUtils.createMockBTreeSet<PolymeshPrimitivesIdentityId>([
+      const mockSet = dsMockUtils.createMockBtreeSet<PolymeshPrimitivesIdentityId>([
         dsMockUtils.createMockIdentityId(did),
       ]);
 
@@ -9059,7 +9038,7 @@ describe('portfolioIdsToBtreeSet', () => {
       did: dsMockUtils.createMockIdentityId('someDid'),
       kind: 'Default',
     });
-    const mockPortfolioIdsSet = dsMockUtils.createMockBTreeSet([rawPortfolioId]);
+    const mockPortfolioIdsSet = dsMockUtils.createMockBtreeSet([rawPortfolioId]);
 
     when(context.createType)
       .calledWith('BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>', [rawPortfolioId])
@@ -9118,7 +9097,7 @@ describe('statisticStatTypesToBtreeStatType', () => {
     const context = dsMockUtils.getContextInstance();
     const stat = dsMockUtils.createMockStatisticsStatType();
 
-    const btreeSet = dsMockUtils.createMockBTreeSet([stat]);
+    const btreeSet = dsMockUtils.createMockBtreeSet([stat]);
 
     when(context.createType)
       .calledWith('BTreeSet<PolymeshPrimitivesStatisticsStatType>', [stat])
@@ -9147,7 +9126,7 @@ describe('transferConditionsToBtreeTransferConditions', () => {
     const context = dsMockUtils.getContextInstance();
     const condition = dsMockUtils.createMockTransferCondition();
 
-    const btreeSet = dsMockUtils.createMockBTreeSet([condition]);
+    const btreeSet = dsMockUtils.createMockBtreeSet([condition]);
 
     when(context.createType)
       .calledWith('BTreeSet<PolymeshPrimitivesTransferComplianceTransferCondition>', [condition])
