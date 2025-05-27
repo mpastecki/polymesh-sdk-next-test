@@ -1,3 +1,5 @@
+import { AccountId32 } from '@polkadot/types/interfaces';
+import { u64 } from '@polkadot/types-codec';
 import BigNumber from 'bignumber.js';
 
 import { UniqueIdentifiers } from '~/api/entities/Account';
@@ -144,27 +146,36 @@ export class MultiSig extends Account {
 
     const rawAddress = stringToAccountId(address, context);
 
-    const rawProposalEntries = await multiSig.proposals.entries(rawAddress);
+    const [rawProposalEntries, rawLastInvalidProposal] = await Promise.all([
+      multiSig.proposals.entries(rawAddress),
+      multiSig.lastInvalidProposal(rawAddress),
+    ]);
 
-    const proposals: MultiSigProposal[] = [];
+    const lastInvalidProposal = rawLastInvalidProposal.isSome
+      ? u64ToBigNumber(rawLastInvalidProposal.unwrap())
+      : new BigNumber(0);
 
-    if (!rawProposalEntries.length) {
-      return [];
-    }
+    const validProposals: MultiSigProposal[] = [];
 
-    const queries = rawProposalEntries.map(
+    const queries: (AccountId32 | u64)[][] = [];
+
+    rawProposalEntries.forEach(
       ([
         {
           args: [rawKey, rawId],
         },
       ]) => {
-        proposals.push(
-          new MultiSigProposal({ multiSigAddress: address, id: u64ToBigNumber(rawId) }, context)
-        );
-
-        return [rawKey, rawId];
+        const id = u64ToBigNumber(rawId);
+        if (id.gt(lastInvalidProposal)) {
+          validProposals.push(new MultiSigProposal({ multiSigAddress: address, id }, context));
+          queries.push([rawKey, rawId]);
+        }
       }
     );
+
+    if (!validProposals.length) {
+      return [];
+    }
 
     const details = await multiSig.proposalStates.multi(queries);
 
@@ -176,7 +187,7 @@ export class MultiSig extends Account {
       return ProposalStatus.Invalid;
     });
 
-    return proposals.filter((_, index) => statuses[index] === ProposalStatus.Active);
+    return validProposals.filter((_, index) => statuses[index] === ProposalStatus.Active);
   }
 
   /**

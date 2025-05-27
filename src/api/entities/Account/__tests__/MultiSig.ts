@@ -12,6 +12,7 @@ import {
   createMockMoment,
   createMockOption,
   createMockSignatory,
+  createMockU64,
 } from '~/testUtils/mocks/dataSources';
 import { Mocked } from '~/testUtils/types';
 import { AssetTx, BalancesTx, ErrorCode, ProposalStatus, UtilityTx } from '~/types';
@@ -129,13 +130,21 @@ describe('MultiSig class', () => {
   });
 
   describe('method: getProposals', () => {
-    const id = new BigNumber(1);
+    const id = new BigNumber(10);
+    const invalidId = new BigNumber(2);
 
-    it('should get proposals', async () => {
+    it('should get valid proposals', async () => {
+      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
+        returnValue: createMockOption(createMockU64(new BigNumber(5))),
+      });
       dsMockUtils.createQueryMock('multiSig', 'proposals', {
         entries: [
           [
             [dsMockUtils.createMockAccountId(address), dsMockUtils.createMockU64(id)],
+            createMockOption(createMockCall()),
+          ],
+          [
+            [dsMockUtils.createMockAccountId(address), dsMockUtils.createMockU64(invalidId)],
             createMockOption(createMockCall()),
           ],
         ],
@@ -152,15 +161,15 @@ describe('MultiSig class', () => {
               },
             })
           ),
-        ],
-      });
-
-      dsMockUtils.createQueryMock('multiSig', 'proposalVoteCounts', {
-        multi: [
-          dsMockUtils.createMockProposalVoteCount({
-            approvals: new BigNumber(1),
-            rejections: new BigNumber(1),
-          }),
+          dsMockUtils.createMockOption(
+            dsMockUtils.createMockProposalState({
+              Active: {
+                until: createMockOption(
+                  createMockMoment(new BigNumber(new Date().getTime() + 10000))
+                ),
+              },
+            })
+          ),
         ],
       });
 
@@ -170,6 +179,9 @@ describe('MultiSig class', () => {
     });
 
     it('should return an empty array if no proposals are pending', async () => {
+      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
+        returnValue: createMockOption(),
+      });
       dsMockUtils.createQueryMock('multiSig', 'proposals', {
         entries: [],
       });
@@ -180,6 +192,9 @@ describe('MultiSig class', () => {
     });
 
     it('should filter out non pending proposals', async () => {
+      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
+        returnValue: createMockOption(),
+      });
       dsMockUtils.createQueryMock('multiSig', 'proposals', {
         entries: [
           [
