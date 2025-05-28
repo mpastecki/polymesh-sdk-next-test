@@ -153,7 +153,7 @@ export class MultiSig extends Account {
 
     const lastInvalidProposal = rawLastInvalidProposal.isSome
       ? u64ToBigNumber(rawLastInvalidProposal.unwrap())
-      : new BigNumber(0);
+      : new BigNumber(-1);
 
     const validProposals: MultiSigProposal[] = [];
 

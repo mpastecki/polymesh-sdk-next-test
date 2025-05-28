@@ -952,7 +952,7 @@ describe('Account class', () => {
 
       account = new Account({ address }, context);
 
-      const id = new BigNumber(1);
+      const id = new BigNumber(0);
 
       dsMockUtils.createQueryMock('multiSig', 'proposals', {
         entries: [
