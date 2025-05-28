@@ -952,7 +952,7 @@ describe('Account class', () => {
 
       account = new Account({ address }, context);
 
-      const id = new BigNumber(0);
+      const id = new BigNumber(1);
 
       dsMockUtils.createQueryMock('multiSig', 'proposals', {
         entries: [
@@ -962,6 +962,11 @@ describe('Account class', () => {
           ],
         ],
       });
+
+      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
+        returnValue: dsMockUtils.createMockOption(),
+      });
+
       dsMockUtils.createQueryMock('multiSig', 'proposalStates', {
         multi: [
           dsMockUtils.createMockOption(
@@ -982,6 +987,10 @@ describe('Account class', () => {
     });
 
     it('should throw an error if Account is not part of MultiSig', async () => {
+      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
+        returnValue: dsMockUtils.createMockOption(),
+      });
+
       dsMockUtils.createQueryMock('identity', 'keyRecords', {
         returnValue: dsMockUtils.createMockOption(
           dsMockUtils.createMockKeyRecord({
