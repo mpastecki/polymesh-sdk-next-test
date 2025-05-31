@@ -432,7 +432,7 @@ describe('Metadata class', () => {
       expect(JSON.stringify(result)).toEqual(JSON.stringify(mockResult));
     });
 
-    it('should throw an error if nameValue / valueDetail is not returned', async () => {
+    it('should throw an error if nameValue / valueDetail is not returned', () => {
       dsMockUtils.createQueryMock('asset', 'assetMetadataValueDetails');
 
       dsMockUtils.createQueryMock('asset', 'assetMetadataLocalKeyToName', {

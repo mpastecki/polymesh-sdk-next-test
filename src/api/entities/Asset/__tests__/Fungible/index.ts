@@ -851,7 +851,7 @@ describe('Fungible class', () => {
       };
 
       when(jest.spyOn(utilsInternalModule, 'getAssetIdFromMiddleware'))
-        .calledWith(middlewareAsset)
+        .calledWith(middlewareAsset.id)
         .mockReturnValue(assetId);
 
       dsMockUtils.createApolloQueryMock(

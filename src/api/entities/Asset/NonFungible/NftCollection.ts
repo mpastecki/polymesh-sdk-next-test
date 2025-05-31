@@ -356,7 +356,7 @@ export class NftCollection extends BaseAsset {
       const fromPortfolio = optionize(portfolioIdStringToPortfolio)(fromPortfolioId);
       const toPortfolio = optionize(portfolioIdStringToPortfolio)(toPortfolioId);
 
-      const assetId = getAssetIdFromMiddleware(asset);
+      const assetId = getAssetIdFromMiddleware(asset!.id);
       const collection = new NftCollection({ assetId }, context);
       data.push({
         asset: collection,
@@ -367,7 +367,7 @@ export class NftCollection extends BaseAsset {
         to: optionize(middlewarePortfolioToPortfolio)(toPortfolio, context),
         from: optionize(middlewarePortfolioToPortfolio)(fromPortfolio, context),
         fundingRound,
-        ...(instructionId && { instructionId: new BigNumber(instructionId) }),
+        instructionId: instructionId ? new BigNumber(instructionId) : undefined,
         instructionMemo,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         extrinsicIndex: new BigNumber(extrinsicIdx!),

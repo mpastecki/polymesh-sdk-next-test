@@ -293,7 +293,7 @@ describe('CorporateAction class', () => {
       expect(result).toBeInstanceOf(Checkpoint);
     });
 
-    it('should thrown an error if the created Checkpoint is not returned from the query', async () => {
+    it('should thrown an error if the created Checkpoint is not returned from the query', () => {
       schedulePointsQueryMock.mockResolvedValue([]);
 
       return expect(corporateAction.checkpoint()).rejects.toThrow('No checkpoint found');

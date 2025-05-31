@@ -218,7 +218,7 @@ export class Claims {
     let targetIssuers;
 
     const filters = {
-      ...(scope && { scope: await scopeToMiddlewareScope(scope, context) }),
+      scope: scope ? await scopeToMiddlewareScope(scope, context) : undefined,
       trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
         signerToString(trustedClaimIssuer)
       ),
@@ -305,9 +305,8 @@ export class Claims {
         if (claim.claim.scope) {
           return {
             scope: claim.claim.scope,
-            ...(claim.claim.scope.type === ScopeType.Asset && {
-              assetId: claim.claim.scope.value,
-            }),
+            assetId:
+              claim.claim.scope.type === ScopeType.Asset ? claim.claim.scope.value : undefined,
           };
         }
 
@@ -389,7 +388,7 @@ export class Claims {
             type,
             value,
           },
-          ...(assetId && { assetId }),
+          assetId,
         };
       });
 
@@ -461,7 +460,9 @@ export class Claims {
   ): Promise<ResultSet<IdentityWithClaims>> {
     const identityClaimsFromChain = await context.getIdentityClaimsFromChain({
       targets: [did],
-      ...(trustedClaimIssuers && { trustedClaimIssuers: trustedClaimIssuers.map(signerToString) }),
+      trustedClaimIssuers: trustedClaimIssuers
+        ? trustedClaimIssuers.map(signerToString)
+        : undefined,
       includeExpired,
     });
 

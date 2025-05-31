@@ -212,7 +212,7 @@ export type CustomClaimType = {
 /**
  * CustomClaimType with DID that registered the CustomClaimType
  */
-export type CustomClaimTypeWithDid = CustomClaimType & { did?: string };
+export type CustomClaimTypeWithDid = CustomClaimType & { did?: string | undefined };
 
 /**
  * Filters for instructions

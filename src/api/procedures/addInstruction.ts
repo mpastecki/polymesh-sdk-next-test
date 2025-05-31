@@ -76,7 +76,7 @@ import {
  * @hidden
  */
 export type Params = AddInstructionsParams & {
-  venueId?: BigNumber;
+  venueId?: BigNumber | undefined;
 };
 
 /**
@@ -765,7 +765,7 @@ export function getAuthorization(
   });
 
   return {
-    ...(venueId ? { roles: [{ type: RoleType.VenueOwner, venueId }] } : {}),
+    roles: venueId ? [{ type: RoleType.VenueOwner, venueId }] : undefined,
     permissions: {
       assets: [],
       portfolios,

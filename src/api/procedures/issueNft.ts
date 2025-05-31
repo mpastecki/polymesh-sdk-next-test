@@ -1,5 +1,4 @@
 import { ISubmittableResult } from '@polkadot/types/types';
-import BigNumber from 'bignumber.js';
 
 import { Nft } from '~/api/entities/Asset/NonFungible/Nft';
 import { Context, NftCollection, PolymeshError, Procedure } from '~/internal';
@@ -28,7 +27,7 @@ export const issueNftResolver =
     const { data } = record!;
     const { assetId, ids } = meshNftToNftId(data[1]);
 
-    const id = ids[0] as BigNumber;
+    const id = ids[0]!;
 
     return new Nft({ id, assetId }, context);
   };

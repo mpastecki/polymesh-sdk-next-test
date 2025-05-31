@@ -162,8 +162,8 @@ export class Authorizations<Parent extends Signer> extends Namespace<Parent> {
     const { status, type, start, size } = opts;
 
     const filters: QueryArgs<MiddlewareAuthorization, AuthorizationArgs> = {
-      ...(type ? { type } : {}),
-      ...(status ? { status } : {}),
+      type,
+      status,
     };
     if (signerValue.type === SignerType.Identity) {
       filters.toId = signerValue.value;

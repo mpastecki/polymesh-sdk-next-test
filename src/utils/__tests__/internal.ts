@@ -2446,13 +2446,15 @@ describe('getAssetIdForMiddleware', () => {
 describe('getAssetIdFromMiddleware', () => {
   it('should return asset ID from middleware', () => {
     const assetId = '0x12341234123412341234123412341234';
-    const ticker = 'SOME_TICKER';
-    const result = getAssetIdFromMiddleware({
-      id: assetId,
-      ticker,
-    });
+    const result = getAssetIdFromMiddleware(assetId);
 
     expect(result).toEqual('12341234-1234-1234-1234-123412341234');
+  });
+
+  it('should throw an error if the asset ID is not provided', () => {
+    expect(() => getAssetIdFromMiddleware(undefined)).toThrow(
+      'Cannot convert assetId to UUID for undefined asset'
+    );
   });
 });
 
@@ -2708,11 +2710,11 @@ describe('getAllowedMajors', () => {
 
   it('should handle version ranges ending with empty version', () => {
     const result = getAllowedMajors('7.0 || ', '7.0.0');
-    expect(result).toEqual(['1']);
+    expect(result).toEqual(['7']);
   });
 
   it('should handle version ranges with invalid version format', () => {
     const result = getAllowedMajors('7.0 || invalid', '7.0.0');
-    expect(result).toEqual(['1']);
+    expect(result).toEqual(['7']);
   });
 });

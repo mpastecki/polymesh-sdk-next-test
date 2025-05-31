@@ -224,11 +224,11 @@ export class Account extends Entity<UniqueIdentifiers, string> {
       extrinsicsByArgs(
         context.isSqIdPadded,
         {
-          ...(blockNumber ? { blockId: blockNumber.toString() } : {}),
+          blockId: blockNumber?.toString(),
           address,
-          ...(moduleId ? { moduleId } : {}),
-          ...(callId ? { callId } : {}),
-          ...(successFilter ? { success: successFilter } : {}),
+          moduleId,
+          callId,
+          success: successFilter,
         },
         size,
         start,

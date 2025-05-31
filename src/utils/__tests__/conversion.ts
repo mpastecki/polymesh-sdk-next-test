@@ -10093,7 +10093,10 @@ describe('meshMetadataValueToMetadataValue', () => {
       dsMockUtils.createMockOption(),
       dsMockUtils.createMockOption()
     );
-    expect(result).toBeNull();
+    expect(result).toEqual({
+      value: undefined,
+      lockStatus: undefined,
+    });
 
     const rawValue = dsMockUtils.createMockOption(dsMockUtils.createMockBytes('SOME_VALUE'));
 

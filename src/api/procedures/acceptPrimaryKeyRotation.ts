@@ -13,7 +13,7 @@ import { optionize } from '~/utils/internal';
 export interface Storage {
   calledByTarget: boolean;
   ownerAuthRequest: AuthorizationRequest;
-  cddAuthRequest?: AuthorizationRequest;
+  cddAuthRequest: AuthorizationRequest | undefined;
 }
 
 /**
@@ -101,7 +101,7 @@ export async function prepareStorage(
   return {
     calledByTarget,
     ownerAuthRequest,
-    ...(cddAuthRequest && { cddAuthRequest }),
+    cddAuthRequest,
   };
 }
 

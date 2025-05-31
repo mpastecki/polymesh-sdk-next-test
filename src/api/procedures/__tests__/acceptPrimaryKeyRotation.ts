@@ -90,6 +90,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
       {
         calledByTarget: true,
         ownerAuthRequest,
+        cddAuthRequest: undefined,
       }
     );
 
@@ -180,6 +181,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
         {
           calledByTarget: false,
           ownerAuthRequest: entityMockUtils.getAuthorizationRequestInstance(),
+          cddAuthRequest: undefined,
         }
       );
 
@@ -194,6 +196,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
         {
           calledByTarget: true,
           ownerAuthRequest: entityMockUtils.getAuthorizationRequestInstance(),
+          cddAuthRequest: undefined,
         }
       );
       boundFunc = getAuthorization.bind(proc);

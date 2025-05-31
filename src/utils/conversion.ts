@@ -709,9 +709,9 @@ export function meshClaimToInputStatClaim(
   } else {
     return {
       type: ClaimType.Jurisdiction,
-      ...(claim.asJurisdiction.isSome
-        ? { countryCode: meshCountryCodeToCountryCode(claim.asJurisdiction.unwrap()) }
-        : {}),
+      countryCode: claim.asJurisdiction.isSome
+        ? meshCountryCodeToCountryCode(claim.asJurisdiction.unwrap())
+        : undefined,
     };
   }
 }
@@ -730,7 +730,7 @@ export function claimCountToClaimCountRestrictionValue(
     claim: meshClaimToInputStatClaim(claim),
     issuer: new Identity({ did: identityIdToString(issuer) }, context),
     min: u64ToBigNumber(min),
-    ...(max.isSome && { max: u64ToBigNumber(max.unwrap()) }),
+    max: max.isSome ? u64ToBigNumber(max.unwrap()) : undefined,
   };
 }
 
@@ -806,7 +806,7 @@ export function portfolioLikeToPortfolioId(value: PortfolioLike): PortfolioId {
     did = asDid(valueIdentity);
   }
 
-  return { did, ...(number?.gt(0) && { number }) };
+  return { did, number: number?.gt(0) ? number : undefined };
 }
 
 /**
@@ -2456,7 +2456,7 @@ export function middlewareScopeToScope(scope: MiddlewareScope): Scope | void {
     case ClaimScopeTypeEnum.Asset:
       return {
         type: ScopeType.Asset,
-        value: getAssetIdFromMiddleware({ id: assetId }),
+        value: getAssetIdFromMiddleware(assetId),
       };
     case ClaimScopeTypeEnum.Identity:
     case ClaimScopeTypeEnum.Custom:
@@ -4574,9 +4574,12 @@ export function metadataToMeshMetadataKey(
 export function meshMetadataValueToMetadataValue(
   rawValue: Option<Bytes>,
   rawDetails: Option<PolymeshPrimitivesAssetMetadataAssetMetadataValueDetail>
-): MetadataValue | null {
+): MetadataValue {
   if (rawValue.isNone) {
-    return null;
+    return {
+      value: undefined,
+      lockStatus: undefined,
+    };
   }
 
   let metadataValue: MetadataValue = {
@@ -4693,10 +4696,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
 
   if (legType === LegTypeEnum.Fungible) {
     return {
-      asset: new FungibleAsset(
-        { assetId: getAssetIdFromMiddleware({ id: assetId, ...(ticker && { ticker }) }) },
-        context
-      ),
+      asset: new FungibleAsset({ assetId: getAssetIdFromMiddleware(assetId) }, context),
       amount: new BigNumber(amount).shiftedBy(-6),
       from: middlewarePortfolioToPortfolio(
         { identityId: from, number: fromPortfolio! } as MiddlewarePortfolio,
@@ -4710,7 +4710,7 @@ export function middlewareLegToLeg(leg: MiddlewareLeg, context: Context): Leg {
   }
 
   if (legType === LegTypeEnum.NonFungible) {
-    const id = getAssetIdFromMiddleware({ id: assetId, ...(ticker && { ticker }) });
+    const id = getAssetIdFromMiddleware(assetId);
     return {
       from: middlewarePortfolioToPortfolio(
         { identityId: from, number: fromPortfolio! } as MiddlewarePortfolio,
@@ -4828,7 +4828,7 @@ export function middlewareInstructionToHistoricInstruction(
     valueDate,
     ...middlewareInstructionToInstructionEndCondition(instruction),
     memo: memo ?? null,
-    ...(venueId && { venueId: new BigNumber(venueId) }),
+    venueId: venueId ? new BigNumber(venueId) : undefined,
     createdAt: new Date(datetime),
     legs: legs.map(leg => middlewareLegToLeg(leg, context)),
   };
@@ -4982,14 +4982,14 @@ function middlewareExtrinsicPermissionsDataToTransactionPermissions(
   pallets.forEach(({ palletName, dispatchableNames }) => {
     const moduleName = stringLowerFirst(coerceHexToString(palletName));
     if ('except' in dispatchableNames) {
-      const dispatchables = [...(dispatchableNames.except as string[])];
+      const dispatchables = [...dispatchableNames.except!];
       exceptions = [
         ...exceptions,
         ...dispatchables.map(name => formatTxTag(coerceHexToString(name), moduleName)),
       ];
       txValues = [...txValues, moduleName as ModuleName];
     } else if ('these' in dispatchableNames) {
-      const dispatchables = [...(dispatchableNames.these as string[])];
+      const dispatchables = [...dispatchableNames.these!];
       txValues = [
         ...txValues,
         ...dispatchables.map(name => formatTxTag(coerceHexToString(name), moduleName)),
@@ -5271,7 +5271,7 @@ export function toCustomClaimTypeWithIdentity(
   return data.map(({ id, name, identityId: did }) => ({
     id: new BigNumber(id),
     name,
-    ...(did ? { did } : {}),
+    did,
   }));
 }
 
@@ -5293,7 +5293,7 @@ function portfolioMovementsToHistoricSettlements(
         accounts: [handleMiddlewareAddress(accountAddress, context)],
         legs: [
           {
-            asset: new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset) }, context),
+            asset: new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset!.id) }, context),
             amount: new BigNumber(amount).shiftedBy(-6),
             direction: SettlementDirectionEnum.None,
             from: middlewarePortfolioToPortfolio(portfolioIdStringToPortfolio(fromId), context),
@@ -5390,7 +5390,7 @@ export function mediatorAffirmationStatusToStatus(
     case 'Affirmed': {
       const rawExpiry = rawStatus.asAffirmed.expiry;
       const expiry = rawExpiry.isSome ? momentToDate(rawExpiry.unwrap()) : undefined;
-      return { status: AffirmationStatus.Affirmed, ...(expiry ? { expiry } : {}) };
+      return { status: AffirmationStatus.Affirmed, expiry };
     }
     default:
       throw new UnreachableCaseError(rawStatus.type);

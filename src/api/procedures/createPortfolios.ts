@@ -13,7 +13,7 @@ import { checkTxType, filterEventRecords, getPortfolioIdsByName } from '~/utils/
 
 type PortfolioParams = {
   name: string;
-  ownerDid?: string;
+  ownerDid?: string | undefined;
 };
 
 /**

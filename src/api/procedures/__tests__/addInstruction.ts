@@ -933,7 +933,7 @@ describe('addInstruction procedure', () => {
 
     await expect(
       prepareAddInstruction.call(proc, {
-        venueId: args.venueId as BigNumber,
+        venueId: args.venueId!,
         instructions: [{ legs: [{ from, to, asset, nfts: [new BigNumber(1)] }] }],
       })
     ).rejects.toThrow(expectedError);
@@ -964,7 +964,7 @@ describe('addInstruction procedure', () => {
 
     await expect(
       prepareAddInstruction.call(proc, {
-        venueId: args.venueId as BigNumber,
+        venueId: args.venueId!,
         instructions: [{ legs: [{ from, to, asset, amount: new BigNumber(1) }] }],
       })
     ).rejects.toThrow(expectedError);
@@ -986,7 +986,7 @@ describe('addInstruction procedure', () => {
     });
 
     const result = await prepareAddInstruction.call(proc, {
-      venueId: args.venueId as BigNumber,
+      venueId: args.venueId!,
       instructions: [{ legs: [{ from, to, asset, nfts: [new BigNumber(1)] }] }],
     });
 
@@ -1136,7 +1136,7 @@ describe('addInstruction procedure', () => {
     });
 
     const result = await prepareAddInstruction.call(proc, {
-      venueId: args.venueId as BigNumber,
+      venueId: args.venueId!,
       instructions: [
         {
           legs: [

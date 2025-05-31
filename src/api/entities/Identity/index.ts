@@ -377,7 +377,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     opts: {
       order?: AssetHoldersOrderBy;
       size?: BigNumber;
-      start?: BigNumber;
+      start?: BigNumber | undefined;
     } = {}
   ): Promise<ResultSet<FungibleAsset>> {
     const { context, did } = this;
@@ -402,7 +402,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     const count = new BigNumber(totalCount);
 
     const data = nodes.map(
-      ({ asset }) => new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset) }, context)
+      ({ asset }) => new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset!.id) }, context)
     );
 
     const next = calculateNextKey(count, data.length, start);
@@ -450,7 +450,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     const count = new BigNumber(totalCount);
 
     const data = nodes.map(({ asset, nftIds }) => {
-      const assetId = getAssetIdFromMiddleware(asset);
+      const assetId = getAssetIdFromMiddleware(asset!.id);
       const collection = new NftCollection({ assetId }, context);
       const nfts = nftIds.map(
         (id: number) =>
@@ -514,7 +514,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     );
 
     return nodes.map(
-      ({ asset }) => new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset) }, context)
+      ({ asset }) => new FungibleAsset({ assetId: getAssetIdFromMiddleware(asset!.id) }, context)
     );
   }
 
@@ -745,7 +745,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
     while (!allFetched) {
       const { data, next } = await this.getHeldAssets({
         size: MAX_PAGE_SIZE,
-        ...(start ? { start } : {}),
+        start,
       });
       start = next ? new BigNumber(next) : undefined;
       allFetched = !next;
@@ -850,7 +850,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const { entries: keys, lastKey: next } = await requestPaginated(identity.didKeys, {
       arg: did,
-      ...(opts ? { paginationOpts: opts } : {}),
+      paginationOpts: opts,
     });
     const accounts = await Promise.all(keys.map(([key]) => keyToAccount(key)));
 

@@ -28,7 +28,7 @@ export type MetadataValueDetails = {
   /**
    * Date at which the Metadata value expires, null if it never expires
    */
-  expiry: Date | null;
+  expiry?: Date | null;
 } & (
   | {
       /**
@@ -40,16 +40,19 @@ export type MetadataValueDetails = {
       /**
        * Lock status of the Metadata value
        */
-      lockStatus: MetadataLockStatus.LockedUntil;
+      lockStatus: MetadataLockStatus.LockedUntil | undefined;
       /**
        * Date till which the Metadata value will be locked
        */
       lockedUntil: Date;
     }
+  | {
+      lockStatus: undefined;
+    }
 );
 
 export type MetadataValue = {
-  value: string;
+  value: string | undefined;
 } & MetadataValueDetails;
 
 export type GlobalMetadataKey = MetadataDetails & {

@@ -86,6 +86,7 @@ describe('Polymesh Transaction Base class', () => {
       );
 
       expect(PolymeshTransactionBase.toTransactionSpec(tx)).toEqual({
+        multiSig: null,
         resolver,
         transformer,
         paidForBy,
@@ -714,6 +715,30 @@ describe('Polymesh Transaction Base class', () => {
       );
     });
 
+    it('should call signAndSend with no era when given a mortal mortality option with no lifetime', async () => {
+      const transaction = dsMockUtils.createTxMock('staking', 'bond');
+      const args = tuple('FOO');
+      const txWithArgsMock = transaction(...args);
+
+      const tx = new PolymeshTransaction(
+        {
+          ...txSpec,
+          mortality: { immortal: false },
+          transaction,
+          args,
+          resolver: undefined,
+        },
+        context
+      );
+
+      await tx.run();
+      expect(txWithArgsMock.signAndSend).toHaveBeenCalledWith(
+        txSpec.signingAddress,
+        expect.not.objectContaining({ era: expect.anything() }),
+        expect.any(Function)
+      );
+    });
+
     it('should use polling when subscription is not enabled', async () => {
       const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
       context.supportsSubscription.mockReturnValue(false);
@@ -756,6 +781,78 @@ describe('Polymesh Transaction Base class', () => {
       expect(tx.receipt).toBeDefined();
 
       expect(result).toBe('pollingResult');
+    });
+
+    it('should throw an error when polling if there is an extrinsic failure', () => {
+      const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
+      context.supportsSubscription.mockReturnValue(false);
+
+      const fakeReceipt = new SubmittableResult({
+        blockNumber: dsMockUtils.createMockU32(new BigNumber(101)),
+        status: dsMockUtils.createMockExtrinsicStatus({
+          Finalized: dsMockUtils.createMockHash('blockHash'),
+        }),
+        txHash: dsMockUtils.createMockHash('bond'),
+        txIndex: 1,
+      });
+      fakeReceipt.filterRecords = jest.fn().mockReturnValue([{ event: { data: ['some error'] } }]);
+
+      jest.spyOn(baseUtils, 'pollForTransactionFinalization').mockResolvedValue(fakeReceipt);
+
+      const args = tuple('FOO');
+
+      const expectedError = new PolymeshError({
+        code: ErrorCode.UnexpectedError,
+        message: 'Unknown error',
+      });
+
+      const tx = new PolymeshTransaction(
+        {
+          ...txSpec,
+          transaction,
+          args,
+          resolver: undefined,
+        },
+        context
+      );
+
+      return expect(tx.run()).rejects.toThrow(expectedError);
+    });
+
+    it('should handle era=0 correctly when subscription is not enabled', async () => {
+      const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
+      context.supportsSubscription.mockReturnValue(false);
+
+      const fakeReceipt = new SubmittableResult({
+        blockNumber: dsMockUtils.createMockU32(new BigNumber(101)),
+        status: dsMockUtils.createMockExtrinsicStatus({
+          Finalized: dsMockUtils.createMockHash('blockHash'),
+        }),
+        txHash: dsMockUtils.createMockHash('bond'),
+        txIndex: 1,
+      });
+
+      jest.spyOn(baseUtils, 'pollForTransactionFinalization').mockResolvedValue(fakeReceipt);
+
+      const args = tuple('FOO');
+      const txWithArgsMock = transaction(...args);
+
+      const tx = new PolymeshTransaction(
+        {
+          ...txSpec,
+          mortality: { immortal: true },
+          transaction,
+          args,
+          resolver: 'pollingResult',
+        },
+        context
+      );
+
+      await tx.run();
+      expect(txWithArgsMock.signAndSend).toHaveBeenCalledWith(
+        txSpec.signingAddress,
+        expect.objectContaining({ nonce: -1, signer: 'signer', era: 0 })
+      );
     });
 
     it('should throw an error when polling if there is an extrinsic failure', () => {

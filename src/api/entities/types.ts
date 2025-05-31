@@ -88,7 +88,7 @@ export type UnsubCallback = () => void;
 
 export interface PaginationOptions {
   size: BigNumber;
-  start?: string;
+  start?: string | undefined;
 }
 
 export interface MiddlewarePaginationOptions {
@@ -254,7 +254,7 @@ export type StatClaimType = ClaimType.Accredited | ClaimType.Affiliate | ClaimTy
 
 export interface StatJurisdictionClaimInput {
   type: ClaimType.Jurisdiction;
-  countryCode?: CountryCode;
+  countryCode: CountryCode | undefined;
 }
 
 export interface StatAccreditedClaimInput {
@@ -832,3 +832,8 @@ export type NonFungiblePortfolioMovement = {
 };
 
 export type PortfolioMovement = FungiblePortfolioMovement | NonFungiblePortfolioMovement;
+
+export type ActiveStats = {
+  isSet: boolean;
+  claims: { claimType: ClaimType; issuer: Identity }[] | undefined;
+};

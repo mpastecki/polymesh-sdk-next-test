@@ -101,7 +101,7 @@ export interface AssetDetails {
   owner: Identity;
   totalSupply: BigNumber;
   fullAgents: Identity[];
-  ticker?: string;
+  ticker?: string | undefined;
 }
 
 /**
@@ -175,7 +175,7 @@ export interface BaseHistoricAssetTransaction extends EventIdentifier {
   /**
    * Name of the funding round (if provided while issuing the Asset). This value is present only when the value of `event` is `Issued`
    */
-  fundingRound?: string | undefined;
+  fundingRound: string | undefined;
   /**
    * ID of the instruction being executed. This value is present only when the value of `event` is `Transfer`
    */

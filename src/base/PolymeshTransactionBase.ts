@@ -71,9 +71,9 @@ export abstract class PolymeshTransactionBase<
 
     return {
       resolver,
-      ...(transformer ? { transformer } : {}),
-      ...(paidForBy ? { paidForBy } : {}),
-      ...(multiSig ? { multiSig } : {}),
+      transformer,
+      paidForBy,
+      multiSig,
     };
   }
 
@@ -373,7 +373,7 @@ export abstract class PolymeshTransactionBase<
     await context.assertHasSigningAddress(signingAddress);
 
     // era is how many blocks the transaction remains valid for, `undefined` for default
-    const era = mortality.immortal ? 0 : (mortality.lifetime?.toNumber() as number);
+    const era = mortality.immortal ? 0 : mortality.lifetime?.toNumber();
     const nonce = context.getNonce().toNumber();
 
     this.updateStatus(TransactionStatus.Unapproved);
@@ -384,7 +384,7 @@ export abstract class PolymeshTransactionBase<
         let settingBlockData = Promise.resolve();
         const gettingUnsub = txWithArgs.signAndSend(
           signingAddress,
-          { nonce, ...(signer && { signer }), era },
+          { nonce, ...(signer && { signer }), ...(era !== undefined ? { era } : {}) },
           receipt => {
             const { status } = receipt;
             let isLastCallback = false;
@@ -476,7 +476,7 @@ export abstract class PolymeshTransactionBase<
         .signAndSend(signingAddress, {
           nonce,
           ...(signer && { signer }),
-          era,
+          ...(era !== undefined ? { era } : {}),
         })
         .then(() => {
           this.setIsRunningStatus(txWithArgs.hash.toString());

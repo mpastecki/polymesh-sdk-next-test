@@ -240,16 +240,16 @@ export class Portfolios extends Namespace<Identity> {
     const settlementsPromise = context.queryMiddleware<Ensured<Query, 'legs'>>(
       settlementsForAllPortfoliosQuery(context.isSqIdPadded, {
         identityId,
-        ...(account ? { address: account } : {}),
-        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
+        address: account,
+        assetId: middlewareAssetId,
       })
     );
 
     const portfolioMovementsPromise = context.queryMiddleware<Ensured<Query, 'portfolioMovements'>>(
       portfoliosMovementsQuery(context.isSqIdPadded, {
         identityId,
-        ...(account ? { address: account } : {}),
-        ...(middlewareAssetId ? { assetId: middlewareAssetId } : {}),
+        address: account,
+        assetId: middlewareAssetId,
       })
     );
 

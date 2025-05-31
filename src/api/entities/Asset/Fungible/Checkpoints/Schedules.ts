@@ -1,3 +1,4 @@
+import { PolymeshCommonUtilitiesCheckpointScheduleCheckpoints } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
 import {
@@ -94,7 +95,8 @@ export class Schedules extends Namespace<FungibleAsset> {
     const rawSchedulesEntries = await checkpoint.scheduledCheckpoints.entries(rawAssetId);
 
     return rawSchedulesEntries.map(([key, rawScheduleOpt]) => {
-      const rawSchedule = rawScheduleOpt.unwrap();
+      const rawSchedule =
+        rawScheduleOpt.unwrap() as PolymeshCommonUtilitiesCheckpointScheduleCheckpoints;
       const rawId = key.args[1];
       const checkpointId = u64ToBigNumber(rawId);
       const points = [...rawSchedule.pending].map(rawPoint => momentToDate(rawPoint));
@@ -113,9 +115,9 @@ export class Schedules extends Namespace<FungibleAsset> {
         schedule,
         details: {
           remainingCheckpoints,
-          nextCheckpointDate: points[0],
+          nextCheckpointDate: points[0]!,
         },
-      } as ScheduleWithDetails;
+      };
     });
   }
 

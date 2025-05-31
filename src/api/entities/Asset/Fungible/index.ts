@@ -217,7 +217,7 @@ export class FungibleAsset extends BaseAsset {
       const fromPortfolio = optionize(portfolioIdStringToPortfolio)(fromPortfolioId);
       const toPortfolio = optionize(portfolioIdStringToPortfolio)(toPortfolioId);
 
-      const assetId = getAssetIdFromMiddleware(asset);
+      const assetId = getAssetIdFromMiddleware(asset!.id);
 
       data.push({
         asset: new FungibleAsset({ assetId }, context),
@@ -226,7 +226,7 @@ export class FungibleAsset extends BaseAsset {
         from: optionize(middlewarePortfolioToPortfolio)(fromPortfolio, context),
         to: optionize(middlewarePortfolioToPortfolio)(toPortfolio, context),
         fundingRound,
-        ...(instructionId && { instructionId: new BigNumber(instructionId) }),
+        instructionId: instructionId ? new BigNumber(instructionId) : undefined,
         instructionMemo,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         extrinsicIndex: new BigNumber(extrinsicIdx!),

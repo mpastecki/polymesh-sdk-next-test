@@ -226,7 +226,8 @@ export class Metadata extends Namespace<BaseAsset> {
     const specValues = await Promise.all(specPromises);
     const valueDetails = await Promise.all(valueDetailsPromises);
 
-    const data = [];
+    const data: MetadataWithValue[] = [];
+
     let index = 0;
     for (const rawValueEntry of rawValueEntries) {
       const nameValue = nameValues[index];
@@ -246,14 +247,18 @@ export class Metadata extends Namespace<BaseAsset> {
         rawValue,
       ] = rawValueEntry;
 
+      const metadataKey = await meshMetadataKeyToMetadataKey(rawMetadataKey, parent, context);
+
+      const metadataEntry = new MetadataEntry(
+        {
+          ...metadataKey,
+          assetId: parent.id,
+        },
+        context
+      );
+
       data.push({
-        metadataEntry: new MetadataEntry(
-          {
-            ...(await meshMetadataKeyToMetadataKey(rawMetadataKey, parent, context)),
-            assetId: parent.id,
-          },
-          context
-        ),
+        metadataEntry,
         name: bytesToString(nameValue.unwrap()),
         specs: meshMetadataSpecToMetadataSpec(specValues[index]),
         ...meshMetadataValueToMetadataValue(rawValue, valueDetail),
@@ -261,6 +266,6 @@ export class Metadata extends Namespace<BaseAsset> {
       index++;
     }
 
-    return data as MetadataWithValue[];
+    return data;
   }
 }

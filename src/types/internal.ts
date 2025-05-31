@@ -183,7 +183,7 @@ export interface BaseTransactionSpec<ReturnValue, TransformedReturnValue = Retur
    *
    * The proposal will be executed on chain after enough signers have approved the transaction
    */
-  multiSig?: MultiSig | null;
+  multiSig?: MultiSig | null | undefined;
 
   /**
    * value that the transaction will return once it has run, or a function that returns that value
@@ -288,7 +288,7 @@ export interface ProcedureAuthorization {
    * general permissions that apply to both Secondary Key Accounts and External
    *   Agent Identities. Overridden by `signerPermissions` and `agentPermissions` respectively
    */
-  permissions?: SimplePermissions | true | string;
+  permissions?: SimplePermissions | true | string | undefined;
   /**
    * permissions specific to secondary Accounts. This value takes precedence over `permissions` for
    *   secondary Accounts
@@ -299,7 +299,7 @@ export interface ProcedureAuthorization {
    *   External Agents
    */
   agentPermissions?: Omit<SimplePermissions, 'portfolios'> | true | string;
-  roles?: Role[] | true | string;
+  roles?: Role[] | true | string | undefined;
 }
 
 export type Falsyable<T> = T | null | undefined;

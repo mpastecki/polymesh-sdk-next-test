@@ -189,11 +189,17 @@ describe('MetadataEntry class', () => {
         'meshMetadataValueToMetadataValue'
       );
 
-      meshMetadataValueToMetadataValueSpy.mockReturnValue(null);
+      meshMetadataValueToMetadataValueSpy.mockReturnValue({
+        value: undefined,
+        lockStatus: undefined,
+      });
 
       let result = await metadataEntry.value();
 
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        value: undefined,
+        lockStatus: undefined,
+      });
 
       const fakeResult: MetadataValue = {
         value: 'SOME_VALUE',

@@ -213,7 +213,7 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
     // eslint-disable-next-line require-await
     const fetchIdentity = async (): Promise<Identity | null> => identity || account.getIdentity();
 
-    if (skipRolesCheck) {
+    if (skipRolesCheck || !roles) {
       rolesResult = { result: true };
     } else if (typeof roles === 'boolean') {
       rolesResult = { result: roles };
@@ -336,9 +336,9 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
   public async prepare<TransformedReturnValue>(
     args: {
       args: Args;
-      transformer?: (
-        value: ReturnValue
-      ) => TransformedReturnValue | Promise<TransformedReturnValue>;
+      transformer?:
+        | undefined
+        | ((value: ReturnValue) => TransformedReturnValue | Promise<TransformedReturnValue>);
     },
     context: Context,
     opts?: ProcedureOpts

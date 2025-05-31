@@ -392,8 +392,8 @@ export class AssetPermissions extends Namespace<Identity> {
         {
           assetId: middlewareAssetId,
           callerId: did,
-          ...(palletName ? { palletName } : {}),
-          ...(eventId ? { eventId } : {}),
+          palletName,
+          eventId,
         },
         size,
         start

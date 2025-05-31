@@ -101,7 +101,7 @@ interface ConstructorParams {
   polymeshApi: ApiPromise;
   middlewareApiV2: ApolloClient<NormalizedCacheObject> | null;
   ss58Format: BigNumber;
-  signingManager?: SigningManager;
+  signingManager?: SigningManager | undefined;
 }
 
 /**
@@ -162,7 +162,7 @@ export class Context {
     const context = new Context({
       polymeshApi,
       middlewareApiV2,
-      ...(signingManager ? { signingManager } : {}),
+      signingManager,
       ss58Format,
     });
 
@@ -866,8 +866,8 @@ export class Context {
    */
   public async getIdentityClaimsFromChain(args: {
     targets: (string | Identity)[];
-    claimTypes?: ClaimType[];
-    trustedClaimIssuers?: (string | Identity)[];
+    claimTypes?: ClaimType[] | undefined;
+    trustedClaimIssuers?: (string | Identity)[] | undefined;
     includeExpired: boolean;
   }): Promise<ClaimData[]> {
     const {
@@ -933,10 +933,10 @@ export class Context {
    * @hidden
    */
   public async getIdentityClaimsFromMiddleware(args: {
-    targets?: (string | Identity)[];
-    trustedClaimIssuers?: (string | Identity)[];
-    claimTypes?: ClaimType[];
-    includeExpired?: boolean;
+    targets?: (string | Identity)[] | undefined;
+    trustedClaimIssuers?: (string | Identity)[] | undefined;
+    claimTypes?: ClaimType[] | undefined;
+    includeExpired?: boolean | undefined;
     size?: BigNumber | undefined;
     start?: BigNumber | undefined;
   }): Promise<ResultSet<ClaimData>> {
@@ -957,15 +957,11 @@ export class Context {
       claimsQuery(
         this.isSqIdPadded,
         {
-          ...(targets ? { dids: targets.map(target => signerToString(target)) } : {}),
-          ...(trustedClaimIssuers
-            ? {
-                trustedClaimIssuers: trustedClaimIssuers.map(trustedClaimIssuer =>
-                  signerToString(trustedClaimIssuer)
-                ),
-              }
-            : {}),
-          ...(claimTypes ? { claimTypes: claimTypes.map(ct => ClaimTypeEnum[ct]) } : {}),
+          dids: targets?.map(target => signerToString(target)),
+          trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
+            signerToString(trustedClaimIssuer)
+          ),
+          claimTypes: claimTypes?.map(ct => ClaimTypeEnum[ct]),
           includeExpired,
         },
         size,
@@ -1016,12 +1012,12 @@ export class Context {
 
     if (isMiddlewareAvailable) {
       return this.getIdentityClaimsFromMiddleware({
-        ...(targets ? { targets } : {}),
-        ...(trustedClaimIssuers ? { trustedClaimIssuers } : {}),
-        ...(claimTypes ? { claimTypes } : {}),
+        targets,
+        trustedClaimIssuers,
+        claimTypes,
         includeExpired,
-        ...(size ? { size } : {}),
-        ...(start ? { start } : {}),
+        size,
+        start,
       });
     }
 
@@ -1034,8 +1030,8 @@ export class Context {
 
     const identityClaimsFromChain = await this.getIdentityClaimsFromChain({
       targets,
-      ...(claimTypes ? { claimTypes } : {}),
-      ...(trustedClaimIssuers ? { trustedClaimIssuers } : {}),
+      claimTypes,
+      trustedClaimIssuers,
       includeExpired,
     });
 
@@ -1310,8 +1306,8 @@ export class Context {
       polyxTransactionsQuery(
         this.isSqIdPadded,
         {
-          ...(identity ? { identityId: asDid(identity) } : {}),
-          ...(accounts ? { addresses: accounts.map(account => signerToString(account)) } : {}),
+          identityId: identity ? asDid(identity) : undefined,
+          addresses: accounts?.map(account => signerToString(account)),
         },
         size,
         start
@@ -1339,18 +1335,18 @@ export class Context {
 
       /* eslint-disable @typescript-eslint/no-non-null-assertion */
       return {
-        ...(identityId && { fromIdentity: new Identity({ did: identityId }, this) }),
-        ...(address && { fromAccount: new Account({ address }, this) }),
-        ...(toId && { toIdentity: new Identity({ did: toId }, this) }),
-        ...(toAddress && { toAccount: new Account({ address: toAddress }, this) }),
+        fromIdentity: identityId ? new Identity({ did: identityId }, this) : undefined,
+        fromAccount: address ? new Account({ address }, this) : undefined,
+        toIdentity: toId ? new Identity({ did: toId }, this) : undefined,
+        toAccount: toAddress ? new Account({ address: toAddress }, this) : undefined,
         amount: new BigNumber(amount).shiftedBy(-6),
         type,
-        ...(memo && { memo }),
+        memo,
         ...middlewareEventDetailsToEventIdentifier(createdBlock!, eventIdx),
         callId,
         eventId: eventId!,
         moduleId: moduleId!,
-        ...(extrinsic && { extrinsicIdx: new BigNumber(extrinsic.extrinsicIdx) }),
+        extrinsicIdx: extrinsic ? new BigNumber(extrinsic.extrinsicIdx) : undefined,
       };
       /* eslint-enable @typescript-eslint/no-non-null-assertion */
     });
@@ -1389,7 +1385,7 @@ export class Context {
    */
   public async getSignature(args: {
     rawPayload: `0x${string}`;
-    signer?: string | Account;
+    signer?: string | Account | undefined;
   }): Promise<`0x${string}`> {
     const { rawPayload, signer } = args;
 

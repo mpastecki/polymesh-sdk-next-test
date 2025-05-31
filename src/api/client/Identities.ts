@@ -66,7 +66,7 @@ export class Identities {
         getProcedureAndArgs: args => [
           createPortfolios,
           {
-            portfolios: [{ name: args.name, ...(args.ownerDid && { ownerDid: args.ownerDid }) }],
+            portfolios: [{ name: args.name, ownerDid: args.ownerDid }],
           },
         ],
         transformer: createPortfolioTransformer,
@@ -81,7 +81,7 @@ export class Identities {
           {
             portfolios: args.names.map(name => ({
               name,
-              ...(args.ownerDid && { ownerDid: args.ownerDid }),
+              ownerDid: args.ownerDid,
             })),
           },
         ],

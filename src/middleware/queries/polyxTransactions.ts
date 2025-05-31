@@ -7,8 +7,8 @@ import { PolyxTransactionsOrderBy } from '~/middleware/types';
 import { PaginatedQueryArgs } from '~/types/utils';
 
 export interface QueryPolyxTransactionFilters {
-  identityId?: string;
-  addresses?: string[];
+  identityId?: string | undefined;
+  addresses?: string[] | undefined;
 }
 
 /**

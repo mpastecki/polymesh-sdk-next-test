@@ -1,4 +1,3 @@
-import { u64 } from '@polkadot/types';
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
 import P from 'bluebird';
@@ -42,11 +41,10 @@ export interface Storage {
 export const createOfferingResolver =
   (assetId: string, context: Context) =>
   (receipt: ISubmittableResult): Offering => {
-    const [record] = filterEventRecords(receipt, 'sto', 'FundraiserCreated');
+    const [result] = filterEventRecords(receipt, 'sto', 'FundraiserCreated');
 
-    const { data } = record!;
-
-    const newFundraiserId = u64ToBigNumber(data[1] as unknown as u64);
+    const { data } = result!;
+    const newFundraiserId = u64ToBigNumber(data[3]);
 
     return new Offering({ id: newFundraiserId, assetId }, context);
   };

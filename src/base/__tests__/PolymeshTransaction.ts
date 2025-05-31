@@ -60,6 +60,7 @@ describe('Polymesh Transaction class', () => {
         args,
         fee: txSpec.fee,
         feeMultiplier: new BigNumber(10),
+        multiSig: null,
       });
     });
 

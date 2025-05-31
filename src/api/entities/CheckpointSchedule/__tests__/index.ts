@@ -134,7 +134,7 @@ describe('CheckpointSchedule class', () => {
       expect(error.message).toBe('Schedule no longer exists. It was either removed or it expired');
     });
 
-    it('should throw an error if next checkpoint date is not found', async () => {
+    it('should throw an error if next checkpoint date is not found', () => {
       const rawRemaining = new BigNumber(1);
       const checkpointSchedule = new CheckpointSchedule(
         { id, assetId, pendingPoints: [] },

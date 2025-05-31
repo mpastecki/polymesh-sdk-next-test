@@ -305,7 +305,7 @@ export class DividendDistribution extends CorporateActionBase {
     while (!allFetched) {
       const { data, next } = await checkpoint.allBalances({
         size: MAX_PAGE_SIZE,
-        ...(start ? { start } : {}),
+        start,
       });
       start = (next as string) || undefined;
       allFetched = !next;

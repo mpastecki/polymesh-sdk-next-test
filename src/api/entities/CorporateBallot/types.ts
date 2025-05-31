@@ -121,7 +121,7 @@ export type ChoiceWithParticipation = {
   /**
    * The fallback choice for the vote
    */
-  fallback?: BigNumber;
+  fallback?: BigNumber | undefined;
 };
 
 export type CorporateBallotMotionWithParticipation = Pick<BallotMotion, 'title' | 'infoLink'> & {

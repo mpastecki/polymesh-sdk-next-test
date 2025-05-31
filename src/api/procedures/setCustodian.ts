@@ -43,7 +43,7 @@ export async function prepareSetCustodian(
   } = this;
 
   const { targetIdentity, expiry, did, id } = args;
-  const portfolio = portfolioIdToPortfolio({ did, number: id ?? new BigNumber(0) }, context);
+  const portfolio = portfolioIdToPortfolio({ did, number: id }, context);
   const issuerIdentity = await context.getSigningIdentity();
 
   const targetDid = signerToString(targetIdentity);

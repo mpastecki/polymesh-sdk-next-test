@@ -282,7 +282,7 @@ export class CorporateBallot extends CorporateActionBase {
             const choiceWithParticipation: ChoiceWithParticipation = {
               choice,
               power,
-              ...(fallback && { fallback }),
+              fallback,
             };
 
             index++;

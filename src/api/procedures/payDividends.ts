@@ -73,7 +73,7 @@ export async function preparePayDividends(
   const alreadyClaimedList: Identity[] = [];
   holderPaidList.forEach((holderPaid, i) => {
     if (boolToBoolean(holderPaid)) {
-      const target = targets[i] as string | Identity;
+      const target = targets[i]!;
       alreadyClaimedList.push(new Identity({ did: signerToString(target) }, context));
     }
   });

@@ -213,7 +213,7 @@ export class PolymeshTransactionBatch<
       const isLast = index === transactions.length - 1;
 
       const spec = {
-        ...(signer && { signer }),
+        signer,
         signingAddress,
         transaction,
         args,
@@ -237,7 +237,7 @@ export class PolymeshTransactionBatch<
 
               return resolver;
             },
-            ...(transformer && { transformer }),
+            transformer,
           },
           context
         );

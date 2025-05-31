@@ -80,32 +80,32 @@ export interface HistoricPolyxTransaction extends EventIdentifier {
    * Identity from which the POLYX transaction has been initiated/deducted in case of a transfer.
    * @note this can be null in cases where some balance are endowed/transferred from treasury
    */
-  fromIdentity?: Identity | undefined;
+  fromIdentity: Identity | undefined;
   /**
    * Account from which the POLYX transaction has been initiated/deducted in case of a transfer.
    * @note this can be null in cases where some balance are endowed/transferred from treasury
    */
-  fromAccount?: Account | undefined;
+  fromAccount: Account | undefined;
   /**
    * Identity in which the POLYX amount was deposited.
    * @note this can be null in case when account balance was burned
    */
-  toIdentity?: Identity | undefined;
+  toIdentity: Identity | undefined;
   /**
    * Account in which the POLYX amount was deposited.
    * @note this can be null in case when account balance was burned
    */
-  toAccount?: Account | undefined;
+  toAccount: Account | undefined;
 
   amount: BigNumber;
   type: BalanceTypeEnum;
   /**
    * identifier string to help differentiate transfers
    */
-  memo?: string | undefined;
-  extrinsicIdx?: BigNumber | undefined;
+  memo: string | undefined;
+  extrinsicIdx: BigNumber | undefined;
 
-  callId?: CallIdEnum | undefined;
+  callId: CallIdEnum | undefined;
   moduleId: ModuleIdEnum;
   eventId: EventIdEnum;
 }

@@ -62,6 +62,7 @@ describe('Polymesh Transaction Batch class', () => {
       expect(PolymeshTransactionBatch.toTransactionSpec(tx)).toEqual({
         resolver,
         transformer,
+        multiSig: null,
         paidForBy,
         transactions: [
           {

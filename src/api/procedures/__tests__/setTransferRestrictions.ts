@@ -378,6 +378,7 @@ describe('setTransferRestrictions procedure', () => {
             issuer,
             claim: {
               type: ClaimType.Jurisdiction,
+              countryCode: undefined,
             } as const,
             type: TransferRestrictionType.ClaimCount,
           },
@@ -387,6 +388,7 @@ describe('setTransferRestrictions procedure', () => {
             issuer,
             claim: {
               type: ClaimType.Jurisdiction,
+              countryCode: undefined,
             } as const,
             type: TransferRestrictionType.ClaimCount,
           },

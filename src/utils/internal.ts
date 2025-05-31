@@ -45,12 +45,7 @@ import {
   PolymeshError,
 } from '~/internal';
 import { latestSqVersionQuery } from '~/middleware/queries/common';
-import {
-  Asset as MiddlewareAsset,
-  Claim as MiddlewareClaim,
-  ClaimTypeEnum,
-  Query,
-} from '~/middleware/types';
+import { Claim as MiddlewareClaim, ClaimTypeEnum, Query } from '~/middleware/types';
 import { MiddlewareScope } from '~/middleware/typesV1';
 import {
   Asset,
@@ -861,10 +856,10 @@ export function createProcedureMethod<
     procArgs: ProcedureArgs
   ): {
     args: ProcedureArgs;
-    transformer?: (value: ProcedureReturnValue) => ReturnValue | Promise<ReturnValue>;
+    transformer?: undefined | ((value: ProcedureReturnValue) => ReturnValue | Promise<ReturnValue>);
   } => ({
     args: procArgs,
-    ...(transformer && { transformer }),
+    transformer,
   });
 
   if (voidArgs) {
@@ -1721,7 +1716,7 @@ export function compareTransferRestrictionToStat(
  * @returns encoded StatType needed for the TransferRestriction to be enabled
  */
 export function neededStatTypeForRestrictionInput(
-  args: { type: TransferRestrictionType; claimIssuer?: StatClaimIssuer },
+  args: { type: TransferRestrictionType; claimIssuer?: StatClaimIssuer | undefined },
   context: Context
 ): PolymeshPrimitivesStatisticsStatType {
   const { type, claimIssuer } = args;
@@ -2087,10 +2082,14 @@ export async function getAssetIdForMiddleware(
  *
  * @returns asset ID as UUID format
  */
-export function getAssetIdFromMiddleware(
-  assetIdAndTicker: Falsyable<Pick<MiddlewareAsset, 'id' | 'ticker'>>
-): string {
-  const { id } = assetIdAndTicker!;
+export function getAssetIdFromMiddleware(id: string | undefined): string {
+  if (!id) {
+    throw new PolymeshError({
+      code: ErrorCode.UnexpectedError,
+      message: 'Cannot convert assetId to UUID for undefined asset',
+    });
+  }
+
   return hexToUuid(id);
 }
 

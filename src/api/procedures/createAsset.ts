@@ -65,7 +65,7 @@ export interface Storage {
    */
   customTypeData: CustomTypeData | null;
 
-  status?: TickerReservationStatus;
+  status: TickerReservationStatus | undefined;
 
   signingIdentity: Identity;
 }
@@ -390,7 +390,7 @@ export async function prepareStorage(
 
   return {
     customTypeData,
-    ...(status && { status }),
+    status,
     signingIdentity,
   };
 }

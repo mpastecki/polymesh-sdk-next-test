@@ -40,15 +40,10 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
     const authorizations = await identity.authorizations.multi(authQueryParams);
 
     const data = this.createAuthorizationRequests(
-      authorizations.map((auth, index) => {
-        const params = authQueryParams[index]!;
-        const [signer] = params;
-
-        return {
-          auth: auth.unwrap(),
-          target: signatoryToSignerValue(signer),
-        };
-      })
+      authorizations.map((auth, index) => ({
+        auth: auth.unwrap(),
+        target: signatoryToSignerValue(authQueryParams[index]![0]),
+      }))
     );
 
     return {
@@ -97,9 +92,7 @@ export class IdentityAuthorizations extends Authorizations<Identity> {
       const auth = await identity.authorizations(targetSignatory, rawId);
       const target = signatoryToSignerValue(targetSignatory);
 
-      const request = this.createAuthorizationRequests([{ auth: auth.unwrap(), target }]);
-
-      return request[0]!;
+      return this.createAuthorizationRequests([{ auth: auth.unwrap(), target }])[0]!;
     }
 
     return gettingReceivedAuth;

@@ -983,7 +983,7 @@ export interface AddInstructionsParams {
 }
 
 export type AddInstructionWithVenueIdParams = AddInstructionParams & {
-  venueId?: BigNumber;
+  venueId: BigNumber | undefined;
 };
 
 export interface InstructionIdParams {
@@ -1050,7 +1050,7 @@ export interface OffChainAffirmationReceipt {
   /**
    * (optional) Metadata value that can be used to attach messages to the receipt
    */
-  metadata?: string;
+  metadata: string | undefined;
 }
 
 export type AffirmInstructionParams = {

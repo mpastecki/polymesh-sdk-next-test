@@ -242,7 +242,7 @@ export abstract class CorporateActionBase extends Entity<UniqueIdentifiers, unkn
 
     if (!rawCheckpointId) {
       throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
+        code: ErrorCode.DataUnavailable,
         message: 'No checkpoint found',
       });
     }
