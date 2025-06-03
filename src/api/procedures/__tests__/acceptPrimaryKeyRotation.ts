@@ -174,7 +174,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       let proc = procedureMockUtils.getInstance<AcceptPrimaryKeyRotationParams, void, Storage>(
         mockContext,
         {
@@ -184,7 +184,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
       );
 
       let boundFunc = getAuthorization.bind(proc);
-      let result = await boundFunc();
+      let result = boundFunc();
       expect(result).toEqual({
         roles: `"${AuthorizationType.RotatePrimaryKey}" Authorization Requests must be accepted by the target Account`,
       });
@@ -198,7 +198,7 @@ describe('acceptPrimaryKeyRotation procedure', () => {
       );
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc();
+      result = boundFunc();
       expect(result).toEqual({
         roles: true,
       });

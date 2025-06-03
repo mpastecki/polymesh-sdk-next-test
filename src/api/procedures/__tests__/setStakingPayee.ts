@@ -80,7 +80,7 @@ describe('setStakingPayee procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if the payee is already set', async () => {
+  it('should throw an error if the payee is already set', () => {
     currentPayee.account = entityMockUtils.getAccountInstance({ isEqual: true });
 
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
@@ -102,7 +102,7 @@ describe('setStakingPayee procedure', () => {
     return expect(prepareSetStakingPayee.call(proc, args)).rejects.toThrow(expectedError);
   });
 
-  it('should allow the same payee if auto stake value differs', async () => {
+  it('should allow the same payee if auto stake value differs', () => {
     currentPayee.account = entityMockUtils.getAccountInstance({ isEqual: true });
 
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {

@@ -1,3 +1,6 @@
+import { Ballots } from '~/api/entities/Asset/Fungible/CorporateActions/Ballots';
+import { Distributions } from '~/api/entities/Asset/Fungible/CorporateActions/Distributions';
+import { CorporateActionDefaultConfig } from '~/api/entities/Asset/Fungible/CorporateActions/types';
 import { initiateCorporateAction } from '~/api/procedures/initiateCorporateAction';
 import {
   Context,
@@ -21,10 +24,6 @@ import {
   targetIdentitiesToCorporateActionTargets,
 } from '~/utils/conversion';
 import { createProcedureMethod, requestMulti } from '~/utils/internal';
-
-import { Ballots } from './Ballots';
-import { Distributions } from './Distributions';
-import { CorporateActionDefaultConfig } from './types';
 
 /**
  * Handles all Asset Corporate Actions related functionality

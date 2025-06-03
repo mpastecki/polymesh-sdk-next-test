@@ -9,6 +9,7 @@ import {
   Params as CorporateActionParams,
   UniqueIdentifiers,
 } from '~/api/entities/CorporateAction';
+import { DistributionParticipant } from '~/api/entities/DividendDistribution/types';
 import {
   Checkpoint,
   CheckpointSchedule,
@@ -56,8 +57,6 @@ import {
   toHumanReadable,
   xor,
 } from '~/utils/internal';
-
-import { DistributionParticipant } from './types';
 
 export interface HumanReadable extends CorporateActionHumanReadable {
   origin: HumanReadableType<DefaultPortfolio | NumberedPortfolio>;

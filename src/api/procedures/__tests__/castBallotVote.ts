@@ -256,7 +256,7 @@ describe('castBallotVote procedure', () => {
   });
 
   describe('castBallotVote', () => {
-    it('should be instance of Procedure', async () => {
+    it('should be instance of Procedure', () => {
       expect(castBallotVote()).toBeInstanceOf(Procedure);
     });
   });

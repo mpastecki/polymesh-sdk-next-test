@@ -19,7 +19,7 @@ export interface Storage {
 /**
  * @hidden
  */
-export async function prepareWithdrawUnbondedPolyx(
+export function prepareWithdrawUnbondedPolyx(
   this: Procedure<void, void, Storage>
 ): Promise<TransactionSpec<void, ExtrinsicParams<'staking', 'withdrawUnbonded'>>> {
   const {
@@ -47,11 +47,11 @@ export async function prepareWithdrawUnbondedPolyx(
     : new BigNumber(optSpans.unwrap().prior.length + 1);
   const rawSpanCount = bigNumberToU32(spanCount, context);
 
-  return {
+  return Promise.resolve({
     transaction: withdrawUnbonded,
     args: [rawSpanCount],
     resolver: undefined,
-  };
+  });
 }
 
 /**

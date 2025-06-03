@@ -2,6 +2,14 @@ import BigNumber from 'bignumber.js';
 import { groupBy, map } from 'lodash';
 
 import { BaseAsset } from '~/api/entities/Asset/Base';
+import { FungibleSettlements } from '~/api/entities/Asset/Base/Settlements';
+import { AssetHolders } from '~/api/entities/Asset/Fungible/AssetHolders';
+import { Checkpoints } from '~/api/entities/Asset/Fungible/Checkpoints';
+import { CorporateActions } from '~/api/entities/Asset/Fungible/CorporateActions';
+import { Issuance } from '~/api/entities/Asset/Fungible/Issuance';
+import { Offerings } from '~/api/entities/Asset/Fungible/Offerings';
+import { TransferRestrictions } from '~/api/entities/Asset/Fungible/TransferRestrictions';
+import { UniqueIdentifiers } from '~/api/entities/types';
 import { Context, controllerTransfer, Identity, redeemTokens } from '~/internal';
 import { assetQuery, assetTransactionQuery } from '~/middleware/queries/assets';
 import { tickerExternalAgentHistoryQuery } from '~/middleware/queries/externalAgents';
@@ -30,15 +38,6 @@ import {
   getAssetIdFromMiddleware,
   optionize,
 } from '~/utils/internal';
-
-import { FungibleSettlements } from '../Base/Settlements';
-import { UniqueIdentifiers } from '../types';
-import { AssetHolders } from './AssetHolders';
-import { Checkpoints } from './Checkpoints';
-import { CorporateActions } from './CorporateActions';
-import { Issuance } from './Issuance';
-import { Offerings } from './Offerings';
-import { TransferRestrictions } from './TransferRestrictions';
 
 /**
  * Class used to manage all Fungible Asset functionality

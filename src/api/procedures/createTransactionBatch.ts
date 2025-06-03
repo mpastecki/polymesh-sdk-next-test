@@ -1,3 +1,4 @@
+/* eslint-disable require-await */
 import { ISubmittableResult } from '@polkadot/types/types';
 import { identity } from 'lodash';
 

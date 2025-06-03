@@ -7,7 +7,6 @@ import {
   getMissingPortfolioPermissions,
   getMissingTransactionPermissions,
 } from '~/api/entities/Account/helpers';
-import { Staking } from '~/api/entities/Account/Staking';
 import {
   AccountIdentityRelation,
   AccountKeyType,
@@ -23,6 +22,7 @@ import {
   MultiSig,
   MultiSigProposal,
   PolymeshError,
+  Staking,
 } from '~/internal';
 import { extrinsicsByArgs } from '~/middleware/queries/extrinsics';
 import { ExtrinsicsOrderBy, Query } from '~/middleware/types';
@@ -445,8 +445,8 @@ export class Account extends Entity<UniqueIdentifiers, string> {
   /**
    * Determine whether this Account exists on chain
    */
-  public async exists(): Promise<boolean> {
-    return true;
+  public exists(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
   /**
@@ -543,7 +543,7 @@ export class Account extends Entity<UniqueIdentifiers, string> {
    *
    * @note uses the middleware
    */
-  public async getPolyxTransactions(filters: {
+  public getPolyxTransactions(filters: {
     size?: BigNumber;
     start?: BigNumber;
   }): Promise<ResultSet<HistoricPolyxTransaction>> {

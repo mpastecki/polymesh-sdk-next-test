@@ -301,7 +301,7 @@ describe('executeManualInstruction procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const from = entityMockUtils.getNumberedPortfolioInstance();
       const to = entityMockUtils.getDefaultPortfolioInstance();
 
@@ -313,7 +313,7 @@ describe('executeManualInstruction procedure', () => {
       });
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc();
+      const result = boundFunc();
 
       expect(result).toEqual({
         permissions: {

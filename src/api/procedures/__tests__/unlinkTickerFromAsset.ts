@@ -125,13 +125,13 @@ describe('unlinkTickerFromAsset procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions for a free status', async () => {
+    it('should return the appropriate roles and permissions for a free status', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         ticker,
       });
       const boundFunc = getAuthorization.bind(proc);
 
-      return expect(boundFunc(args)).resolves.toEqual({
+      return expect(boundFunc(args)).toEqual({
         roles: [{ type: RoleType.TickerOwner, ticker }],
         permissions: {
           assets: [asset],

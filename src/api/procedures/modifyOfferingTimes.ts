@@ -15,14 +15,16 @@ import { assetToMeshAssetId, bigNumberToU64, dateToMoment } from '~/utils/conver
 /**
  * @hidden
  */
-function validateInput(
-  sale: OfferingSaleStatus,
-  newStart: Date | undefined,
-  start: Date,
-  newEnd: Date | null | undefined,
-  end: Date | null,
-  timing: OfferingTimingStatus
-): void {
+function validateInput(args: {
+  sale: OfferingSaleStatus;
+  newStart: Date | undefined;
+  start: Date;
+  newEnd: Date | null | undefined;
+  end: Date | null;
+  timing: OfferingTimingStatus;
+}): void {
+  const { sale, newStart, start, newEnd, end, timing } = args;
+
   if ([OfferingSaleStatus.Closed, OfferingSaleStatus.ClosedEarly].includes(sale)) {
     throw new PolymeshError({
       code: ErrorCode.UnmetPrerequisite,
@@ -99,7 +101,7 @@ export async function prepareModifyOfferingTimes(
     start,
   } = await offering.details();
 
-  validateInput(sale, newStart, start, newEnd, end, timing);
+  validateInput({ sale, newStart, start, newEnd, end, timing });
 
   const rawAssetId = assetToMeshAssetId(asset, context);
 

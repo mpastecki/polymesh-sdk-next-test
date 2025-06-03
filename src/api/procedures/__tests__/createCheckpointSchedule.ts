@@ -65,12 +65,12 @@ describe('createCheckpointSchedule procedure', () => {
   it('should throw an error if the start date is in the past', () => {
     const proc = procedureMockUtils.getInstance<Params, CheckpointSchedule>(mockContext);
 
-    return expect(
+    return expect(() =>
       prepareCreateCheckpointSchedule.call(proc, {
         asset,
         points: [new Date(new Date().getTime() - 10000)],
       })
-    ).rejects.toThrow('Schedule points must be in the future');
+    ).toThrow('Schedule points must be in the future');
   });
 
   it('should return a create checkpoint schedule transaction spec', async () => {

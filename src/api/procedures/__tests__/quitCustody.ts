@@ -173,7 +173,7 @@ describe('quitCustody procedure', () => {
   });
 
   describe('prepareStorage', () => {
-    it('should return the portfolio id', async () => {
+    it('should return the portfolio id', () => {
       const portfolio = new NumberedPortfolio({ id, did }, mockContext);
 
       const portfolioId: { did: string; number?: BigNumber } = { did, number: id };
@@ -183,7 +183,7 @@ describe('quitCustody procedure', () => {
 
       when(portfolioLikeToPortfolioIdSpy).calledWith(portfolio).mockReturnValue(portfolioId);
 
-      const result = await boundFunc({ portfolio });
+      const result = boundFunc({ portfolio });
 
       expect(result).toEqual({
         portfolioId,

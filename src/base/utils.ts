@@ -198,6 +198,48 @@ export const handleTransactionSubmissionError = (err: Error): PolymeshError => {
 
 /**
  * @hidden
+ */
+async function getLocationInfoForTx(
+  txHash: Hash,
+  context: Context,
+  lastCheckedBlock: BigNumber
+): Promise<{
+  locationInfo: { block: SignedBlock; txIndex: number } | undefined;
+  latestBlockNumber: BigNumber;
+}> {
+  let locationInfo: { block: SignedBlock; txIndex: number } | undefined;
+  const latestBlockNumber = await context.getLatestBlock();
+  if (!latestBlockNumber.eq(lastCheckedBlock)) {
+    const blocksToCheck: u32[] = [];
+    const numberOfCandidateBlocks = latestBlockNumber.minus(lastCheckedBlock).toNumber();
+
+    for (let i = 1; i <= numberOfCandidateBlocks; i++) {
+      const blockNumber = lastCheckedBlock.plus(i);
+      blocksToCheck.push(bigNumberToU32(blockNumber, context));
+    }
+
+    const blockHashesToCheck = await context.polymeshApi.query.system.blockHash.multi(
+      blocksToCheck
+    );
+
+    const newBlocks = await Promise.all(
+      blockHashesToCheck.map(hash => context.polymeshApi.rpc.chain.getBlock(hash))
+    );
+
+    for (const newBlock of newBlocks) {
+      const txIndex = newBlock.block.extrinsics.findIndex(value => txHash.eq(value.hash));
+      if (txIndex >= 0) {
+        locationInfo = { txIndex, block: newBlock };
+        break;
+      }
+    }
+  }
+
+  return { locationInfo, latestBlockNumber };
+}
+
+/**
+ * @hidden
  *
  * given a transaction hash this will poll the chain until it is included in a finalized block
  *
@@ -219,7 +261,6 @@ export const pollForTransactionFinalization = async (
 ): Promise<SubmittableResult> => {
   let lastCheckedBlock = startingBlock;
   let locationInfo: { block: SignedBlock; txIndex: number } | undefined;
-  let txIndex: number;
 
   // Finalization is expected to take ~15 seconds
   const { delayMs, maxAttempts } = pollOptions;
@@ -229,34 +270,13 @@ export const pollForTransactionFinalization = async (
     attemptCounter += 1;
     await delay(delayMs);
 
-    const latestBlockNumber = await context.getLatestBlock();
-    if (!latestBlockNumber.eq(lastCheckedBlock)) {
-      const blocksToCheck: u32[] = [];
-      const numberOfCandidateBlocks = latestBlockNumber.minus(lastCheckedBlock).toNumber();
+    const result = await getLocationInfoForTx(txHash, context, lastCheckedBlock);
 
-      for (let i = 1; i <= numberOfCandidateBlocks; i++) {
-        const blockNumber = lastCheckedBlock.plus(i);
-        blocksToCheck.push(bigNumberToU32(blockNumber, context));
-      }
-
-      const blockHashesToCheck = await context.polymeshApi.query.system.blockHash.multi(
-        blocksToCheck
-      );
-
-      const newBlocks = await Promise.all(
-        blockHashesToCheck.map(hash => context.polymeshApi.rpc.chain.getBlock(hash))
-      );
-
-      for (const newBlock of newBlocks) {
-        txIndex = newBlock.block.extrinsics.findIndex(value => txHash.eq(value.hash));
-        if (txIndex >= 0) {
-          locationInfo = { txIndex, block: newBlock };
-          break;
-        }
-      }
-
-      lastCheckedBlock = latestBlockNumber;
+    if (result.locationInfo) {
+      locationInfo = result.locationInfo;
     }
+
+    lastCheckedBlock = result.latestBlockNumber;
   }
 
   if (!locationInfo) {

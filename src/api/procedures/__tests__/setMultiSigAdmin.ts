@@ -79,7 +79,7 @@ describe('setMultiSigAdmin procedure', () => {
     ).rejects.toThrow(expectedError);
   });
 
-  it('should return an add admin transaction when given an admin', async () => {
+  it('should return an add admin transaction when given an admin', () => {
     adminIdentity = entityMockUtils.getIdentityInstance({ did: adminDid, isEqual: false });
     const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
 

@@ -22,6 +22,7 @@ import { chunk, clone, flatMap, flatten, flattenDeep } from 'lodash';
 import { gte } from 'semver';
 
 import { HistoricPolyxTransaction } from '~/api/entities/Account/types';
+import { processType } from '~/base/utils';
 import {
   Account,
   ChildIdentity,
@@ -95,8 +96,6 @@ import {
   getApiAtBlock,
   getLatestSqVersion,
 } from '~/utils/internal';
-
-import { processType } from './utils';
 
 interface ConstructorParams {
   polymeshApi: ApiPromise;
@@ -281,7 +280,7 @@ export class Context {
    *
    * @throws if the passed address isn't valid
    */
-  public async setSigningAddress(signingAddress: string): Promise<void> {
+  public setSigningAddress(signingAddress: string): void {
     assertAddressValid(signingAddress, this.ss58Format);
 
     this.signingAddress = signingAddress;

@@ -119,9 +119,9 @@ export async function prepareExecuteManualInstruction(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, Instruction, Storage>
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { portfolios },
   } = this;

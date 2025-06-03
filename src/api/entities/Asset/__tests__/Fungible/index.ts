@@ -225,7 +225,7 @@ describe('Fungible class', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (rawToken as any).primaryIssuanceAgent = dsMockUtils.createMockOption();
 
-      dsMockUtils.createQueryMock('asset', 'assets').mockImplementation(async (_, cbFunc) => {
+      dsMockUtils.createQueryMock('asset', 'assets').mockImplementation((_, cbFunc) => {
         cbFunc(rawToken);
 
         return unsubCallback;
@@ -385,7 +385,7 @@ describe('Fungible class', () => {
     it('should allow subscription', async () => {
       const unsubCallback = 'unsubCallBack';
 
-      dsMockUtils.createQueryMock('asset', 'fundingRound').mockImplementation(async (_, cbFunc) => {
+      dsMockUtils.createQueryMock('asset', 'fundingRound').mockImplementation((_, cbFunc) => {
         cbFunc(rawFundingRound);
 
         return unsubCallback;
@@ -485,13 +485,11 @@ describe('Fungible class', () => {
     it('should allow subscription', async () => {
       const unsubCallback = 'unsubCallBack';
 
-      dsMockUtils
-        .createQueryMock('asset', 'assetIdentifiers')
-        .mockImplementation(async (_, cbFunc) => {
-          cbFunc([isinMock, cusipMock, cinsMock, leiMock, figiMock]);
+      dsMockUtils.createQueryMock('asset', 'assetIdentifiers').mockImplementation((_, cbFunc) => {
+        cbFunc([isinMock, cusipMock, cinsMock, leiMock, figiMock]);
 
-          return unsubCallback;
-        });
+        return unsubCallback;
+      });
 
       const callback = jest.fn();
       const result = await asset.getIdentifiers(callback);
@@ -626,7 +624,7 @@ describe('Fungible class', () => {
       const asset = new FungibleAsset({ assetId }, context);
       const unsubCallback = 'unsubCallBack';
 
-      frozenMock.mockImplementation(async (_, cbFunc) => {
+      frozenMock.mockImplementation((_, cbFunc) => {
         cbFunc(rawBoolValue);
         return unsubCallback;
       });

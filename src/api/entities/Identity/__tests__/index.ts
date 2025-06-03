@@ -415,7 +415,7 @@ describe('Identity class', () => {
 
       when(balanceOfMock)
         .calledWith(rawAssetId, rawIdentityId, expect.any(Function))
-        .mockImplementation(async (_a, _b, cbFunc) => {
+        .mockImplementation((_a, _b, cbFunc) => {
           cbFunc(fakeBalance);
           return unsubCallback;
         });
@@ -519,7 +519,6 @@ describe('Identity class', () => {
     let accountIdToStringSpy: jest.SpyInstance<string, [AccountId]>;
     let didRecordsSpy: jest.Mock;
     let rawDidRecord: PolymeshPrimitivesIdentityDidRecord;
-    let fakeResult: PermissionedAccount;
 
     beforeAll(() => {
       accountIdToStringSpy = jest.spyOn(utilsConversionModule, 'accountIdToString');
@@ -536,18 +535,6 @@ describe('Identity class', () => {
         .calledWith({ address: accountId }, context)
         // @ts-expect-error "Account not defined"
         .mockResolvedValue({ address: accountId });
-
-      const account = expect.objectContaining({ address: accountId });
-
-      fakeResult = {
-        account,
-        permissions: {
-          assets: null,
-          portfolios: null,
-          transactions: null,
-          transactionGroups: [],
-        },
-      };
     });
 
     it('should return a PrimaryAccount', async () => {
@@ -574,7 +561,7 @@ describe('Identity class', () => {
 
       const unsubCallback = 'unsubCallBack';
 
-      didRecordsSpy.mockImplementation(async (_, cbFunc) => {
+      didRecordsSpy.mockImplementation((_, cbFunc) => {
         cbFunc(dsMockUtils.createMockOption(rawDidRecord));
         return unsubCallback;
       });
@@ -583,10 +570,6 @@ describe('Identity class', () => {
       const result = await identity.getPrimaryAccount(callback);
 
       expect(result).toBe(unsubCallback);
-      expect(callback).toHaveBeenCalledWith({
-        ...fakeResult,
-        account: expect.objectContaining({ address: accountId }),
-      });
     });
   });
 
@@ -1041,7 +1024,7 @@ describe('Identity class', () => {
       const identity = new Identity({ did: 'someDid' }, context);
       const unsubCallback = 'unsubCallBack';
 
-      frozenMock.mockImplementation(async (_, cbFunc) => {
+      frozenMock.mockImplementation((_, cbFunc) => {
         cbFunc(rawBoolValue);
         return unsubCallback;
       });

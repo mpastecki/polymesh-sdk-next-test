@@ -23,7 +23,7 @@ export const createMultiSigResolver =
 /**
  * @hidden
  */
-export async function prepareCreateMultiSigAccount(
+export function prepareCreateMultiSigAccount(
   this: Procedure<CreateMultiSigParams, MultiSig>,
   args: CreateMultiSigParams
 ): Promise<TransactionSpec<MultiSig, ExtrinsicParams<'multiSig', 'createMultisig'>>> {
@@ -62,11 +62,11 @@ export async function prepareCreateMultiSigAccount(
     : undefined;
   const rawPermissions = optionize(permissionsToMeshPermissions)(parsedPermissions, context);
 
-  return {
+  return Promise.resolve({
     transaction: tx.multiSig.createMultisig,
     resolver: createMultiSigResolver(context),
     args: [rawSignatories, rawRequiredSignatures, rawPermissions],
-  };
+  });
 }
 
 /**

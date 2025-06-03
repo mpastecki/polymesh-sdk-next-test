@@ -553,7 +553,7 @@ describe('createNftCollection procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return all needed permissions', async () => {
+    it('should return all needed permissions', () => {
       const proc = procedureMockUtils.getInstance<Params, NftCollection, Storage>(mockContext, {
         customTypeData: {
           rawId: dsMockUtils.createMockU32(new BigNumber(1)),
@@ -568,7 +568,7 @@ describe('createNftCollection procedure', () => {
 
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc({ ...args, documents });
+      const result = boundFunc({ ...args, documents });
 
       expect(result).toEqual({
         permissions: {
@@ -587,7 +587,7 @@ describe('createNftCollection procedure', () => {
       });
     });
 
-    it('should handle ticker already reserved', async () => {
+    it('should handle ticker already reserved', () => {
       const proc = procedureMockUtils.getInstance<Params, NftCollection, Storage>(mockContext, {
         customTypeData: null,
         status: TickerReservationStatus.Reserved,
@@ -598,7 +598,7 @@ describe('createNftCollection procedure', () => {
 
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc(args);
+      const result = boundFunc(args);
 
       expect(result).toEqual({
         roles: [{ ticker, type: RoleType.TickerOwner }],
@@ -614,7 +614,7 @@ describe('createNftCollection procedure', () => {
       });
     });
 
-    it('should handle asset already created', async () => {
+    it('should handle asset already created', () => {
       const proc = procedureMockUtils.getInstance<Params, NftCollection, Storage>(mockContext, {
         customTypeData: null,
         status: TickerReservationStatus.AssetCreated,
@@ -625,7 +625,7 @@ describe('createNftCollection procedure', () => {
 
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc(args);
+      const result = boundFunc(args);
 
       expect(result).toEqual({
         permissions: {

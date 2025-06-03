@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 import { range } from 'lodash';
 
+import { Permissions } from '~/api/entities/Asset/Base/Permissions';
 import {
   Context,
   CustomPermissionGroup,
@@ -13,8 +14,6 @@ import {
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { PermissionGroupType, TransactionPermissions } from '~/types';
 import { tuple } from '~/types/utils';
-
-import { Permissions } from '../../Base/Permissions';
 
 jest.mock(
   '~/base/Procedure',

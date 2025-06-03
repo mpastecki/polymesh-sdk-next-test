@@ -121,7 +121,7 @@ describe('reclaimDividendDistributionFunds procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const params = {
         distribution: {
           origin,
@@ -132,7 +132,7 @@ describe('reclaimDividendDistributionFunds procedure', () => {
       const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc(params);
+      const result = boundFunc(params);
 
       expect(result).toEqual({
         roles: [{ type: RoleType.PortfolioCustodian, portfolioId: { did } }],

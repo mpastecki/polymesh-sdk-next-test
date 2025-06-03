@@ -231,7 +231,7 @@ describe('AccountManagement class', () => {
 
   describe('method: getSigningAccount', () => {
     const stringToAccountIdSpy = jest.spyOn(utilsConversionModule, 'stringToAccountId');
-    it('should return the signing Account', async () => {
+    it('should return the signing Account', () => {
       const address = 'someAddress';
       const rawAddress = dsMockUtils.createMockAccountId(address);
       when(stringToAccountIdSpy).calledWith(address, context).mockReturnValue(rawAddress);
@@ -242,7 +242,7 @@ describe('AccountManagement class', () => {
       expect(result?.address).toBe(address);
     });
 
-    it('should return null if there is no set signing Account', async () => {
+    it('should return null if there is no set signing Account', () => {
       context.getSigningAccount.mockImplementation(() => {
         throw new Error('err');
       });

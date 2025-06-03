@@ -44,7 +44,7 @@ export const createCheckpointScheduleResolver =
 /**
  * @hidden
  */
-export async function prepareCreateCheckpointSchedule(
+export function prepareCreateCheckpointSchedule(
   this: Procedure<Params, CheckpointSchedule>,
   args: Params
 ): Promise<TransactionSpec<CheckpointSchedule, ExtrinsicParams<'checkpoint', 'createSchedule'>>> {
@@ -65,11 +65,11 @@ export async function prepareCreateCheckpointSchedule(
 
   const checkpointSchedule = datesToScheduleCheckpoints(points, context);
 
-  return {
+  return Promise.resolve({
     transaction: context.polymeshApi.tx.checkpoint.createSchedule,
     args: [rawAssetId, checkpointSchedule],
     resolver: createCheckpointScheduleResolver(asset.id, context),
-  };
+  });
 }
 
 /**

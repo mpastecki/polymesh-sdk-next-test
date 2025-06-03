@@ -18,6 +18,7 @@ export function countryCodeToMeshCountryCode(
 /**
  * @hidden
  */
+// eslint-disable-next-line
 export function meshCountryCodeToCountryCode(
   meshCountryCode: PolymeshPrimitivesJurisdictionCountryCode
 ): CountryCode {

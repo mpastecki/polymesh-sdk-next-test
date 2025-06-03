@@ -9,6 +9,9 @@ import BigNumber from 'bignumber.js';
 import P from 'bluebird';
 import { chunk, differenceWith, flatten, intersectionWith, uniqBy } from 'lodash';
 
+import { AssetPermissions } from '~/api/entities/Identity/AssetPermissions';
+import { IdentityAuthorizations } from '~/api/entities/Identity/IdentityAuthorizations';
+import { Portfolios } from '~/api/entities/Identity/Portfolios';
 import { unlinkChildIdentity } from '~/api/procedures/unlinkChildIdentity';
 import { assertPortfolioExists } from '~/api/procedures/utils';
 import {
@@ -90,10 +93,6 @@ import {
   getSecondaryAccountPermissions,
   requestPaginated,
 } from '~/utils/internal';
-
-import { AssetPermissions } from './AssetPermissions';
-import { IdentityAuthorizations } from './IdentityAuthorizations';
-import { Portfolios } from './Portfolios';
 
 /**
  * Properties that uniquely identify an Identity
@@ -964,7 +963,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
   /**
    * Check whether this Identity is a child Identity
    */
-  public async isChild(): Promise<boolean> {
+  public isChild(): Promise<boolean> {
     const { did, context } = this;
 
     const childIdentity = new ChildIdentity({ did }, context);

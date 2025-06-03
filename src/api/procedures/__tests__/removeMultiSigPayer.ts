@@ -82,9 +82,7 @@ describe('removeMultiSigPayer procedure', () => {
       message: 'The multiSig does not have a payer set',
     });
 
-    return expect(prepareRemoveMultiSigPayer.call(proc, { multiSig })).rejects.toThrow(
-      expectedError
-    );
+    return expect(() => prepareRemoveMultiSigPayer.call(proc, { multiSig })).toThrow(expectedError);
   });
 
   it('should return a remove payer transaction if the signer is a multiSig signer', async () => {
@@ -142,11 +140,11 @@ describe('removeMultiSigPayer procedure', () => {
       message: "The signing account is not part of the MultiSig nor the payer's identity",
     });
 
-    return expect(
+    return expect(() =>
       prepareRemoveMultiSigPayer.call(proc, {
         multiSig,
       })
-    ).rejects.toThrow(expectedError);
+    ).toThrow(expectedError);
   });
 
   describe('getAuthorization', () => {

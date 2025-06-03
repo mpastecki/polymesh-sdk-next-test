@@ -1,4 +1,4 @@
-import { BTreeSet, Option, u32, u64 } from '@polkadot/types';
+import { BTreeSet, u32, u64 } from '@polkadot/types';
 import { Balance, Moment } from '@polkadot/types/interfaces';
 import {
   PolymeshPrimitivesAssetAssetId,
@@ -256,37 +256,8 @@ describe('addInstruction procedure', () => {
     });
   });
 
-  let addAndAffirmWithMediatorsTransaction: PolymeshTx<
-    [
-      u64,
-      PolymeshPrimitivesSettlementSettlementType,
-      Option<Moment>,
-      {
-        from: PolymeshPrimitivesIdentityIdPortfolioId;
-        to: PolymeshPrimitivesIdentityIdPortfolioId;
-        asset: PolymeshPrimitivesAssetAssetId;
-        amount: Balance;
-      }[],
-      PolymeshPrimitivesIdentityIdPortfolioId[],
-      Option<PolymeshPrimitivesMemo>,
-      BTreeSet<PolymeshPrimitivesIdentityId>
-    ]
-  >;
-  let addWithMediatorsTransaction: PolymeshTx<
-    [
-      u64,
-      PolymeshPrimitivesSettlementSettlementType,
-      Option<Moment>,
-      {
-        from: PolymeshPrimitivesIdentityIdPortfolioId;
-        to: PolymeshPrimitivesIdentityIdPortfolioId;
-        asset: PolymeshPrimitivesAssetAssetId;
-        amount: Balance;
-      }[],
-      Option<PolymeshPrimitivesMemo>,
-      BTreeSet<PolymeshPrimitivesIdentityId>
-    ]
-  >;
+  let addAndAffirmWithMediatorsTransaction: PolymeshTx;
+  let addWithMediatorsTransaction: PolymeshTx;
 
   beforeEach(() => {
     jest.spyOn(utilsInternalModule, 'asBaseAsset').mockImplementation((a): Promise<BaseAsset> => {
@@ -1198,13 +1169,13 @@ describe('addInstruction procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       let proc = procedureMockUtils.getInstance<Params, Instruction[], Storage>(mockContext, {
         portfoliosToAffirm: [[fromPortfolio, toPortfolio]],
       });
       let boundFunc = getAuthorization.bind(proc);
 
-      let result = await boundFunc({
+      let result = boundFunc({
         venueId,
         instructions: [
           {
@@ -1228,7 +1199,7 @@ describe('addInstruction procedure', () => {
       });
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({
+      result = boundFunc({
         venueId,
         instructions: [
           {
@@ -1247,7 +1218,7 @@ describe('addInstruction procedure', () => {
         },
       });
 
-      result = await boundFunc({
+      result = boundFunc({
         instructions: [
           {
             mediators: [mediatorDid],

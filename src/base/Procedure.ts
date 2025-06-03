@@ -43,7 +43,7 @@ function assertOnlyOneAsset(assets: BaseAsset[]): void {
 /**
  * @hidden
  */
-async function getAgentPermissionsResult(
+function getAgentPermissionsResult(
   identity: Identity | null,
   asset: BaseAsset,
   transactions: TxTag[] | null
@@ -53,7 +53,7 @@ async function getAgentPermissionsResult(
         asset,
         transactions,
       })
-    : { result: false, missingPermissions: transactions };
+    : Promise.resolve({ result: false, missingPermissions: transactions });
 }
 
 /**
@@ -101,10 +101,12 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
           args: Args
         ) =>
           | Promise<ProcedureAuthorization>
+          // eslint-disable-next-line require-await
           | ProcedureAuthorization) = async (): Promise<ProcedureAuthorization> => ({}),
     prepareStorage: (
       this: Procedure<Args, ReturnValue, Storage>,
       args: Args
+      // eslint-disable-next-line require-await
     ) => Promise<Storage> | Storage = async (): Promise<Storage> => ({} as Storage)
   ) {
     this.prepareTransactions = prepareTransactions as typeof this.prepareTransactions;
@@ -168,21 +170,21 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
   /**
    * @hidden
    */
-  private async checkSignerPermissions(
+  private checkSignerPermissions(
     account: MultiSig | Account,
     signerPermissions: NonNullable<ProcedureAuthorization['signerPermissions']>,
     skipSignerPermissionsCheck?: boolean
   ): Promise<CheckPermissionsResult<SignerType.Account>> {
     if (skipSignerPermissionsCheck) {
-      return { result: true };
+      return Promise.resolve({ result: true });
     }
 
     if (typeof signerPermissions === 'boolean') {
-      return { result: signerPermissions };
+      return Promise.resolve({ result: signerPermissions });
     }
 
     if (typeof signerPermissions === 'string') {
-      return { result: false, message: signerPermissions };
+      return Promise.resolve({ result: false, message: signerPermissions });
     }
 
     return account.checkPermissions(signerPermissions);
@@ -208,6 +210,7 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
     let rolesResult: CheckRolesResult;
     let noIdentity = false;
 
+    // eslint-disable-next-line require-await
     const fetchIdentity = async (): Promise<Identity | null> => identity || account.getIdentity();
 
     if (skipRolesCheck) {
@@ -481,7 +484,9 @@ export class Procedure<Args = void, ReturnValue = void, Storage = Record<string,
    * @param args - procedure arguments
    * @returns authorization data containing required roles and permissions
    */
-  public async requiredAuthorizations(args: Args): Promise<ProcedureAuthorization> {
+  public requiredAuthorizations(
+    args: Args
+  ): Promise<ProcedureAuthorization> | ProcedureAuthorization {
     return this.getAuthorization(args);
   }
 }

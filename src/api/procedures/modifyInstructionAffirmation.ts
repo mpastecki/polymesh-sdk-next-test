@@ -272,6 +272,113 @@ function validateMediatorStatusForWithdrawl(
 }
 
 /**
+ *
+ */
+function affirmAsMediator(
+  mediatorStatus: AffirmationStatus,
+  signer: Identity,
+  context: Context,
+  instruction: Instruction,
+  expiry?: Date
+): TransactionSpec<Instruction, ExtrinsicParams<'settlementTx', 'affirmInstructionAsMediator'>> {
+  validateMediatorStatusForAffirmation(mediatorStatus, signer, instruction.id);
+  const now = new Date();
+  if (expiry && expiry < now) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'The expiry must be in the future',
+      data: { expiry, now },
+    });
+  }
+
+  const rawInstructionId = bigNumberToU64(instruction.id, context);
+
+  const rawExpiry = optionize(dateToMoment)(expiry, context);
+
+  return {
+    transaction: context.polymeshApi.tx.settlement.affirmInstructionAsMediator,
+    resolver: instruction,
+    args: [rawInstructionId, rawExpiry],
+  };
+}
+
+/**
+ * @hidden
+ */
+function rejectAsMediator(
+  mediatorStatus: AffirmationStatus,
+  signer: Identity,
+  context: Context,
+  instruction: Instruction,
+  instructionInfo: ExecuteInstructionInfo
+): TransactionSpec<Instruction, ExtrinsicParams<'settlementTx', 'rejectInstructionAsMediator'>> {
+  if (mediatorStatus === AffirmationStatus.Unknown) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'The signer is not a mediator for the instruction',
+      data: { did: signer.did, instructionId: instruction.id.toString() },
+    });
+  }
+
+  const rawAssetCount = getAssetCount(context, instructionInfo);
+
+  const rawInstructionId = bigNumberToU64(instruction.id, context);
+  return {
+    transaction: context.polymeshApi.tx.settlement.rejectInstructionAsMediator,
+    resolver: instruction,
+    args: [rawInstructionId, rawAssetCount],
+  };
+}
+
+/**
+ * @hidden
+ */
+function reject(
+  context: Context,
+  instructionInfo: ExecuteInstructionInfo,
+  instruction: Instruction,
+  totalLegAmount: BigNumber,
+  rawPortfolioIds: PolymeshPrimitivesIdentityIdPortfolioId[]
+): TransactionSpec<Instruction, ExtrinsicParams<'settlementTx', 'rejectInstructionWithCount'>> {
+  const rawInstructionId = bigNumberToU64(instruction.id, context);
+  const rawAssetCount = getAssetCount(context, instructionInfo);
+
+  return {
+    transaction: context.polymeshApi.tx.settlement.rejectInstructionWithCount,
+    resolver: instruction,
+    feeMultiplier: totalLegAmount,
+    args: [rawInstructionId, rawPortfolioIds[0], rawAssetCount],
+  };
+}
+
+type ModifyInstructionType =
+  | PolymeshTx<
+      [
+        u64,
+        BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
+        PolymeshPrimitivesSettlementAssetCount
+      ]
+    >
+  | PolymeshTx<
+      [
+        u64,
+        BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
+        PolymeshPrimitivesSettlementAffirmationCount
+      ]
+    >
+  | PolymeshTx<[u64, Option<PolymeshMoment>]>
+  | PolymeshTx<[u64]>
+  | PolymeshTx<
+      [
+        u64,
+        Vec<PolymeshPrimitivesSettlementReceiptDetails>,
+        BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
+        Option<PolymeshPrimitivesSettlementAffirmationCount>
+      ]
+    >
+  | null;
+
+/**
  * @hidden
  */
 async function validateInstructionNotLocked(instruction: Instruction): Promise<void> {
@@ -351,60 +458,16 @@ export async function prepareModifyInstructionAffirmation(
   ]);
 
   const affirmationStatuses = rawAffirmationStatuses.map(meshAffirmationStatusToAffirmationStatus);
-  const { status: mediatorStatus, expiry } =
-    mediatorAffirmationStatusToStatus(rawMediatorAffirmation);
+  const { status: mediatorStatus } = mediatorAffirmationStatusToStatus(rawMediatorAffirmation);
 
   const excludeCriteria: AffirmationStatus[] = [];
   let errorMessage: string;
-  let transaction:
-    | PolymeshTx<
-        [
-          u64,
-          BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
-          PolymeshPrimitivesSettlementAssetCount
-        ]
-      >
-    | PolymeshTx<
-        [
-          u64,
-          BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
-          PolymeshPrimitivesSettlementAffirmationCount
-        ]
-      >
-    | PolymeshTx<[u64, Option<PolymeshMoment>]>
-    | PolymeshTx<[u64]>
-    | PolymeshTx<
-        [
-          u64,
-          Vec<PolymeshPrimitivesSettlementReceiptDetails>,
-          BTreeSet<PolymeshPrimitivesIdentityIdPortfolioId>,
-          Option<PolymeshPrimitivesSettlementAffirmationCount>
-        ]
-      >
-    | null = null;
+  let transaction: ModifyInstructionType = null;
 
   let rawReceiptDetails: Vec<PolymeshPrimitivesSettlementReceiptDetails> | null = null;
   switch (operation) {
     case InstructionAffirmationOperation.AffirmAsMediator: {
-      validateMediatorStatusForAffirmation(mediatorStatus, signer, id);
-
-      const givenExpiry = args.expiry;
-      const now = new Date();
-      if (givenExpiry && givenExpiry < now) {
-        throw new PolymeshError({
-          code: ErrorCode.ValidationError,
-          message: 'The expiry must be in the future',
-          data: { expiry, now },
-        });
-      }
-
-      const rawExpiry = optionize(dateToMoment)(givenExpiry, context);
-
-      return {
-        transaction: settlementTx.affirmInstructionAsMediator,
-        resolver: instruction,
-        args: [rawInstructionId, rawExpiry],
-      };
+      return affirmAsMediator(mediatorStatus, signer, context, instruction, args.expiry);
     }
 
     case InstructionAffirmationOperation.WithdrawAsMediator: {
@@ -418,34 +481,13 @@ export async function prepareModifyInstructionAffirmation(
     }
 
     case InstructionAffirmationOperation.RejectAsMediator: {
-      if (mediatorStatus === AffirmationStatus.Unknown) {
-        throw new PolymeshError({
-          code: ErrorCode.ValidationError,
-          message: 'The signer is not a mediator for the instruction',
-          data: { did: signer.did, instructionId: id.toString() },
-        });
-      }
-
-      const rawAssetCount = getAssetCount(context, instructionInfo);
-
-      return {
-        transaction: settlementTx.rejectInstructionAsMediator,
-        resolver: instruction,
-        args: [rawInstructionId, rawAssetCount],
-      };
+      return rejectAsMediator(mediatorStatus, signer, context, instruction, instructionInfo);
     }
 
     case InstructionAffirmationOperation.Reject: {
       await validateInstructionNotLocked(instruction);
 
-      const rawAssetCount = getAssetCount(context, instructionInfo);
-
-      return {
-        transaction: settlementTx.rejectInstructionWithCount,
-        resolver: instruction,
-        feeMultiplier: totalLegAmount,
-        args: [rawInstructionId, rawPortfolioIds[0], rawAssetCount],
-      };
+      return reject(context, instructionInfo, instruction, totalLegAmount, rawPortfolioIds);
     }
 
     case InstructionAffirmationOperation.Affirm: {
@@ -509,10 +551,10 @@ export async function prepareModifyInstructionAffirmation(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<ModifyInstructionAffirmationParams, Instruction, Storage>,
   args: ModifyInstructionAffirmationParams
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { portfolios },
   } = this;
@@ -712,8 +754,7 @@ export async function prepareStorage(
     [[], new BigNumber(0), []]
   );
 
-  const rawInfo = executeInstructionInfo as Option<ExecuteInstructionInfo>;
-  const instructionInfo = rawInfo.unwrapOrDefault();
+  const instructionInfo = executeInstructionInfo.unwrapOrDefault();
 
   return {
     portfolios,

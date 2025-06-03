@@ -4,12 +4,11 @@ import { SignerPayloadJSON, SignerPayloadRaw, TypeDef } from '@polkadot/types/ty
 import { HexString } from '@polkadot/util/types';
 import BigNumber from 'bignumber.js';
 
+import { PolymeshError as PolymeshErrorClass } from '~/base/PolymeshError';
+import { PolymeshTransaction as PolymeshTransactionClass } from '~/base/PolymeshTransaction';
+import { PolymeshTransactionBatch as PolymeshTransactionBatchClass } from '~/base/PolymeshTransactionBatch';
 import { Account } from '~/internal';
 import { Fees, TxData } from '~/types';
-
-import { PolymeshError as PolymeshErrorClass } from './PolymeshError';
-import { PolymeshTransaction as PolymeshTransactionClass } from './PolymeshTransaction';
-import { PolymeshTransactionBatch as PolymeshTransactionBatchClass } from './PolymeshTransactionBatch';
 
 /**
  * Apply the {@link TxData} type to all args in an array

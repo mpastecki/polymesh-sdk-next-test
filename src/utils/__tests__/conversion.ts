@@ -194,10 +194,6 @@ import { InstructionStatus, PermissionGroupIdentifier } from '~/types/internal';
 import { tuple } from '~/types/utils';
 import { hexToUuid, uuidToHex } from '~/utils';
 import { DUMMY_ACCOUNT_ID, MAX_BALANCE, MAX_DECIMALS, MAX_TICKER_LENGTH } from '~/utils/constants';
-import * as utilsInternalModule from '~/utils/internal';
-import { padString } from '~/utils/internal';
-
-import * as utilsConversionModule from '../conversion';
 import {
   accountIdToString,
   activeEraStakingToActiveEraInfo,
@@ -407,7 +403,10 @@ import {
   u128ToBigNumber,
   u128ToStatValue,
   venueTypeToMeshVenueType,
-} from '../conversion';
+} from '~/utils/conversion';
+import * as utilsConversionModule from '~/utils/conversion';
+import * as utilsInternalModule from '~/utils/internal';
+import { padString } from '~/utils/internal';
 
 jest.mock(
   '~/api/entities/Identity',
@@ -3827,7 +3826,7 @@ describe('assetDocumentToDocument and documentToAssetDocument', () => {
 });
 
 describe('cddStatusToBoolean', () => {
-  it('should convert a valid CDD status to a true boolean', async () => {
+  it('should convert a valid CDD status to a true boolean', () => {
     const cddStatusMock = dsMockUtils.createMockCddStatus({
       Ok: dsMockUtils.createMockIdentityId(),
     });
@@ -3836,7 +3835,7 @@ describe('cddStatusToBoolean', () => {
     expect(result).toEqual(true);
   });
 
-  it('should convert an invalid CDD status to a false boolean', async () => {
+  it('should convert an invalid CDD status to a false boolean', () => {
     const cddStatusMock = dsMockUtils.createMockCddStatus();
     const result = cddStatusToBoolean(cddStatusMock);
 
@@ -7226,13 +7225,13 @@ describe('portfolioLikeToPortfolioId', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should convert a DID string to a PolymeshPrimitivesIdentityIdPortfolioId', async () => {
+  it('should convert a DID string to a PolymeshPrimitivesIdentityIdPortfolioId', () => {
     const result = portfolioLikeToPortfolioId(did);
 
     expect(result).toEqual({ did, number: undefined });
   });
 
-  it('should convert an Identity to a PolymeshPrimitivesIdentityIdPortfolioId', async () => {
+  it('should convert an Identity to a PolymeshPrimitivesIdentityIdPortfolioId', () => {
     const identity = entityMockUtils.getIdentityInstance({ did });
 
     const result = portfolioLikeToPortfolioId(identity);
@@ -7240,7 +7239,7 @@ describe('portfolioLikeToPortfolioId', () => {
     expect(result).toEqual({ did, number: undefined });
   });
 
-  it('should convert a NumberedPortfolio to a PolymeshPrimitivesIdentityIdPortfolioId', async () => {
+  it('should convert a NumberedPortfolio to a PolymeshPrimitivesIdentityIdPortfolioId', () => {
     const portfolio = new NumberedPortfolio({ did, id: number }, context);
 
     const result = portfolioLikeToPortfolioId(portfolio);
@@ -7248,7 +7247,7 @@ describe('portfolioLikeToPortfolioId', () => {
     expect(result).toEqual({ did, number });
   });
 
-  it('should convert a DefaultPortfolio to a PolymeshPrimitivesIdentityIdPortfolioId', async () => {
+  it('should convert a DefaultPortfolio to a PolymeshPrimitivesIdentityIdPortfolioId', () => {
     const portfolio = new DefaultPortfolio({ did }, context);
 
     const result = portfolioLikeToPortfolioId(portfolio);
@@ -7256,7 +7255,7 @@ describe('portfolioLikeToPortfolioId', () => {
     expect(result).toEqual({ did, number: undefined });
   });
 
-  it('should convert a Portfolio identifier object to a PolymeshPrimitivesIdentityIdPortfolioId', async () => {
+  it('should convert a Portfolio identifier object to a PolymeshPrimitivesIdentityIdPortfolioId', () => {
     let result = portfolioLikeToPortfolioId({ identity: did, id: number });
     expect(result).toEqual({ did, number });
 
@@ -7294,12 +7293,12 @@ describe('portfolioLikeToPortfolio', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should convert a PortfolioLike to a DefaultPortfolio instance', async () => {
+  it('should convert a PortfolioLike to a DefaultPortfolio instance', () => {
     const result = portfolioLikeToPortfolio(did, context);
     expect(result instanceof DefaultPortfolio).toBe(true);
   });
 
-  it('should convert a PortfolioLike to a NumberedPortfolio instance', async () => {
+  it('should convert a PortfolioLike to a NumberedPortfolio instance', () => {
     const result = portfolioLikeToPortfolio({ identity: did, id }, context);
     expect(result instanceof NumberedPortfolio).toBe(true);
   });
@@ -7529,7 +7528,7 @@ describe('permissionsLikeToPermissions', () => {
 });
 
 describe('middlewarePortfolioToPortfolio', () => {
-  it('should convert a MiddlewarePortfolio into a Portfolio', async () => {
+  it('should convert a MiddlewarePortfolio into a Portfolio', () => {
     const context = dsMockUtils.getContextInstance();
     let middlewarePortfolio = {
       identityId: 'someDid',
@@ -10383,7 +10382,7 @@ describe('expiryToMoment', () => {
 });
 
 describe('middlewarePortfolioDataToPortfolio', () => {
-  it('should convert middleware portfolio like data into a Portfolio', async () => {
+  it('should convert middleware portfolio like data into a Portfolio', () => {
     const context = dsMockUtils.getContextInstance();
     const defaultPortfolioData = {
       did: 'someDid',

@@ -686,7 +686,7 @@ describe('createAsset procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       let proc = procedureMockUtils.getInstance<Params, FungibleAsset, Storage>(mockContext, {
         customTypeData: null,
         status: TickerReservationStatus.Reserved,
@@ -695,7 +695,7 @@ describe('createAsset procedure', () => {
 
       let boundFunc = getAuthorization.bind(proc);
 
-      let result = await boundFunc(args);
+      let result = boundFunc(args);
 
       expect(result).toEqual({
         roles: [{ type: RoleType.TickerOwner, ticker }],
@@ -718,7 +718,7 @@ describe('createAsset procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({
+      result = boundFunc({
         ...args,
         documents: [{ uri: 'www.doc.com', name: 'myDoc' }],
         initialStatistics: [{ type: StatType.Count }],
@@ -751,7 +751,7 @@ describe('createAsset procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({ ...args, documents: [] });
+      result = boundFunc({ ...args, documents: [] });
 
       expect(result).toEqual({
         roles: [{ type: RoleType.TickerOwner, ticker }],
@@ -774,7 +774,7 @@ describe('createAsset procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({ ...args, documents: [], reservationRequired: false });
+      result = boundFunc({ ...args, documents: [], reservationRequired: false });
 
       expect(result).toEqual({
         permissions: {

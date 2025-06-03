@@ -134,7 +134,7 @@ describe('setAssetDocuments procedure', () => {
       currentDocIds: [],
     });
 
-    return expect(prepareSetAssetDocuments.call(proc, args)).rejects.toThrow(
+    return expect(() => prepareSetAssetDocuments.call(proc, args)).toThrow(
       'The supplied document list is equal to the current one'
     );
   });

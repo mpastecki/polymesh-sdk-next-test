@@ -295,7 +295,7 @@ describe('modifyAsset procedure', () => {
     ).rejects.toThrow('New type is the same as current type');
   });
 
-  it('should  throw if trying to modify asset type for NFT collection', async () => {
+  it('should  throw if trying to modify asset type for NFT collection', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
       Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
     });
@@ -318,7 +318,7 @@ describe('modifyAsset procedure', () => {
     ).rejects.toThrow('The type for a NFT Collection cannot be modified');
   });
 
-  it('should  throw if trying to modify asset type with custom type that is not registered on chain', async () => {
+  it('should  throw if trying to modify asset type with custom type that is not registered on chain', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
       Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
     });
@@ -346,7 +346,7 @@ describe('modifyAsset procedure', () => {
     );
   });
 
-  it('should  throw if trying to modify asset type with KnownNftType', async () => {
+  it('should  throw if trying to modify asset type with KnownNftType', () => {
     const rawIdentifier = dsMockUtils.createMockAssetIdentifier({
       Isin: dsMockUtils.createMockU8aFixed(identifiers[0].value),
     });

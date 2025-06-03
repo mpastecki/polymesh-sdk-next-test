@@ -178,7 +178,9 @@ import {
   TransferConditionResult,
 } from '@polymeshassociation/polymesh-types/polkadot/polymesh';
 import { SigningManager } from '@polymeshassociation/signing-manager-types';
+// eslint-disable-next-line import/order
 import BigNumber from 'bignumber.js';
+// eslint-disable-next-line import/order
 import { EventEmitter } from 'events';
 import { when } from 'jest-when';
 import { cloneDeep, map, merge, upperFirst } from 'lodash';

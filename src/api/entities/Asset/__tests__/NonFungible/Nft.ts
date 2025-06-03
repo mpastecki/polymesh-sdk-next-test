@@ -131,7 +131,7 @@ describe('Nft class', () => {
     const id = new BigNumber(1);
     let context: Context;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       context = dsMockUtils.getContextInstance();
       const globalId = new BigNumber(2);
       dsMockUtils.createQueryMock('asset', 'assetMetadataGlobalNameToKey', {
@@ -259,7 +259,7 @@ describe('Nft class', () => {
     const id = new BigNumber(1);
     let context: Context;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       context = dsMockUtils.getContextInstance();
       const globalId = new BigNumber(2);
       dsMockUtils.createQueryMock('asset', 'assetMetadataGlobalNameToKey', {
@@ -384,7 +384,7 @@ describe('Nft class', () => {
     let nftOwnerMock: jest.Mock;
     let nft: Nft;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       context = dsMockUtils.getContextInstance();
       nftOwnerMock = dsMockUtils.createQueryMock('nft', 'nftOwner');
       nft = new Nft({ assetId, id }, context);
@@ -431,7 +431,7 @@ describe('Nft class', () => {
     let nft: Nft;
     let ownerSpy: jest.SpyInstance;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       context = dsMockUtils.getContextInstance();
       nft = new Nft({ assetId, id }, context);
       ownerSpy = jest.spyOn(nft, 'getOwner');

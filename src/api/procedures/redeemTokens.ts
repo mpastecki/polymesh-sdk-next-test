@@ -70,10 +70,10 @@ export async function prepareRedeemTokens(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void, Storage>,
   { asset, from }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { fromPortfolio },
   } = this;

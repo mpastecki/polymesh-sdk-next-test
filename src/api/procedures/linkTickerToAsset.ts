@@ -29,7 +29,7 @@ export interface Storage {
 /**
  * @hidden
  */
-export async function prepareLinkTickerToAsset(
+export function prepareLinkTickerToAsset(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<
@@ -58,7 +58,7 @@ export async function prepareLinkTickerToAsset(
   const rawAssetId = assetToMeshAssetId(asset, context);
 
   if (status === TickerReservationStatus.Free) {
-    return {
+    return Promise.resolve({
       transactions: [
         checkTxType({
           transaction: tx.asset.registerUniqueTicker,
@@ -70,23 +70,23 @@ export async function prepareLinkTickerToAsset(
         }),
       ],
       resolver: undefined,
-    };
+    });
   }
 
-  return {
+  return Promise.resolve({
     transaction: tx.asset.linkTickerToAssetId,
     args: [rawTicker, rawAssetId],
     resolver: undefined,
-  };
+  });
 }
 
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void, Storage>,
   { asset, ticker }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const transactions = [TxTags.asset.LinkTickerToAssetId];
   const { status } = this.storage;
 

@@ -311,6 +311,7 @@ import {
   MiddlewarePermissions,
   PalletPermissions,
   PermissionGroupIdentifier,
+  PermissionsEnum,
   PolymeshTx,
   StatClaimInputType,
 } from '~/types/internal';
@@ -360,8 +361,6 @@ import {
   isNumberedPortfolio,
   isSingleClaimCondition,
 } from '~/utils/typeguards';
-
-import { PermissionsEnum } from './../types/internal';
 export * from '~/generated/utils';
 
 /**
@@ -1798,77 +1797,38 @@ export function stringToMemo(value: string, context: Context): PolymeshPrimitive
 export function u8ToTransferStatus(status: u8): TransferStatus {
   const code = status.toNumber();
 
-  switch (code) {
-    case 81: {
-      return TransferStatus.Success;
-    }
-    case 82: {
-      return TransferStatus.InsufficientBalance;
-    }
-    case 83: {
-      return TransferStatus.InsufficientAllowance;
-    }
-    case 84: {
-      return TransferStatus.TransfersHalted;
-    }
-    case 85: {
-      return TransferStatus.FundsLocked;
-    }
-    case 86: {
-      return TransferStatus.InvalidSenderAddress;
-    }
-    case 87: {
-      return TransferStatus.InvalidReceiverAddress;
-    }
-    case 88: {
-      return TransferStatus.InvalidOperator;
-    }
-    case 160: {
-      return TransferStatus.InvalidSenderIdentity;
-    }
-    case 161: {
-      return TransferStatus.InvalidReceiverIdentity;
-    }
-    case 162: {
-      return TransferStatus.ComplianceFailure;
-    }
-    case 163: {
-      return TransferStatus.SmartExtensionFailure;
-    }
-    case 164: {
-      return TransferStatus.InvalidGranularity;
-    }
-    case 165: {
-      return TransferStatus.VolumeLimitReached;
-    }
-    case 166: {
-      return TransferStatus.BlockedTransaction;
-    }
-    case 168: {
-      return TransferStatus.FundsLimitReached;
-    }
-    case 169: {
-      return TransferStatus.PortfolioFailure;
-    }
-    case 170: {
-      return TransferStatus.CustodianError;
-    }
-    case 171: {
-      return TransferStatus.ScopeClaimMissing;
-    }
-    case 172: {
-      return TransferStatus.TransferRestrictionFailure;
-    }
-    case 80: {
-      return TransferStatus.Failure;
-    }
-    default: {
-      throw new PolymeshError({
-        code: ErrorCode.UnexpectedError,
-        message: `Unsupported status code "${status.toString()}". Please report this issue to the Polymesh team`,
-      });
-    }
+  const transferStatusMap = new Map<number, TransferStatus>([
+    [81, TransferStatus.Success],
+    [82, TransferStatus.InsufficientBalance],
+    [83, TransferStatus.InsufficientAllowance],
+    [84, TransferStatus.TransfersHalted],
+    [85, TransferStatus.FundsLocked],
+    [86, TransferStatus.InvalidSenderAddress],
+    [87, TransferStatus.InvalidReceiverAddress],
+    [88, TransferStatus.InvalidOperator],
+    [160, TransferStatus.InvalidSenderIdentity],
+    [161, TransferStatus.InvalidReceiverIdentity],
+    [162, TransferStatus.ComplianceFailure],
+    [163, TransferStatus.SmartExtensionFailure],
+    [164, TransferStatus.InvalidGranularity],
+    [165, TransferStatus.VolumeLimitReached],
+    [166, TransferStatus.BlockedTransaction],
+    [168, TransferStatus.FundsLimitReached],
+    [169, TransferStatus.PortfolioFailure],
+    [170, TransferStatus.CustodianError],
+    [171, TransferStatus.ScopeClaimMissing],
+    [172, TransferStatus.TransferRestrictionFailure],
+    [80, TransferStatus.Failure],
+  ]);
+
+  if (transferStatusMap.has(code)) {
+    return transferStatusMap.get(code)!;
   }
+
+  throw new PolymeshError({
+    code: ErrorCode.UnexpectedError,
+    message: `Unsupported status code "${status.toString()}". Please report this issue to the Polymesh team`,
+  });
 }
 
 /**

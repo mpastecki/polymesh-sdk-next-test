@@ -153,7 +153,7 @@ describe('redeemNft procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const someDid = 'someDid';
 
       dsMockUtils.getContextInstance({ did: someDid });
@@ -172,7 +172,7 @@ describe('redeemNft procedure', () => {
       };
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc(params);
+      const result = boundFunc(params);
 
       expect(result).toEqual({
         permissions: {

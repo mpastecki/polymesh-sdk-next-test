@@ -166,7 +166,7 @@ describe('Polymesh Class', () => {
       ).rejects.toThrow(error);
     });
 
-    it('should throw an error if the Polymesh version check could not connect to the node', async () => {
+    it('should throw an error if the Polymesh version check could not connect to the node', () => {
       const error = new PolymeshError({
         code: ErrorCode.FatalError,
         message: 'Unable to connect',
@@ -231,7 +231,7 @@ describe('Polymesh Class', () => {
       );
     });
 
-    it('should throw if Context fails in the connection process', async () => {
+    it('should throw if Context fails in the connection process', () => {
       dsMockUtils.throwOnApiCreation();
       const nodeUrl = 'wss://some.url';
       const polymeshApiPromise = Polymesh.connect({
@@ -243,7 +243,7 @@ describe('Polymesh Class', () => {
       );
     });
 
-    it('should throw if Polkadot fails in the connection process', async () => {
+    it('should throw if Polkadot fails in the connection process', () => {
       dsMockUtils.throwOnApiCreation(new Error());
 
       const nodeUrl = 'wss://some.url';
@@ -360,7 +360,7 @@ describe('Polymesh Class', () => {
 
       const address = 'address';
 
-      await polymesh.setSigningAccount(address);
+      polymesh.setSigningAccount(address);
       expect(dsMockUtils.getContextInstance().setSigningAddress).toHaveBeenCalledWith(address);
     });
   });

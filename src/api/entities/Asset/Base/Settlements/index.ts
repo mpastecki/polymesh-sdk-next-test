@@ -210,7 +210,7 @@ export class FungibleSettlements extends BaseSettlements<FungibleAsset> {
    * @param args.amount - amount of tokens to transfer
    *
    */
-  public async canTransfer(args: {
+  public canTransfer(args: {
     from?: PortfolioLike;
     to: PortfolioLike;
     amount: BigNumber;
@@ -238,7 +238,7 @@ export class NonFungibleSettlements extends BaseSettlements<NftCollection> {
    * @param args.nfts - the NFTs to transfer
    *
    */
-  public async canTransfer(args: {
+  public canTransfer(args: {
     from?: PortfolioLike;
     to: PortfolioLike;
     nfts: (BigNumber | Nft)[];

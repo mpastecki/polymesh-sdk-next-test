@@ -43,7 +43,7 @@ export async function prepareLockInstructionForExecution(
       instruction.getMediators(),
     ]);
 
-  await assertInstructionValidForLocking(instructionDetails);
+  assertInstructionValidForLocking(instructionDetails);
 
   if (!pendingAffirmationsCount.isZero()) {
     throw new PolymeshError({
@@ -99,9 +99,7 @@ export async function prepareLockInstructionForExecution(
 /**
  * @hidden
  */
-export async function getAuthorization(
-  this: Procedure<Params, Instruction>
-): Promise<ProcedureAuthorization> {
+export function getAuthorization(this: Procedure<Params, Instruction>): ProcedureAuthorization {
   return {
     permissions: {
       transactions: [TxTags.settlement.LockInstruction],

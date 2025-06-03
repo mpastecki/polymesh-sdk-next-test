@@ -54,9 +54,9 @@ export async function prepareAcceptPrimaryKeyRotation(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<AcceptPrimaryKeyRotationParams, void, Storage>
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { calledByTarget },
   } = this;
@@ -79,13 +79,13 @@ export async function prepareStorage(
 
   const actingAccount = await context.getActingAccount();
 
-  const getAuthRequest = async (
+  const getAuthRequest = (
     auth: BigNumber | AuthorizationRequest
   ): Promise<AuthorizationRequest> => {
     if (auth && auth instanceof BigNumber) {
       return actingAccount.authorizations.getOne({ id: auth });
     }
-    return auth;
+    return Promise.resolve(auth);
   };
 
   const ownerAuthRequest = await getAuthRequest(ownerAuth);

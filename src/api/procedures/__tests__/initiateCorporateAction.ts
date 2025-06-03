@@ -44,7 +44,7 @@ describe('assertCheckpointValue', () => {
     assetId: '0x12341234123412341234123412341234',
   });
 
-  it('should throw an error if the provided Date is in the past', async () => {
+  it('should throw an error if the provided Date is in the past', () => {
     const checkpoint = new Date(new Date().getTime() - 1000 * 60 * 60 * 24);
 
     return expect(assertCheckpointValue(checkpoint)).rejects.toThrow(
@@ -52,7 +52,7 @@ describe('assertCheckpointValue', () => {
     );
   });
 
-  it('should throw an error if the checkpoint is in the past', async () => {
+  it('should throw an error if the checkpoint is in the past', () => {
     const mockCheckpoint = new Checkpoint({ id: new BigNumber(1), assetId: asset.id }, context);
     mockCheckpoint.createdAt = jest
       .fn()
@@ -63,7 +63,7 @@ describe('assertCheckpointValue', () => {
     );
   });
 
-  it('should throw an error if the provided CheckpointSchedule has no pending checkpoints', async () => {
+  it('should throw an error if the provided CheckpointSchedule has no pending checkpoints', () => {
     const mockSchedule = new CheckpointSchedule(
       { id: new BigNumber(1), assetId: asset.id, pendingPoints: [] },
       context
@@ -162,7 +162,7 @@ describe('initiateCorporateAction procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if the description length is greater than the allowed maximum', async () => {
+  it('should throw an error if the description length is greater than the allowed maximum', () => {
     const proc = procedureMockUtils.getInstance<Params, CorporateAction>(mockContext);
 
     dsMockUtils.createQueryMock('corporateAction', 'maxDetailsLength', {
@@ -307,7 +307,7 @@ describe('initiateCorporateAction procedure', () => {
   });
 
   describe('initiateCorporateAction', () => {
-    it('should be instance of Procedure', async () => {
+    it('should be instance of Procedure', () => {
       expect(initiateCorporateAction()).toBeInstanceOf(Procedure);
     });
   });

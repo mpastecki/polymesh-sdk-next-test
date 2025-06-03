@@ -2,13 +2,12 @@ import { StorageKey } from '@polkadot/types';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { Documents } from '~/api/entities/Asset/Base/Documents';
 import { FungibleAsset, Namespace, PolymeshTransaction } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { AssetDocument } from '~/types';
 import { tuple } from '~/types/utils';
 import * as utilsInternalModule from '~/utils/internal';
-
-import { Documents } from '../../Base/Documents';
 
 jest.mock(
   '~/base/Procedure',

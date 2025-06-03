@@ -149,7 +149,7 @@ describe('controllerTransfer procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const portfolioId = { did: 'oneDid' };
 
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
@@ -164,7 +164,7 @@ describe('controllerTransfer procedure', () => {
         },
       ];
 
-      expect(await boundFunc({ asset, originPortfolio, amount })).toEqual({
+      expect(boundFunc({ asset, originPortfolio, amount })).toEqual({
         roles,
         permissions: {
           transactions: [TxTags.asset.ControllerTransfer],

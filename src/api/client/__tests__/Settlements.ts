@@ -68,7 +68,7 @@ describe('Settlements Class', () => {
       expect(result.id).toEqual(venueId);
     });
 
-    it('should throw if the Venue does not exist', async () => {
+    it('should throw if the Venue does not exist', () => {
       const venueId = new BigNumber(1);
 
       entityMockUtils.configureMocks({
@@ -94,7 +94,7 @@ describe('Settlements Class', () => {
       expect(result.id).toEqual(instructionId);
     });
 
-    it('should throw if the Instruction does not exist', async () => {
+    it('should throw if the Instruction does not exist', () => {
       const instructionId = new BigNumber(1);
 
       entityMockUtils.configureMocks({

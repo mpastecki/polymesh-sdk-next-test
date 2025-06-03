@@ -359,7 +359,7 @@ describe('modifyBallot procedure', () => {
   });
 
   describe('modifyBallot', () => {
-    it('should be instance of Procedure', async () => {
+    it('should be instance of Procedure', () => {
       expect(modifyBallot()).toBeInstanceOf(Procedure);
     });
   });

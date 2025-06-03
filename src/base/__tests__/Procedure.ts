@@ -366,17 +366,17 @@ describe('Procedure class', () => {
       const tx1 = dsMockUtils.createTxMock('asset', 'registerUniqueTicker');
       const tx2 = dsMockUtils.createTxMock('identity', 'cddRegisterDid');
 
-      const func1 = async function (
+      const func1 = function (
         this: Procedure<typeof procArgs, string>,
         args: typeof procArgs
       ): Promise<BatchTransactionSpec<string, [[string], [string[]]]>> {
-        return {
+        return Promise.resolve({
           transactions: [
             { transaction: tx1, args: [args.ticker] },
             { transaction: tx2, args: [args.secondaryAccounts] },
           ],
           resolver: returnValue,
-        };
+        });
       };
 
       const proc1 = new Procedure(func1);
@@ -408,15 +408,15 @@ describe('Procedure class', () => {
       expect(context.setSigningAddress).toHaveBeenCalledWith('someAddress');
       expect(context.setNonce).toHaveBeenCalledWith(new BigNumber(15));
 
-      const func2 = async function (
+      const func2 = function (
         this: Procedure<typeof procArgs, string>,
         args: typeof procArgs
       ): Promise<TransactionSpec<string, [string]>> {
-        return {
+        return Promise.resolve({
           transaction: tx1,
           args: [args.ticker],
           resolver: returnValue,
-        };
+        });
       };
 
       const proc2 = new Procedure(func2);
@@ -441,14 +441,14 @@ describe('Procedure class', () => {
       );
       expect(context.setSigningAddress).toHaveBeenCalledWith('someAddress');
 
-      const func3 = async function (
+      const func3 = function (
         this: Procedure<typeof procArgs, string>,
         args: typeof procArgs
       ): Promise<BatchTransactionSpec<string, [[string]]>> {
-        return {
+        return Promise.resolve({
           transactions: [{ transaction: tx1, args: [args.ticker] }],
           resolver: returnValue,
-        };
+        });
       };
 
       const proc3 = new Procedure(func3);
@@ -517,14 +517,14 @@ describe('Procedure class', () => {
 
       const constructorMock = polymeshTransactionMockUtils.getTransactionConstructorMock();
 
-      const func = async function (
+      const func = function (
         this: Procedure<typeof procArgs, string>,
         args: typeof procArgs
       ): Promise<BatchTransactionSpec<string, [[string]]>> {
-        return {
+        return Promise.resolve({
           transactions: [{ transaction: tx, args: [args.ticker] }],
           resolver: returnValue,
-        };
+        });
       };
 
       const proc = new Procedure(func);
@@ -548,7 +548,7 @@ describe('Procedure class', () => {
 
     it('should throw any errors encountered during preparation', () => {
       const errorMsg = 'failed';
-      const func = async function (
+      const func = function (
         this: Procedure<typeof procArgs, string>
       ): Promise<TransactionSpec<string, [unknown]>> {
         throw new Error(errorMsg);
@@ -560,14 +560,14 @@ describe('Procedure class', () => {
     });
 
     it("should throw an error if the caller doesn't have the appropriate roles", async () => {
-      const func = async function (
+      const func = function (
         this: Procedure<typeof procArgs, string>
       ): Promise<TransactionSpec<string, [string]>> {
-        return {
+        return Promise.resolve({
           transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
           args: [ticker],
           resolver: 'success',
-        };
+        });
       };
 
       let proc = new Procedure(func, {
@@ -640,7 +640,7 @@ describe('Procedure class', () => {
         "The signing Account doesn't have the required permissions to execute this procedure"
       );
 
-      proc = new Procedure(func, async () => ({ roles: 'Failed just because' }));
+      proc = new Procedure(func, () => ({ roles: 'Failed just because' }));
 
       await expect(proc.prepare({ args: procArgs }, context)).rejects.toThrow(
         "The signing Identity doesn't have the required roles to execute this procedure"
@@ -658,11 +658,13 @@ describe('Procedure class', () => {
     let proc: Procedure<void, undefined, { something: string }>;
 
     beforeAll(() => {
-      proc = new Procedure(async () => ({
-        transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
-        resolver: undefined,
-        args: ['TICKER'],
-      }));
+      proc = new Procedure(() =>
+        Promise.resolve({
+          transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
+          resolver: undefined,
+          args: ['TICKER'],
+        })
+      );
     });
 
     it('should return the storage', () => {
@@ -684,11 +686,13 @@ describe('Procedure class', () => {
     let proc: Procedure<void, undefined>;
 
     beforeAll(() => {
-      proc = new Procedure(async () => ({
-        transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
-        resolver: undefined,
-        args: ['TICKER'],
-      }));
+      proc = new Procedure(() =>
+        Promise.resolve({
+          transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
+          resolver: undefined,
+          args: ['TICKER'],
+        })
+      );
     });
 
     it('should return the context', () => {
@@ -708,14 +712,14 @@ describe('Procedure class', () => {
 
   describe('method: requiredAuthorizations', () => {
     it('should return the required authorizations for the Procedure', async () => {
-      const func = async function (
+      const func = function (
         this: Procedure<typeof procArgs, string>
       ): Promise<TransactionSpec<string, [string]>> {
-        return {
+        return Promise.resolve({
           transaction: dsMockUtils.createTxMock('asset', 'registerUniqueTicker'),
           args: [procArgs.ticker],
           resolver: 'success',
-        };
+        });
       };
 
       const proc = new Procedure(func, {

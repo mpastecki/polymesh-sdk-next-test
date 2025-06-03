@@ -26,7 +26,7 @@ export type Params = SetAssetDocumentsParams & {
 /**
  * @hidden
  */
-export async function prepareSetAssetDocuments(
+export function prepareSetAssetDocuments(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<BatchTransactionSpec<void, unknown[][]>> {
@@ -72,7 +72,7 @@ export async function prepareSetAssetDocuments(
     );
   }
 
-  return { transactions, resolver: undefined };
+  return Promise.resolve({ transactions, resolver: undefined });
 }
 
 /**

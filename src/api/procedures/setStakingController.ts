@@ -19,7 +19,7 @@ export type Params = SetStakingControllerParams;
 /**
  * @hidden
  */
-export async function prepareSetStakingController(
+export function prepareSetStakingController(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<TransactionSpec<void, ExtrinsicParams<'staking', 'setController'>>> {
@@ -59,11 +59,11 @@ export async function prepareSetStakingController(
 
   const rawController = stringToAccountId(controller.address, context);
 
-  return {
+  return Promise.resolve({
     transaction: setController,
     args: [rawController],
     resolver: undefined,
-  };
+  });
 }
 
 /**

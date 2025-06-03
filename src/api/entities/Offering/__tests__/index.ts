@@ -196,12 +196,10 @@ describe('Offering class', () => {
         returnValue: rawName,
       });
 
-      dsMockUtils
-        .createQueryMock('sto', 'fundraisers')
-        .mockImplementation(async (_a, _b, cbFunc) => {
-          cbFunc(rawFundraiser, rawName);
-          return unsubCallback;
-        });
+      dsMockUtils.createQueryMock('sto', 'fundraisers').mockImplementation((_a, _b, cbFunc) => {
+        cbFunc(rawFundraiser, rawName);
+        return unsubCallback;
+      });
 
       const callback = jest.fn();
       const result = await offering.details(callback);

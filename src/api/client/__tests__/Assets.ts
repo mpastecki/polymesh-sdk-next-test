@@ -183,7 +183,7 @@ describe('Assets Class', () => {
 
       entityMockUtils.configureMocks({
         tickerReservationOptions: {
-          details: async cbFunc => {
+          details: cbFunc => {
             cbFunc({
               owner: entityMockUtils.getIdentityInstance(),
               expiryDate: new Date(),
@@ -340,7 +340,7 @@ describe('Assets Class', () => {
       expect(asset).toBeInstanceOf(NftCollection);
     });
 
-    it('should throw if the Asset does not exist', async () => {
+    it('should throw if the Asset does not exist', () => {
       const assetId = '12341234-1234-1234-1234-123412341234';
       entityMockUtils.configureMocks({
         fungibleAssetOptions: { exists: false },

@@ -60,10 +60,10 @@ export async function prepareReclaimDividendDistributionFunds(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void>,
   { distribution: { origin, asset } }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   return {
     roles: [{ type: RoleType.PortfolioCustodian, portfolioId: portfolioToPortfolioId(origin) }],
     permissions: {

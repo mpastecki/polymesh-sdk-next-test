@@ -211,7 +211,7 @@ describe('payDividends procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const proc = procedureMockUtils.getInstance<Params, void>(mockContext);
       const boundFunc = getAuthorization.bind(proc);
 
@@ -219,7 +219,7 @@ describe('payDividends procedure', () => {
         assetId,
       });
 
-      const result = await boundFunc();
+      const result = boundFunc();
 
       expect(result).toEqual({
         permissions: {

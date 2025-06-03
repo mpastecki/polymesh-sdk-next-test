@@ -229,36 +229,36 @@ describe('assertInstructionValid', () => {
 });
 
 describe('assertInstructionValidForLocking', () => {
-  it('should throw an error if instruction is not in pending or failed state', async () => {
-    await expect(
+  it('should throw an error if instruction is not in pending or failed state', () => {
+    expect(() =>
       assertInstructionValidForLocking({
         status: InstructionStatus.Success,
       } as InstructionDetails)
-    ).rejects.toThrow('The Instruction has already been executed');
+    ).toThrow('The Instruction has already been executed');
 
-    await expect(
+    expect(() =>
       assertInstructionValidForLocking({
         status: InstructionStatus.Rejected,
       } as InstructionDetails)
-    ).rejects.toThrow('The Instruction has already been executed');
+    ).toThrow('The Instruction has already been executed');
   });
 
-  it('should throw an error if the instruction is not of type SettleAfterLock', async () => {
-    await expect(
+  it('should throw an error if the instruction is not of type SettleAfterLock', () => {
+    expect(() =>
       assertInstructionValidForLocking({
         status: InstructionStatus.Pending,
         type: InstructionType.SettleOnAffirmation,
       } as InstructionDetails)
-    ).rejects.toThrow("You cannot lock instruction of type 'SettleOnAffirmation'");
+    ).toThrow("You cannot lock instruction of type 'SettleOnAffirmation'");
   });
 
-  it('should not throw an error for valid instruction', async () => {
-    await expect(
+  it('should not throw an error for valid instruction', () => {
+    expect(() =>
       assertInstructionValidForLocking({
         status: InstructionStatus.Pending,
         type: InstructionType.SettleAfterLock,
       } as InstructionDetails)
-    ).resolves.not.toThrow();
+    ).not.toThrow();
   });
 });
 
@@ -306,7 +306,7 @@ describe('assertInstructionValidForManualExecution', () => {
     ).rejects.toThrow('The Instruction has already been executed');
   });
 
-  it('should throw an error if the instruction is not of type SettleManual', async () => {
+  it('should throw an error if the instruction is not of type SettleManual', () => {
     return expect(
       assertInstructionValidForManualExecution(
         {
@@ -318,7 +318,7 @@ describe('assertInstructionValidForManualExecution', () => {
     ).rejects.toThrow("You cannot manually execute settlement of type 'SettleOnAffirmation'");
   });
 
-  it('should throw an error if the instruction is being executed before endAfterBlock', async () => {
+  it('should throw an error if the instruction is being executed before endAfterBlock', () => {
     const endAfterBlock = new BigNumber(1000);
 
     const expectedError = new PolymeshError({
@@ -400,7 +400,7 @@ describe('assertSecondaryAccounts', () => {
     signerToSignerValueSpy = jest.spyOn(utilsConversionModule, 'signerToSignerValue');
   });
 
-  it('should not throw an error if all signers are secondary Accounts', async () => {
+  it('should not throw an error if all signers are secondary Accounts', () => {
     const address = 'someAddress';
     const account = entityMockUtils.getAccountInstance({ address });
     const secondaryAccounts = [
@@ -473,7 +473,7 @@ describe('assertCaTaxWithholdingsValid', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if there are more target Identities than the maximum', async () => {
+  it('should throw an error if there are more target Identities than the maximum', () => {
     expect(() =>
       assertCaTaxWithholdingsValid(
         [
@@ -486,7 +486,7 @@ describe('assertCaTaxWithholdingsValid', () => {
     ).toThrow('Too many tax withholding entries');
   });
 
-  it('should throw an error if the identity has already been added to the tax withholding list', async () => {
+  it('should throw an error if the identity has already been added to the tax withholding list', () => {
     expect(() =>
       assertCaTaxWithholdingsValid(
         [
@@ -498,7 +498,7 @@ describe('assertCaTaxWithholdingsValid', () => {
     ).toThrow('Identity included more than once in the tax withholding list');
   });
 
-  it('should not throw an error if the number of target Identities is appropriate', async () => {
+  it('should not throw an error if the number of target Identities is appropriate', () => {
     expect(() =>
       assertCaTaxWithholdingsValid(
         [
@@ -682,7 +682,7 @@ describe('assertRequirementsNotTooComplex', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if the total added complexity is greater than max condition complexity', async () => {
+  it('should throw an error if the total added complexity is greater than max condition complexity', () => {
     dsMockUtils.setConstMock('complianceManager', 'maxConditionComplexity', {
       returnValue: dsMockUtils.createMockU32(new BigNumber(2)),
     });
@@ -723,7 +723,7 @@ describe('assertRequirementsNotTooComplex', () => {
     ).toThrow('Compliance Requirement complexity limit exceeded');
   });
 
-  it('should not throw an error if the complexity is less than the max condition complexity', async () => {
+  it('should not throw an error if the complexity is less than the max condition complexity', () => {
     dsMockUtils.setConstMock('complianceManager', 'maxConditionComplexity', {
       returnValue: dsMockUtils.createMockU32(new BigNumber(50)),
     });

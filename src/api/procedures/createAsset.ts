@@ -318,10 +318,10 @@ export async function prepareCreateAsset(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, FungibleAsset, Storage>,
   { ticker, documents, initialStatistics }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { customTypeData, status },
   } = this;

@@ -65,7 +65,7 @@ describe('withdrawUnbondedPolyx procedure', () => {
   });
 
   describe('withdrawUnbondedPolyx', () => {
-    it('should throw an error if the acting account is not a controller', async () => {
+    it('should throw an error if the acting account is not a controller', () => {
       const proc = procedureMockUtils.getInstance<void, void, Storage>(mockContext, {
         ...storage,
         controllerEntry: null,
@@ -76,7 +76,7 @@ describe('withdrawUnbondedPolyx procedure', () => {
         message: 'The caller must be a controller account',
       });
 
-      await expect(prepareWithdrawUnbondedPolyx.call(proc)).rejects.toThrow(expectedError);
+      expect(() => prepareWithdrawUnbondedPolyx.call(proc)).toThrow(expectedError);
     });
 
     it('should return a withdrawUnbonded transaction spec', async () => {

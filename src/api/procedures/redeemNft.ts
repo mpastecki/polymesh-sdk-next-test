@@ -67,10 +67,10 @@ export async function prepareRedeemNft(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void, Storage>,
   { collection }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { fromPortfolio },
   } = this;

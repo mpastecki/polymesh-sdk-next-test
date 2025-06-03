@@ -521,7 +521,7 @@ describe('modifyMultiSig procedure', () => {
   });
 
   describe('modifyMultiSig', () => {
-    it('should return an instance of Procedure', async () => {
+    it('should return an instance of Procedure', () => {
       const result = modifyMultiSig();
 
       expect(result).toBeInstanceOf(Procedure);

@@ -144,7 +144,7 @@ describe('lockInstructionForExecution procedure', () => {
     ).rejects.toThrow('Mediator affirmation has expired');
   });
 
-  it('should return an throw an error if runtime API throws an error while fetching lock weight', async () => {
+  it('should return an throw an error if runtime API throws an error while fetching lock weight', () => {
     lockInstructionWeightMock.mockReturnValue(
       dsMockUtils.createMockLockInstructionWeight({
         Err: 'errorResponse' as unknown as DispatchError,
@@ -176,11 +176,11 @@ describe('lockInstructionForExecution procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const proc = procedureMockUtils.getInstance<Params, Instruction>(mockContext, { id });
       const boundFunc = getAuthorization.bind(proc);
 
-      const result = await boundFunc();
+      const result = boundFunc();
 
       expect(result).toEqual({
         permissions: {

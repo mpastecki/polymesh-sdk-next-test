@@ -1,7 +1,9 @@
-import { StorageKey, u128 } from '@polkadot/types';
+import { BTreeSet, StorageKey, u128 } from '@polkadot/types';
 import {
+  PolymeshPrimitivesAssetAssetId,
   PolymeshPrimitivesStatisticsStat1stKey,
   PolymeshPrimitivesStatisticsStat2ndKey,
+  PolymeshPrimitivesStatisticsStatType,
 } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
@@ -165,28 +167,43 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
   }
 
   /**
-   * Get the values of all active transfer restrictions for this Asset
-   * @returns an array of objects containing the values of all active transfer restrictions for this Asset
+   * @hidden
    */
-  public async getValues(): Promise<TransferRestrictionStatValues[]> {
+  private assembleAssetMappings(
+    activeStats: BTreeSet<PolymeshPrimitivesStatisticsStatType>,
+    rawAssetId: PolymeshPrimitivesAssetAssetId,
+    context: Context
+  ): {
+    jurisdictionQueries: Promise<
+      [
+        StorageKey<
+          [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
+        >,
+        u128
+      ][]
+    >[];
+    jurisdictionMappings: {
+      statType: StatType;
+      issuer: Identity;
+      claimType: TrustedFor;
+    }[];
+    nonJurisdictionQueries: [
+      typeof statistics.assetStats,
+      [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
+    ][];
+    nonJurisdictionMappings: {
+      statType: StatType;
+      issuer?: Identity;
+      claimType?: TrustedFor;
+    }[];
+  } {
     const {
-      parent,
-      context,
       context: {
         polymeshApi: {
           query: { statistics },
         },
       },
     } = this;
-
-    const rawAssetId = assetToMeshAssetId(parent, context);
-    const activeStats = await statistics.activeAssetStats(rawAssetId);
-
-    if (activeStats.isEmpty) {
-      return [];
-    }
-
-    const result: TransferRestrictionStatValues[] = [];
     const jurisdictionQueries: Promise<
       [
         StorageKey<
@@ -206,6 +223,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
       typeof statistics.assetStats,
       [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
     ][] = [];
+
     const nonJurisdictionMappings: {
       statType: StatType;
       issuer?: Identity;
@@ -265,6 +283,45 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
         });
       }
     });
+
+    return {
+      jurisdictionQueries,
+      jurisdictionMappings,
+      nonJurisdictionQueries,
+      nonJurisdictionMappings,
+    };
+  }
+
+  /**
+   * Get the values of all active transfer restrictions for this Asset
+   * @returns an array of objects containing the values of all active transfer restrictions for this Asset
+   */
+  public async getValues(): Promise<TransferRestrictionStatValues[]> {
+    const {
+      parent,
+      context,
+      context: {
+        polymeshApi: {
+          query: { statistics },
+        },
+      },
+    } = this;
+
+    const rawAssetId = assetToMeshAssetId(parent, context);
+    const activeStats = await statistics.activeAssetStats(rawAssetId);
+
+    if (activeStats.isEmpty) {
+      return [];
+    }
+
+    const result: TransferRestrictionStatValues[] = [];
+
+    const {
+      jurisdictionQueries,
+      jurisdictionMappings,
+      nonJurisdictionQueries,
+      nonJurisdictionMappings,
+    } = this.assembleAssetMappings(activeStats, rawAssetId, context);
 
     // Execute all queries in parallel
     const [jurisdictionResults, nonJurisdictionResults] = await Promise.all([

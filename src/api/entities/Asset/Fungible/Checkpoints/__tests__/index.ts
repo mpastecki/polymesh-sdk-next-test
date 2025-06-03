@@ -90,7 +90,7 @@ describe('Checkpoints class', () => {
       expect(result.asset.id).toBe(assetId);
     });
 
-    it('should throw an error if the Checkpoint does not exist', async () => {
+    it('should throw an error if the Checkpoint does not exist', () => {
       const id = new BigNumber(1);
 
       entityMockUtils.configureMocks({ checkpointOptions: { exists: false } });

@@ -133,7 +133,7 @@ export class NftCollection extends BaseAsset {
       const numberIssued = sumNftIssuance(rawNumberNfts);
 
       // currently `asset.tokens` does not track Nft `totalSupply', we wrap the callback to provide it
-      const wrappedCallback = async (commonDetails: AssetDetails): Promise<void> => {
+      const wrappedCallback = (commonDetails: AssetDetails): void => {
         const nftDetails = { ...commonDetails, totalSupply: numberIssued };
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises

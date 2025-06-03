@@ -3,6 +3,11 @@ import { PalletCorporateActionsCorporateAction } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
 import {
+  CorporateActionKind,
+  CorporateActionTargets,
+  TaxWithholding,
+} from '~/api/entities/CorporateActionBase/types';
+import {
   Checkpoint,
   CheckpointSchedule,
   Context,
@@ -26,8 +31,6 @@ import {
   u64ToBigNumber,
 } from '~/utils/conversion';
 import { createProcedureMethod, toHumanReadable } from '~/utils/internal';
-
-import { CorporateActionKind, CorporateActionTargets, TaxWithholding } from './types';
 
 export interface UniqueIdentifiers {
   id: BigNumber;

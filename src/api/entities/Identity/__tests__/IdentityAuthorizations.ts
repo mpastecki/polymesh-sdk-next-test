@@ -2,6 +2,7 @@ import { StorageKey } from '@polkadot/types';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { IdentityAuthorizations } from '~/api/entities/Identity/IdentityAuthorizations';
 import { Authorizations, Identity, Namespace } from '~/internal';
 import { dsMockUtils, entityMockUtils } from '~/testUtils/mocks';
 import { AuthorizationType } from '~/types';
@@ -9,8 +10,6 @@ import { tuple } from '~/types/utils';
 import { hexToUuid } from '~/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
-
-import { IdentityAuthorizations } from '../IdentityAuthorizations';
 
 jest.mock(
   '~/api/entities/Identity',

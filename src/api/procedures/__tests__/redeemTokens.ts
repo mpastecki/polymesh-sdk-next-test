@@ -161,7 +161,7 @@ describe('redeemTokens procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const someDid = 'someDid';
 
       dsMockUtils.getContextInstance({ did: someDid });
@@ -180,7 +180,7 @@ describe('redeemTokens procedure', () => {
       };
       let boundFunc = getAuthorization.bind(proc);
 
-      let result = await boundFunc(params);
+      let result = boundFunc(params);
 
       expect(result).toEqual({
         permissions: {
@@ -198,7 +198,7 @@ describe('redeemTokens procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({ ...params, from: fromPortfolio });
+      result = boundFunc({ ...params, from: fromPortfolio });
 
       expect(result).toEqual({
         permissions: {

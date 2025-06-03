@@ -73,10 +73,10 @@ export async function prepareControllerTransfer(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void, Storage>,
   { asset }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     context,
     storage: { did },

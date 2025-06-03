@@ -640,7 +640,7 @@ describe('Polymesh Transaction Base class', () => {
       expect(tx.status).toBe(TransactionStatus.Failed);
     });
 
-    it('should throw error if the signing address is not available in the Context', async () => {
+    it('should throw error if the signing address is not available in the Context', () => {
       const transaction = dsMockUtils.createTxMock('staking', 'bond', {
         autoResolve: MockTxStatus.Succeeded,
       });
@@ -758,7 +758,7 @@ describe('Polymesh Transaction Base class', () => {
       expect(result).toBe('pollingResult');
     });
 
-    it('should throw an error when polling if there is an extrinsic failure', async () => {
+    it('should throw an error when polling if there is an extrinsic failure', () => {
       const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
       context.supportsSubscription.mockReturnValue(false);
 
@@ -794,7 +794,7 @@ describe('Polymesh Transaction Base class', () => {
       return expect(tx.run()).rejects.toThrow(expectedError);
     });
 
-    it('should throw an error when polling if there is an error submitting the transaction', async () => {
+    it('should throw an error when polling if there is an error submitting the transaction', () => {
       const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
       context.supportsSubscription.mockReturnValue(false);
 
@@ -821,7 +821,7 @@ describe('Polymesh Transaction Base class', () => {
       return expect(tx.run()).rejects.toThrow(expectedError);
     });
 
-    it('should throw an error if called with a multiSig signer', async () => {
+    it('should throw an error if called with a multiSig signer', () => {
       const transaction = dsMockUtils.createTxMock('staking', 'bond', { autoResolve: false });
       context.supportsSubscription.mockReturnValue(false);
 

@@ -6,6 +6,16 @@ import { hexAddPrefix, hexStripPrefix, stringToHex } from '@polkadot/util';
 import BigNumber from 'bignumber.js';
 import P from 'bluebird';
 
+import {
+  AffirmationStatus,
+  InstructionAffirmation,
+  InstructionDetails,
+  InstructionStatus,
+  InstructionStatusResult,
+  Leg,
+  MediatorAffirmation,
+  OffChainAffirmation,
+} from '~/api/entities/Instruction/types';
 import { executeManualInstruction } from '~/api/procedures/executeManualInstruction';
 import { lockInstructionForExecution } from '~/api/procedures/lockInstructionForExecution';
 import {
@@ -42,6 +52,7 @@ import {
   EventIdentifier,
   ExecuteManualInstructionParams,
   InstructionAffirmationOperation,
+  InstructionLockedInfo,
   MiddlewarePaginationOptions,
   NoArgsProcedureMethod,
   NumberedPortfolio,
@@ -86,18 +97,6 @@ import {
   requestMulti,
   requestPaginated,
 } from '~/utils/internal';
-
-import {
-  AffirmationStatus,
-  InstructionAffirmation,
-  InstructionDetails,
-  InstructionLockedInfo,
-  InstructionStatus,
-  InstructionStatusResult,
-  Leg,
-  MediatorAffirmation,
-  OffChainAffirmation,
-} from './types';
 
 export interface UniqueIdentifiers {
   id: BigNumber;
@@ -349,7 +348,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
    * @note current status as `Executed` means that the Instruction has been executed/rejected and pruned from
    *   the chain.
    */
-  public async onStatusChange(callback: SubCallback<InstructionStatus>): Promise<UnsubCallback> {
+  public onStatusChange(callback: SubCallback<InstructionStatus>): Promise<UnsubCallback> {
     const {
       context: {
         polymeshApi: {
@@ -1021,7 +1020,7 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
 
     const portfolios = await P.reduce<Leg, (DefaultPortfolio | NumberedPortfolio)[]>(
       legs,
-      async (result, leg) => assemblePortfolios(result, leg),
+      async (result, leg) => await assemblePortfolios(result, leg),
       []
     );
 

@@ -78,7 +78,7 @@ describe('setStakingController procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if the target is already a controller', async () => {
+  it('should throw an error if the target is already a controller', () => {
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
       ...storage,
       newControllerLedger,
@@ -89,14 +89,14 @@ describe('setStakingController procedure', () => {
       message: 'The given controller is already paired with a stash',
     });
 
-    await expect(
+    expect(() =>
       prepareSetStakingController.call(proc, {
         controller: newController,
       })
-    ).rejects.toThrow(expectedError);
+    ).toThrow(expectedError);
   });
 
-  it('should throw an error if the the acting account is not a stash', async () => {
+  it('should throw an error if the the acting account is not a stash', () => {
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
       ...storage,
       currentController: null,
@@ -107,11 +107,11 @@ describe('setStakingController procedure', () => {
       message: 'Current controller not found. The acting account must be a stash account',
     });
 
-    await expect(
+    expect(() =>
       prepareSetStakingController.call(proc, {
         controller: newController,
       })
-    ).rejects.toThrow(expectedError);
+    ).toThrow(expectedError);
   });
 
   it('should return a setController transaction spec', async () => {

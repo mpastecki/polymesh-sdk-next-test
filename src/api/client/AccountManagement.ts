@@ -254,7 +254,7 @@ export class AccountManagement {
   /**
    * Return an Account instance from an address. If the Account has multiSig signers, the returned value will be a {@link api/entities/Account/MultiSig!MultiSig} instance
    */
-  public async getAccount(args: { address: string }): Promise<Account | MultiSig> {
+  public getAccount(args: { address: string }): Promise<Account | MultiSig> {
     return getAccount(args, this.context);
   }
 
@@ -274,7 +274,7 @@ export class AccountManagement {
    *
    * @throws — if there is no Signing Manager attached to the SDK
    */
-  public async getSigningAccounts(): Promise<Account[]> {
+  public getSigningAccounts(): Promise<Account[]> {
     return this.context.getSigningAccounts();
   }
 

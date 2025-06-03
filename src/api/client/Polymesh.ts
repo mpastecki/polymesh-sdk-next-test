@@ -10,6 +10,12 @@ import schema from '@polymeshassociation/polymesh-types/polkadot/schema';
 import { SigningManager } from '@polymeshassociation/signing-manager-types';
 import fetch from 'cross-fetch';
 
+import { AccountManagement } from '~/api/client/AccountManagement';
+import { Assets } from '~/api/client/Assets';
+import { Claims } from '~/api/client/Claims';
+import { Identities } from '~/api/client/Identities';
+import { Network } from '~/api/client/Network';
+import { Settlements } from '~/api/client/Settlements';
 import { Staking } from '~/api/client/Staking';
 import { Account, Context, createTransactionBatch, Identity, PolymeshError } from '~/internal';
 import {
@@ -27,13 +33,6 @@ import {
   extractProtocol,
   warnUnexpectedSqVersion,
 } from '~/utils/internal';
-
-import { AccountManagement } from './AccountManagement';
-import { Assets } from './Assets';
-import { Claims } from './Claims';
-import { Identities } from './Identities';
-import { Network } from './Network';
-import { Settlements } from './Settlements';
 
 export interface ConnectParams {
   /**
@@ -285,7 +284,7 @@ export class Polymesh {
    *
    * @throws if the passed Account is not present in the Signing Manager (or there is no Signing Manager)
    */
-  public setSigningAccount(signer: string | Account): Promise<void> {
+  public setSigningAccount(signer: string | Account): void {
     return this.context.setSigningAddress(signerToString(signer));
   }
 

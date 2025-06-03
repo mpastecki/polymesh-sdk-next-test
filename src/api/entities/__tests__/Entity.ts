@@ -11,8 +11,8 @@ class NonAbstract extends Entity<unknown, boolean> {
   }
 
   // eslint-disable-next-line require-jsdoc
-  public async exists(): Promise<boolean> {
-    return true;
+  public exists(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 }
 
@@ -23,7 +23,7 @@ describe('Entity class', () => {
 
   const serializeSpy = jest.spyOn(utilsInternalModule, 'serialize');
   describe('method: generateUuid', () => {
-    it("should generate the Entity's UUID", async () => {
+    it("should generate the Entity's UUID", () => {
       when(serializeSpy)
         .calledWith('Entity', {
           did: 'abc',
@@ -41,14 +41,14 @@ describe('Entity class', () => {
       unserializeSpy = jest.spyOn(utilsInternalModule, 'unserialize');
     });
 
-    it('should throw an error if the string is not related to an Entity Unique Identifier', async () => {
+    it('should throw an error if the string is not related to an Entity Unique Identifier', () => {
       unserializeSpy.mockReturnValue(undefined);
       expect(() => Entity.unserialize('def')).toThrow(
         "The string doesn't correspond to the UUID of type Entity"
       );
     });
 
-    it('should return an Entity Unique Identifier object', async () => {
+    it('should return an Entity Unique Identifier object', () => {
       const fakeReturn = { someIdentifier: 'abc' };
       unserializeSpy.mockReturnValue(fakeReturn);
       expect(Entity.unserialize('def')).toEqual(fakeReturn);

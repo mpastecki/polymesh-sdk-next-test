@@ -76,10 +76,10 @@ export function getAuthorization(
 /**
  * @hidden
  */
-export async function prepareStorage(
+export function prepareStorage(
   this: Procedure<Params, void, Storage>,
   { portfolio }: Params
-): Promise<Storage> {
+): Storage {
   return {
     portfolioId: portfolioLikeToPortfolioId(portfolio),
   };

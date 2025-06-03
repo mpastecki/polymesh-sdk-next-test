@@ -115,12 +115,12 @@ describe('linkTickerToAsset procedure', () => {
     });
   });
 
-  it('should throw an error if the ticker is already linked', async () => {
+  it('should throw an error if the ticker is already linked', () => {
     const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
       status: TickerReservationStatus.AssetCreated,
     });
 
-    return expect(prepareLinkTickerToAsset.call(proc, args)).rejects.toThrow(PolymeshError);
+    return expect(() => prepareLinkTickerToAsset.call(proc, args)).toThrow(PolymeshError);
   });
 
   describe('prepareStorage', () => {
@@ -146,13 +146,13 @@ describe('linkTickerToAsset procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions for a free status', async () => {
+    it('should return the appropriate roles and permissions for a free status', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         status: TickerReservationStatus.Free,
       });
       const boundFunc = getAuthorization.bind(proc);
 
-      return expect(boundFunc(args)).resolves.toEqual({
+      return expect(boundFunc(args)).toEqual({
         permissions: {
           assets: [asset],
           transactions: [TxTags.asset.LinkTickerToAssetId, TxTags.asset.RegisterUniqueTicker],
@@ -161,13 +161,13 @@ describe('linkTickerToAsset procedure', () => {
       });
     });
 
-    it('should return the appropriate roles and permissions for a reserved status', async () => {
+    it('should return the appropriate roles and permissions for a reserved status', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         status: TickerReservationStatus.Reserved,
       });
       const boundFunc = getAuthorization.bind(proc);
 
-      return expect(boundFunc(args)).resolves.toEqual({
+      return expect(boundFunc(args)).toEqual({
         permissions: {
           assets: [asset],
           transactions: [TxTags.asset.LinkTickerToAssetId],

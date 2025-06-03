@@ -13,6 +13,7 @@ import { hexToUuid } from '~/utils';
 import { DUMMY_ACCOUNT_ID } from '~/utils/constants';
 import * as utilsConversionModule from '~/utils/conversion';
 
+// eslint-disable-next-line import/order
 import { Authorizations } from '../Authorizations';
 
 jest.mock(
@@ -201,7 +202,7 @@ describe('Authorizations class', () => {
       expect(result.issuer.did).toEqual(issuerDid);
     });
 
-    it('should throw an error if the Authorization Request does not exist', async () => {
+    it('should throw an error if the Authorization Request does not exist', () => {
       const did = 'someDid';
       const context = dsMockUtils.getContextInstance({ did });
       const identity = entityMockUtils.getIdentityInstance({ did });

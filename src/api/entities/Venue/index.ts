@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import P from 'bluebird';
 
+import { HistoricInstruction, VenueDetails } from '~/api/entities/Venue/types';
 import {
   Account,
   addInstruction,
@@ -35,8 +36,6 @@ import {
   u64ToBigNumber,
 } from '~/utils/conversion';
 import { calculateNextKey, createProcedureMethod } from '~/utils/internal';
-
-import { HistoricInstruction, VenueDetails } from './types';
 
 export interface UniqueIdentifiers {
   id: BigNumber;

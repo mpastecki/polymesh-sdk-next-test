@@ -1,10 +1,26 @@
-import { PolymeshPrimitivesAssetAssetType } from '@polkadot/types/lookup';
+import {
+  PolymeshPrimitivesAssetAssetId,
+  PolymeshPrimitivesAssetAssetType,
+} from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 import { values } from 'lodash';
 
-import { BaseAsset, PolymeshError, Procedure } from '~/internal';
-import { Asset, ErrorCode, KnownAssetType, KnownNftType, ModifyAssetParams, TxTags } from '~/types';
-import { BatchTransactionSpec, CustomTypeData, ProcedureAuthorization } from '~/types/internal';
+import { BaseAsset, Context, PolymeshError, Procedure } from '~/internal';
+import {
+  Asset,
+  ErrorCode,
+  KnownAssetType,
+  KnownNftType,
+  ModifyAssetParams,
+  SecurityIdentifier,
+  TxTags,
+} from '~/types';
+import {
+  BatchTransactionSpec,
+  CustomTypeData,
+  ProcedureAuthorization,
+  TxWithArgs,
+} from '~/types/internal';
 import { isNftCollection } from '~/utils';
 import {
   assetToMeshAssetId,
@@ -39,17 +55,180 @@ export interface Storage {
 /**
  * @hidden
  */
+function getTxForMakeDivisible(
+  asset: BaseAsset,
+  isDivisible: boolean,
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  context: Context
+): TxWithArgs<unknown[]> {
+  if (isNftCollection(asset)) {
+    throw new PolymeshError({
+      code: ErrorCode.UnmetPrerequisite,
+      message: 'NFT Collections cannot be made divisible',
+    });
+  }
+
+  if (isDivisible) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'The Asset is already divisible',
+    });
+  }
+
+  return checkTxType({
+    transaction: context.polymeshApi.tx.asset.makeDivisible,
+    args: [rawAssetId],
+  });
+}
+
+/**
+ * @hidden
+ */
+function getTxForNameChange(
+  newName: string,
+  name: string,
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  context: Context
+): TxWithArgs<unknown[]> {
+  if (newName === name) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'New name is the same as current name',
+    });
+  }
+
+  const nameBytes = nameToAssetName(newName, context);
+  return checkTxType({
+    transaction: context.polymeshApi.tx.asset.renameAsset,
+    args: [rawAssetId, nameBytes],
+  });
+}
+
+/**
+ * @hidden
+ */
+function getTxForFundingRoundChange(
+  newFundingRound: string,
+  fundingRound: string | null,
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  context: Context
+): TxWithArgs<unknown[]> {
+  if (newFundingRound === fundingRound) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'New funding round name is the same as current funding round',
+    });
+  }
+
+  const fundingBytes = fundingRoundToAssetFundingRound(newFundingRound, context);
+  return checkTxType({
+    transaction: context.polymeshApi.tx.asset.setFundingRound,
+    args: [rawAssetId, fundingBytes],
+  });
+}
+
+/**
+ * @hidden
+ */
+function getTxForIdentifiersChange(
+  identifiers: SecurityIdentifier[],
+  newIdentifiers: SecurityIdentifier[],
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  context: Context
+): TxWithArgs<unknown[]> {
+  const identifiersAreEqual = hasSameElements(identifiers, newIdentifiers);
+
+  if (identifiersAreEqual) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'New identifiers are the same as current identifiers',
+    });
+  }
+
+  return checkTxType({
+    transaction: context.polymeshApi.tx.asset.updateIdentifiers,
+    args: [
+      rawAssetId,
+      newIdentifiers.map(newIdentifier =>
+        securityIdentifierToAssetIdentifier(newIdentifier, context)
+      ),
+    ],
+  });
+}
+
+/* eslint-disable max-params */
+/**
+ * @hidden
+ */
+function getTxForAssetTypeChange(
+  newType: string | BigNumber | undefined,
+  assetType: string,
+  nonFungible: boolean,
+  customTypeData: CustomTypeData | null,
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  context: Context
+): TxWithArgs<unknown[]> {
+  /* eslint-enable max-params */
+  if (
+    (typeof newType === 'string' && newType === assetType) ||
+    (newType instanceof BigNumber && newType.eq(assetType))
+  ) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'New type is the same as current type',
+    });
+  }
+
+  if (nonFungible) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'The type for a NFT Collection cannot be modified',
+    });
+  }
+
+  if (
+    typeof newType === 'string' &&
+    !values<string>(KnownAssetType).includes(newType) &&
+    values<string>(KnownNftType).includes(newType)
+  ) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'KnownNftType cannot be used as an asset type',
+    });
+  }
+
+  if (customTypeData && !customTypeData.isAlreadyCreated) {
+    throw new PolymeshError({
+      code: ErrorCode.DataUnavailable,
+      message: 'The provided custom type has not been created on the chain',
+      data: { newType },
+    });
+  }
+
+  let rawType: PolymeshPrimitivesAssetAssetType;
+
+  if (customTypeData) {
+    const { rawId } = customTypeData;
+
+    rawType = internalAssetTypeToAssetType({ Custom: rawId }, context);
+  } else {
+    rawType = internalAssetTypeToAssetType(newType as KnownAssetType, context);
+  }
+
+  return checkTxType({
+    transaction: context.polymeshApi.tx.asset.updateAssetType,
+    args: [rawAssetId, rawType],
+  });
+}
+
+/**
+ * @hidden
+ */
 export async function prepareModifyAsset(
   this: Procedure<Params, Asset, Storage>,
   args: Params
 ): Promise<BatchTransactionSpec<Asset, unknown[][]>> {
-  const {
-    storage,
-    context: {
-      polymeshApi: { tx },
-    },
-    context,
-  } = this;
+  const { storage, context } = this;
   const {
     asset,
     makeDivisible,
@@ -80,139 +259,33 @@ export async function prepareModifyAsset(
 
   const transactions = [];
   if (makeDivisible) {
-    if (isNftCollection(asset)) {
-      throw new PolymeshError({
-        code: ErrorCode.UnmetPrerequisite,
-        message: 'NFT Collections cannot be made divisible',
-      });
-    }
-
-    if (isDivisible) {
-      throw new PolymeshError({
-        code: ErrorCode.NoDataChange,
-        message: 'The Asset is already divisible',
-      });
-    }
-
-    transactions.push(
-      checkTxType({
-        transaction: tx.asset.makeDivisible,
-        args: [rawAssetId],
-      })
-    );
+    transactions.push(getTxForMakeDivisible(asset, isDivisible, rawAssetId, context));
   }
 
   if (newName) {
-    if (newName === name) {
-      throw new PolymeshError({
-        code: ErrorCode.NoDataChange,
-        message: 'New name is the same as current name',
-      });
-    }
-
-    const nameBytes = nameToAssetName(newName, context);
-    transactions.push(
-      checkTxType({
-        transaction: tx.asset.renameAsset,
-        args: [rawAssetId, nameBytes],
-      })
-    );
+    transactions.push(getTxForNameChange(newName, name, rawAssetId, context));
   }
 
   if (newFundingRound) {
-    if (newFundingRound === fundingRound) {
-      throw new PolymeshError({
-        code: ErrorCode.NoDataChange,
-        message: 'New funding round name is the same as current funding round',
-      });
-    }
-
-    const fundingBytes = fundingRoundToAssetFundingRound(newFundingRound, context);
     transactions.push(
-      checkTxType({
-        transaction: tx.asset.setFundingRound,
-        args: [rawAssetId, fundingBytes],
-      })
+      getTxForFundingRoundChange(newFundingRound, fundingRound, rawAssetId, context)
     );
   }
 
   if (newIdentifiers) {
-    const identifiersAreEqual = hasSameElements(identifiers, newIdentifiers);
-
-    if (identifiersAreEqual) {
-      throw new PolymeshError({
-        code: ErrorCode.NoDataChange,
-        message: 'New identifiers are the same as current identifiers',
-      });
-    }
-
-    transactions.push(
-      checkTxType({
-        transaction: tx.asset.updateIdentifiers,
-        args: [
-          rawAssetId,
-          newIdentifiers.map(newIdentifier =>
-            securityIdentifierToAssetIdentifier(newIdentifier, context)
-          ),
-        ],
-      })
-    );
+    transactions.push(getTxForIdentifiersChange(identifiers, newIdentifiers, rawAssetId, context));
   }
 
   if (newType) {
-    const { customTypeData } = storage;
-
-    if (
-      (typeof newType === 'string' && newType === assetType) ||
-      (newType instanceof BigNumber && newType.eq(assetType))
-    ) {
-      throw new PolymeshError({
-        code: ErrorCode.NoDataChange,
-        message: 'New type is the same as current type',
-      });
-    }
-
-    if (nonFungible) {
-      throw new PolymeshError({
-        code: ErrorCode.ValidationError,
-        message: 'The type for a NFT Collection cannot be modified',
-      });
-    }
-
-    if (
-      typeof newType === 'string' &&
-      !values<string>(KnownAssetType).includes(newType) &&
-      values<string>(KnownNftType).includes(newType)
-    ) {
-      throw new PolymeshError({
-        code: ErrorCode.ValidationError,
-        message: 'KnownNftType cannot be used as an asset type',
-      });
-    }
-
-    if (customTypeData && !customTypeData.isAlreadyCreated) {
-      throw new PolymeshError({
-        code: ErrorCode.DataUnavailable,
-        message: 'The provided custom type has not been created on the chain',
-        data: { newType },
-      });
-    }
-
-    let rawType: PolymeshPrimitivesAssetAssetType;
-
-    if (customTypeData) {
-      const { rawId } = customTypeData;
-
-      rawType = internalAssetTypeToAssetType({ Custom: rawId }, context);
-    } else {
-      rawType = internalAssetTypeToAssetType(newType as KnownAssetType, context);
-    }
-
     transactions.push(
-      checkTxType({
-        transaction: tx.asset.updateAssetType,
-        args: [rawAssetId, rawType],
-      })
+      getTxForAssetTypeChange(
+        newType,
+        assetType,
+        nonFungible,
+        storage.customTypeData,
+        rawAssetId,
+        context
+      )
     );
   }
 

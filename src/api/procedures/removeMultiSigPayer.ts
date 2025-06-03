@@ -17,7 +17,7 @@ export interface Storage {
 /**
  * @hidden
  */
-export async function prepareRemoveMultiSigPayer(
+export function prepareRemoveMultiSigPayer(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<
@@ -45,19 +45,19 @@ export async function prepareRemoveMultiSigPayer(
   const signingAccount = context.getSigningAccount();
 
   if (isMultiSigSigner) {
-    return {
+    return Promise.resolve({
       transaction: tx.multiSig.removePayer,
       args: undefined,
       resolver: undefined,
-    };
+    });
   } else if (currentPayer.isEqual(signingIdentity)) {
     const rawMultiSigAddress = stringToAccountId(multiSig.address, context);
 
-    return {
+    return Promise.resolve({
       transaction: tx.multiSig.removePayerViaPayer,
       args: [rawMultiSigAddress],
       resolver: undefined,
-    };
+    });
   } else {
     throw new PolymeshError({
       code: ErrorCode.ValidationError,

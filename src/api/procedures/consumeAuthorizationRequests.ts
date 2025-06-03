@@ -118,6 +118,7 @@ export async function getAuthorization(
   const { context } = this;
 
   let identity: Identity;
+  // eslint-disable-next-line require-await
   const fetchIdentity = async (): Promise<Identity> => identity || context.getSigningIdentity();
 
   const unexpiredRequests = authRequests.filter(request => !request.isExpired());

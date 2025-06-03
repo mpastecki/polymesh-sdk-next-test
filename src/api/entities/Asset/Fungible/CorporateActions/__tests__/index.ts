@@ -2,6 +2,7 @@ import { PolymeshPrimitivesAssetAssetId } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { CorporateActions } from '~/api/entities/Asset/Fungible/CorporateActions';
 import {
   Context,
   CorporateAction,
@@ -13,8 +14,6 @@ import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mo
 import { InitiateCorporateActionParams, TargetTreatment } from '~/types';
 import { tuple } from '~/types/utils';
 import * as utilsConversionModule from '~/utils/conversion';
-
-import { CorporateActions } from '..';
 
 jest.mock(
   '~/api/entities/Identity',

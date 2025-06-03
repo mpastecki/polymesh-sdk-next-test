@@ -2,6 +2,11 @@ import BigNumber from 'bignumber.js';
 import { values } from 'lodash';
 
 import {
+  HistoricSettlement,
+  PortfolioBalance,
+  PortfolioCollection,
+} from '~/api/entities/Portfolio/types';
+import {
   Context,
   Entity,
   FungibleAsset,
@@ -33,8 +38,6 @@ import {
   getIdentity,
   toHumanReadable,
 } from '~/utils/internal';
-
-import { HistoricSettlement, PortfolioBalance, PortfolioCollection } from './types';
 
 export interface UniqueIdentifiers {
   did: string;

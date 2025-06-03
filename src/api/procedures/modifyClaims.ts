@@ -30,11 +30,11 @@ import {
 } from '~/utils/conversion';
 import { areSameClaims, asIdentity, assembleBatchTransactions } from '~/utils/internal';
 
-const findClaimsByOtherIssuers = async (
+const findClaimsByOtherIssuers = (
   claims: ClaimTarget[],
   claimsByDid: Record<string, MiddlewareClaim[]>,
   signerDid: string
-): Promise<Claim[]> => {
+): Claim[] => {
   return claims.reduce<Claim[]>((prev, { target, claim }) => {
     const targetClaims = claimsByDid[signerToString(target)] ?? [];
 
@@ -176,11 +176,7 @@ export async function prepareModifyClaims(
 
     const claimsByDid = groupBy(claimsData, 'targetId');
 
-    const claimsByOtherIssuers: Claim[] = await findClaimsByOtherIssuers(
-      claims,
-      claimsByDid,
-      currentDid
-    );
+    const claimsByOtherIssuers: Claim[] = findClaimsByOtherIssuers(claims, claimsByDid, currentDid);
 
     if (claimsByOtherIssuers.length) {
       throw new PolymeshError({

@@ -2,6 +2,7 @@ import { TypeDef } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { pollForTransactionFinalization, processType } from '~/base/utils';
 import { PolymeshError } from '~/internal';
 import { dsMockUtils } from '~/testUtils/mocks';
 import {
@@ -10,8 +11,6 @@ import {
   MockContext,
 } from '~/testUtils/mocks/dataSources';
 import { ErrorCode, TransactionArgumentType } from '~/types';
-
-import { pollForTransactionFinalization, processType } from '../utils';
 
 describe('Process Type', () => {
   it('should be a function', () => {
@@ -100,7 +99,7 @@ describe('pollForTransactionFinalization', () => {
     );
   });
 
-  it('should throw an error if transaction location is not found within polling window', async () => {
+  it('should throw an error if transaction location is not found within polling window', () => {
     const expectedError = new PolymeshError({
       code: ErrorCode.UnexpectedError,
       message: 'The block containing the transaction was not found',

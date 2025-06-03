@@ -181,13 +181,11 @@ describe('NftCollection class', () => {
     it('should allow subscription', async () => {
       const unsubCallback = 'unsubCallBack';
 
-      dsMockUtils
-        .createQueryMock('asset', 'assetIdentifiers')
-        .mockImplementation(async (_, cbFunc) => {
-          cbFunc([isinMock]);
+      dsMockUtils.createQueryMock('asset', 'assetIdentifiers').mockImplementation((_, cbFunc) => {
+        cbFunc([isinMock]);
 
-          return unsubCallback;
-        });
+        return unsubCallback;
+      });
 
       const callback = jest.fn();
       const result = await nftCollection.getIdentifiers(callback);
@@ -283,7 +281,7 @@ describe('NftCollection class', () => {
       const nftCollection = new NftCollection({ assetId }, context);
       const unsubCallback = 'unsubCallBack';
 
-      frozenMock.mockImplementation(async (_, cbFunc) => {
+      frozenMock.mockImplementation((_, cbFunc) => {
         cbFunc(rawBoolValue);
         return unsubCallback;
       });

@@ -19,7 +19,7 @@ export class DefaultPortfolio extends Portfolio {
   /**
    * Determine whether this Portfolio exists on chain
    */
-  public async exists(): Promise<boolean> {
-    return true;
+  public exists(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 }

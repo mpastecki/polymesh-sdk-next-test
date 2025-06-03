@@ -6,6 +6,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { Requirements } from '~/api/entities/Asset/Base/Compliance/Requirements';
 import { Params } from '~/api/procedures/setAssetRequirements';
 import { Context, FungibleAsset, Namespace, PolymeshTransaction } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
@@ -20,8 +21,6 @@ import {
   TrustedClaimIssuer,
 } from '~/types';
 import * as utilsConversionModule from '~/utils/conversion';
-
-import { Requirements } from '../../../Base/Compliance/Requirements';
 
 jest.mock(
   '~/api/entities/Identity',

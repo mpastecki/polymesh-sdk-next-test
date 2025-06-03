@@ -40,7 +40,7 @@ describe('leaveIdentity procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if the Account is not associated to any Identity', async () => {
+  it('should throw an error if the Account is not associated to any Identity', () => {
     const proc = procedureMockUtils.getInstance<void, void>(mockContext);
     mockContext.getSigningAccount.mockReturnValue(
       entityMockUtils.getAccountInstance({

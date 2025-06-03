@@ -77,12 +77,12 @@ describe('createVenue procedure', () => {
 
     const proc = procedureMockUtils.getInstance<CreateVenueParams, Venue>(mockContext);
 
-    return expect(
+    return expect(() =>
       prepareCreateVenue.call(proc, {
         ...args,
         signers,
       })
-    ).rejects.toThrow('Maximum number of venue signers exceeded');
+    ).toThrow('Maximum number of venue signers exceeded');
   });
 
   it('should return a createVenue transaction spec', async () => {

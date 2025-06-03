@@ -22,7 +22,7 @@ export type SetAssetStatParams = { asset: FungibleAsset } & SetTransferRestricti
 /**
  * @hidden
  */
-export async function prepareSetAssetStats(
+export function prepareSetAssetStats(
   this: Procedure<SetAssetStatParams, void>,
   args: SetAssetStatParams
 ): Promise<BatchTransactionSpec<void, unknown[][]>> {
@@ -90,7 +90,7 @@ export async function prepareSetAssetStats(
 
   transactions.push(...updateTransactions);
 
-  return { transactions, resolver: undefined };
+  return Promise.resolve({ transactions, resolver: undefined });
 }
 
 /**

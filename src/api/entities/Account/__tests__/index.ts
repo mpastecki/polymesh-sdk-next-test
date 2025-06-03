@@ -986,11 +986,7 @@ describe('Account class', () => {
       ]);
     });
 
-    it('should throw an error if Account is not part of MultiSig', async () => {
-      dsMockUtils.createQueryMock('multiSig', 'lastInvalidProposal', {
-        returnValue: dsMockUtils.createMockOption(),
-      });
-
+    it('should throw an error if Account is not part of MultiSig', () => {
       dsMockUtils.createQueryMock('identity', 'keyRecords', {
         returnValue: dsMockUtils.createMockOption(
           dsMockUtils.createMockKeyRecord({

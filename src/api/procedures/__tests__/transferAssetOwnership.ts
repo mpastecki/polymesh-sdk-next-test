@@ -133,7 +133,7 @@ describe('transferAssetOwnership procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if has Pending Authorization', async () => {
+  it('should throw an error if has Pending Authorization', () => {
     entityMockUtils.configureMocks({
       identityOptions: {
         authorizationsGetReceived: [

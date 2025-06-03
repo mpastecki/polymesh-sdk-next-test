@@ -43,7 +43,7 @@ export class KnownPermissionGroup extends PermissionGroup {
   /**
    * Retrieve the Permissions associated with this Permission Group
    */
-  public async getPermissions(): Promise<GroupPermissions> {
+  public getPermissions(): Promise<GroupPermissions> {
     const { type } = this;
     let transactions;
 
@@ -78,17 +78,17 @@ export class KnownPermissionGroup extends PermissionGroup {
         break;
     }
 
-    return {
+    return Promise.resolve({
       transactions,
       transactionGroups: transactions ? transactionPermissionsToTxGroups(transactions) : [],
-    };
+    });
   }
 
   /**
    * Determine whether this Known Permission Group exists on chain
    */
-  public async exists(): Promise<boolean> {
-    return true;
+  public exists(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
   /**

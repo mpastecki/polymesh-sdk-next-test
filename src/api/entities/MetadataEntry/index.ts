@@ -2,6 +2,12 @@ import { Bytes, Option } from '@polkadot/types-codec';
 import BigNumber from 'bignumber.js';
 
 import {
+  MetadataDetails,
+  MetadataLockStatus,
+  MetadataType,
+  MetadataValue,
+} from '~/api/entities/MetadataEntry/types';
+import {
   BaseAsset,
   clearMetadata,
   Context,
@@ -20,8 +26,6 @@ import {
   metadataToMeshMetadataKey,
 } from '~/utils/conversion';
 import { createProcedureMethod, toHumanReadable } from '~/utils/internal';
-
-import { MetadataDetails, MetadataLockStatus, MetadataType, MetadataValue } from './types';
 
 export interface UniqueIdentifiers {
   type: MetadataType;

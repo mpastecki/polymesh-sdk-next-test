@@ -136,7 +136,7 @@ describe('Network Class', () => {
   });
 
   describe('method: getTreasuryAccount', () => {
-    it('should return the treasury Account', async () => {
+    it('should return the treasury Account', () => {
       const treasuryAddress = '5EYCAe5ijAx5xEfZdpCna3grUpY1M9M5vLUH5vpmwV1EnaYR';
 
       expect(network.getTreasuryAccount().address).toEqual(treasuryAddress);
@@ -165,7 +165,7 @@ describe('Network Class', () => {
 
       entityMockUtils.configureMocks({
         accountOptions: {
-          getBalance: jest.fn().mockImplementation(async cbFunc => {
+          getBalance: jest.fn().mockImplementation(cbFunc => {
             cbFunc(fakeBalance);
             return unsubCallback;
           }),

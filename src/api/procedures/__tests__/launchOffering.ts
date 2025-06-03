@@ -405,11 +405,11 @@ describe('launchOffering procedure', () => {
   });
 
   describe('prepareStorage', () => {
-    it('should return the offering and raising portfolio ids', async () => {
+    it('should return the offering and raising portfolio ids', () => {
       const proc = procedureMockUtils.getInstance<Params, Offering, Storage>(mockContext);
       const boundFunc = prepareStorage.bind(proc);
 
-      const result = await boundFunc(args);
+      const result = boundFunc(args);
 
       expect(result).toEqual({
         offeringPortfolioId,

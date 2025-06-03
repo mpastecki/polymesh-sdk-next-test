@@ -64,7 +64,7 @@ export class Network {
   /**
    * Fetch the current network version (e.g. 3.1.0)
    */
-  public async getVersion(): Promise<string> {
+  public getVersion(): Promise<string> {
     return this.context.getNetworkVersion();
   }
 
@@ -488,7 +488,7 @@ export class Network {
    *
    * @note uses the middleware V2
    */
-  public async getMiddlewareMetadata(): Promise<MiddlewareMetadata | null> {
+  public getMiddlewareMetadata(): Promise<MiddlewareMetadata | null> {
     return this.context.getMiddlewareMetadata();
   }
 

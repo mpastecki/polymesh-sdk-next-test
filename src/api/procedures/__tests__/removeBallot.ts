@@ -102,7 +102,7 @@ describe('removeBallot procedure', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should throw an error if ballot is not found', async () => {
+  it('should throw an error if ballot is not found', () => {
     jest.spyOn(utilsInternalModule, 'getCorporateBallotDetailsOrThrow').mockRejectedValue(
       new PolymeshError({
         code: ErrorCode.DataUnavailable,
@@ -119,7 +119,7 @@ describe('removeBallot procedure', () => {
     ).rejects.toThrow('The CorporateBallot does not exist');
   });
 
-  it('should throw an error if the ballot has already started', async () => {
+  it('should throw an error if the ballot has already started', () => {
     ballot = entityMockUtils.getCorporateBallotInstance({
       id: ballotId,
       assetId,
@@ -178,7 +178,7 @@ describe('removeBallot procedure', () => {
   });
 
   describe('removeBallot', () => {
-    it('should be instance of Procedure', async () => {
+    it('should be instance of Procedure', () => {
       expect(removeBallot()).toBeInstanceOf(Procedure);
     });
   });

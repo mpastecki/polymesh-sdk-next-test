@@ -209,7 +209,7 @@ describe('nftControllerTransfer procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const portfolioId = { did: signerDid };
 
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
@@ -225,7 +225,7 @@ describe('nftControllerTransfer procedure', () => {
         },
       ];
 
-      expect(await boundFunc({ collection, originPortfolio, nfts })).toEqual({
+      expect(boundFunc({ collection, originPortfolio, nfts })).toEqual({
         roles,
         permissions: {
           transactions: [TxTags.nft.ControllerTransfer],

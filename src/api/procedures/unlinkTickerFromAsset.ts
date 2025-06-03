@@ -22,7 +22,7 @@ export interface Storage {
 /**
  * @hidden
  */
-export async function prepareUnlinkTickerFromAsset(
+export function prepareUnlinkTickerFromAsset(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<
@@ -42,20 +42,20 @@ export async function prepareUnlinkTickerFromAsset(
   const rawTicker = stringToTicker(ticker, context);
   const rawAssetId = assetToMeshAssetId(asset, context);
 
-  return {
+  return Promise.resolve({
     transaction: tx.asset.unlinkTickerFromAssetId,
     args: [rawTicker, rawAssetId],
     resolver: undefined,
-  };
+  });
 }
 
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, void, Storage>,
   { asset }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { ticker },
   } = this;

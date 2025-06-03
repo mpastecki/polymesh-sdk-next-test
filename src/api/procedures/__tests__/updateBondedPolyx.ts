@@ -77,7 +77,7 @@ describe('updateBondedPolyx procedure', () => {
   });
 
   describe('unbond', () => {
-    it('should throw an error if the acting account is not a controller', async () => {
+    it('should throw an error if the acting account is not a controller', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         ...storage,
         controllerEntry: null,
@@ -88,15 +88,15 @@ describe('updateBondedPolyx procedure', () => {
         message: 'The caller must be a controller account',
       });
 
-      await expect(
+      expect(() =>
         prepareUnbondPolyx.call(proc, {
           type: 'unbond',
           amount: new BigNumber(900),
         })
-      ).rejects.toThrow(expectedError);
+      ).toThrow(expectedError);
     });
 
-    it('should throw an error if the acting account is not a controller', async () => {
+    it('should throw an error if the acting account is not a controller', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         ...storage,
         controllerEntry: null,
@@ -107,15 +107,15 @@ describe('updateBondedPolyx procedure', () => {
         message: 'The caller must be a stash account',
       });
 
-      await expect(
+      expect(() =>
         prepareUnbondPolyx.call(proc, {
           type: 'bondExtra',
           amount: new BigNumber(900),
         })
-      ).rejects.toThrow(expectedError);
+      ).toThrow(expectedError);
     });
 
-    it('should throw an error if there is insufficient active balance', async () => {
+    it('should throw an error if there is insufficient active balance', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, storage);
 
       const expectedError = new PolymeshError({
@@ -123,12 +123,12 @@ describe('updateBondedPolyx procedure', () => {
         message: 'Insufficient bonded POLYX',
       });
 
-      await expect(
+      expect(() =>
         prepareUnbondPolyx.call(proc, {
           type: 'unbond',
           amount: new BigNumber(900),
         })
-      ).rejects.toThrow(expectedError);
+      ).toThrow(expectedError);
     });
 
     it('should return a unbond transaction spec', async () => {
@@ -150,7 +150,7 @@ describe('updateBondedPolyx procedure', () => {
   });
 
   describe('bondExtra', () => {
-    it('should throw a caller not stash error', async () => {
+    it('should throw a caller not stash error', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, storage);
 
       const args = {
@@ -163,10 +163,10 @@ describe('updateBondedPolyx procedure', () => {
         message: 'The caller must be a stash account',
       });
 
-      return expect(prepareUnbondPolyx.call(proc, args)).rejects.toThrow(expectedError);
+      return expect(() => prepareUnbondPolyx.call(proc, args)).toThrow(expectedError);
     });
 
-    it('should throw an insufficient balance error', async () => {
+    it('should throw an insufficient balance error', () => {
       const proc = procedureMockUtils.getInstance<Params, void, Storage>(mockContext, {
         ...storage,
         isStash: true,
@@ -182,7 +182,7 @@ describe('updateBondedPolyx procedure', () => {
         message: 'The stash account has insufficient free balance',
       });
 
-      return expect(prepareUnbondPolyx.call(proc, args)).rejects.toThrow(expectedError);
+      return expect(() => prepareUnbondPolyx.call(proc, args)).toThrow(expectedError);
     });
 
     it('should return a bond extra transaction spec', async () => {

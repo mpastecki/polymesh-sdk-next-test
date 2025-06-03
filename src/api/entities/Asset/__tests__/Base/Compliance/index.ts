@@ -1,6 +1,5 @@
+import { Compliance } from '~/api/entities/Asset/Base/Compliance';
 import { Namespace } from '~/internal';
-
-import { Compliance } from '../../../Base/Compliance';
 
 describe('Compliance class', () => {
   it('should extend namespace', () => {

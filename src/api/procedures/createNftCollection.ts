@@ -101,11 +101,11 @@ function isGlobalMetadata(value: CollectionKeyInput): value is GlobalCollectionK
 /**
  * @hidden
  */
-async function getCreateAssetTxAndFees(
+function getCreateAssetTxAndFees(
   context: Context,
   storage: Storage,
   args: Params
-): Promise<TxWithArgs<unknown[]>> {
+): TxWithArgs<unknown[]> {
   const {
     polymeshApi: { tx },
   } = context;
@@ -226,7 +226,7 @@ export async function prepareCreateNftCollection(
         })
       );
     }
-    transactions.push(await getCreateAssetTxAndFees(context, storage, args));
+    transactions.push(getCreateAssetTxAndFees(context, storage, args));
   }
 
   if (ticker && status) {
@@ -291,10 +291,10 @@ export async function prepareCreateNftCollection(
 /**
  * @hidden
  */
-export async function getAuthorization(
+export function getAuthorization(
   this: Procedure<Params, NftCollection, Storage>,
   { ticker, documents }: Params
-): Promise<ProcedureAuthorization> {
+): ProcedureAuthorization {
   const {
     storage: { status, needsLocalMetadata, isAssetCreated, assetId, customTypeData },
     context,

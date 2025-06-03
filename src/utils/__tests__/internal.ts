@@ -58,7 +58,6 @@ import {
   SUPPORTED_SPEC_SEMVER,
 } from '~/utils/constants';
 import * as utilsConversionModule from '~/utils/conversion';
-
 import {
   areSameAccounts,
   areSameClaims,
@@ -116,7 +115,7 @@ import {
   sliceBatchReceipt,
   unserialize,
   warnUnexpectedSqVersion,
-} from '../internal';
+} from '~/utils/internal';
 
 jest.mock(
   '~/api/entities/Asset/Fungible',
@@ -277,13 +276,13 @@ describe('asAccount', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should return Account for given address', async () => {
+  it('should return Account for given address', () => {
     const result = asAccount(address, context);
 
     expect(result).toEqual(expect.objectContaining({ address }));
   });
 
-  it('should return the passed Account', async () => {
+  it('should return the passed Account', () => {
     const result = asAccount(account, context);
 
     expect(result).toBe(account);
@@ -824,15 +823,11 @@ describe('createProcedureMethod', () => {
 });
 
 describe('assertIsInteger', () => {
-  it('should not throw if the argument is an integer', async () => {
-    try {
-      assertIsInteger(new BigNumber(1));
-    } catch (_) {
-      expect(true).toBe(false);
-    }
+  it('should not throw if the argument is an integer', () => {
+    expect(() => assertIsInteger(new BigNumber(1))).not.toThrow();
   });
 
-  it('should throw an error if the argument is not an integer', async () => {
+  it('should throw an error if the argument is not an integer', () => {
     expect(() => assertIsInteger(new BigNumber('noInteger'))).toThrow(
       'The number must be an integer'
     );
@@ -845,7 +840,7 @@ describe('assertIsPositive', () => {
   it('should not throw an error if the argument is positive', () => {
     expect(() => assertIsPositive(new BigNumber(43))).not.toThrow();
   });
-  it('should throw an error if the argument is negative', async () => {
+  it('should throw an error if the argument is negative', () => {
     expect(() => assertIsPositive(new BigNumber(-3))).toThrow('The number must be positive');
   });
 });
@@ -853,21 +848,21 @@ describe('assertIsPositive', () => {
 describe('assertAddressValid', () => {
   const ss58Format = new BigNumber(42);
 
-  it('should throw an error if the address is not a valid ss58 address', async () => {
+  it('should throw an error if the address is not a valid ss58 address', () => {
     expect(() =>
       // cSpell: disable-next-line
       assertAddressValid('foo', ss58Format)
     ).toThrow('The supplied address is not a valid SS58 address');
   });
 
-  it('should throw an error if the address is prefixed with an invalid ss58', async () => {
+  it('should throw an error if the address is prefixed with an invalid ss58', () => {
     expect(() =>
       // cSpell: disable-next-line
       assertAddressValid('ajYMsCKsEAhEvHpeA4XqsfiA9v1CdzZPrCfS6pEfeGHW9j8', ss58Format)
     ).toThrow("The supplied address is not encoded with the chain's SS58 format");
   });
 
-  it('should not throw if the address is valid and prefixed with valid ss58', async () => {
+  it('should not throw if the address is valid and prefixed with valid ss58', () => {
     expect(() =>
       assertAddressValid('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', ss58Format)
     ).not.toThrow();
@@ -1126,10 +1121,10 @@ describe('getExemptedIds', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should return a list of DIDs if the Asset does not support PUIS', async () => {
+  it('should return a list of DIDs if the Asset does not support PUIS', () => {
     const dids = ['someDid', 'otherDid'];
 
-    const result = await getExemptedIds(dids, context);
+    const result = getExemptedIds(dids, context);
 
     expect(result).toEqual(dids);
   });
@@ -1137,7 +1132,7 @@ describe('getExemptedIds', () => {
   it('should throw an error if the exempted IDs have duplicates', () => {
     const dids = ['someDid', 'someDid'];
 
-    return expect(getExemptedIds(dids, context)).rejects.toThrow(
+    return expect(() => getExemptedIds(dids, context)).toThrow(
       'One or more of the passed exempted Identities are repeated or have the same Scope ID'
     );
   });
@@ -1268,10 +1263,10 @@ describe('assertExpectedChainVersion', () => {
         })
         .mockResolvedValue({
           status: 200,
-          json: async () => ({
+          json: () => ({
             result: null,
           }),
-        } as Response);
+        } as unknown as Response);
 
       when(crossFetch)
         .calledWith(url, {
@@ -1280,10 +1275,10 @@ describe('assertExpectedChainVersion', () => {
         })
         .mockResolvedValue({
           status: 200,
-          json: async () => ({
+          json: () => ({
             result: { specVersion: getSpecVersion(SUPPORTED_SPEC_SEMVER) },
           }),
-        } as Response);
+        } as unknown as Response);
 
       const signal = assertExpectedChainVersion('http://example.com');
 
@@ -2450,7 +2445,7 @@ describe('getAssetIdForMiddleware', () => {
 });
 
 describe('getAssetIdFromMiddleware', () => {
-  it('should return asset ID from middleware', async () => {
+  it('should return asset ID from middleware', () => {
     const assetId = '0x12341234123412341234123412341234';
     const ticker = 'SOME_TICKER';
     const result = getAssetIdFromMiddleware({
@@ -2488,7 +2483,7 @@ describe('areSameAccounts', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should return true when comparing two Accounts with the same address', async () => {
+  it('should return true when comparing two Accounts with the same address', () => {
     account1 = new Account({ address: address1 }, context);
     account2 = new Account({ address: address1 }, context);
     let result = areSameAccounts(account1, account2);
@@ -2501,7 +2496,7 @@ describe('areSameAccounts', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false when comparing two Accounts with different addresses', async () => {
+  it('should return false when comparing two Accounts with different addresses', () => {
     account1 = new Account({ address: address1 }, context);
     account2 = new Account({ address: address2 }, context);
     let result = areSameAccounts(account1, account2);
@@ -2654,7 +2649,7 @@ describe('getCorporateActionWithDescription', () => {
     expect(result.description).toEqual(description);
   });
 
-  it('should throw an error if the corporate action does not exist', async () => {
+  it('should throw an error if the corporate action does not exist', () => {
     const asset = entityMockUtils.getFungibleAssetInstance();
     const id = new BigNumber(1);
 

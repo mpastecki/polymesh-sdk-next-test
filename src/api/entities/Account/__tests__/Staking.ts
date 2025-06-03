@@ -1,11 +1,10 @@
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
+import { Staking } from '~/api/entities/Account/Staking';
 import { Account, Context, Namespace } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import * as utilsConversionModule from '~/utils/conversion';
-
-import { Staking } from '../Staking';
 
 jest.mock(
   '~/base/Procedure',

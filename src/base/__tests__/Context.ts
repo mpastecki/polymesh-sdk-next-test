@@ -2,7 +2,9 @@ import { QueryOptions } from '@apollo/client/core';
 import { ApiPromise } from '@polkadot/api';
 import { Signer as PolkadotSigner } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
+// eslint-disable-next-line import/order
 import P from 'bluebird';
+// eslint-disable-next-line import/order
 import { EventEmitter } from 'events';
 import { when } from 'jest-when';
 
@@ -231,7 +233,7 @@ describe('Context class', () => {
 
       expect(context.getSigningAddress()).toBe('someAddress');
 
-      await context.setSigningAddress('otherAddress');
+      context.setSigningAddress('otherAddress');
 
       expect(context.getSigningAddress()).toBe('otherAddress');
     });
@@ -443,7 +445,7 @@ describe('Context class', () => {
         }),
       });
 
-      dsMockUtils.createQueryMock('system', 'account').mockImplementation(async (_, cbFunc) => {
+      dsMockUtils.createQueryMock('system', 'account').mockImplementation((_, cbFunc) => {
         cbFunc(returnValue);
         return unsubCallback;
       });
@@ -555,7 +557,7 @@ describe('Context class', () => {
         })
       );
 
-      dsMockUtils.createQueryMock('relayer', 'subsidies').mockImplementation(async (_, cbFunc) => {
+      dsMockUtils.createQueryMock('relayer', 'subsidies').mockImplementation((_, cbFunc) => {
         cbFunc(returnValue);
         return unsubCallback;
       });
@@ -1584,14 +1586,21 @@ describe('Context class', () => {
       const blockNumber = new BigNumber(100);
 
       const mock = dsMockUtils.createRpcMock('chain', 'subscribeFinalizedHeads');
-      mock.mockImplementation(async callback => {
+      mock.mockImplementation(callback => {
+        // Create a Promise that resolves immediately with the unsub function
+        const unsubPromise = Promise.resolve(() => {
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+        });
+
+        // Call the callback with the header data immediately
         setImmediate(() =>
           // eslint-disable-next-line n/no-callback-literal
           callback({
             number: dsMockUtils.createMockCompact(dsMockUtils.createMockU32(blockNumber)),
           })
         );
-        return (): void => undefined;
+
+        return unsubPromise;
       });
 
       const context = await Context.create({
@@ -2120,7 +2129,7 @@ describe('Context class', () => {
       expect(context.getNonce()).toEqual(new BigNumber(-1));
     });
 
-    it('should return the nonce value', async () => {
+    it('should return the nonce value', () => {
       context.setNonce(new BigNumber(10));
       expect(context.getNonce()).toEqual(new BigNumber(10));
     });

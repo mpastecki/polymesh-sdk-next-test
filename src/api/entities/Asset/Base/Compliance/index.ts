@@ -1,7 +1,6 @@
+import { Requirements } from '~/api/entities/Asset/Base/Compliance/Requirements';
+import { TrustedClaimIssuers } from '~/api/entities/Asset/Base/Compliance/TrustedClaimIssuers';
 import { BaseAsset, Context, Namespace } from '~/internal';
-
-import { Requirements } from './Requirements';
-import { TrustedClaimIssuers } from './TrustedClaimIssuers';
 
 /**
  * Handles all Asset Compliance related functionality

@@ -125,7 +125,7 @@ describe('Subsidies Class', () => {
       const callback = jest.fn();
 
       context.accountSubsidy.mockImplementation(
-        async (_, cbFunc: (balance: SubsidyWithAllowance) => void) => {
+        (_, cbFunc: (balance: SubsidyWithAllowance) => void) => {
           cbFunc(fakeResult);
           return unsubCallback;
         }

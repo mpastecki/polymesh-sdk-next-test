@@ -21,7 +21,7 @@ export type Params = UpdatePolyxBondParams & ({ type: 'unbond' } | { type: 'bond
 /**
  * @hidden
  */
-export async function prepareUnbondPolyx(
+export function prepareUnbondPolyx(
   this: Procedure<Params, void, Storage>,
   args: Params
 ): Promise<
@@ -93,11 +93,11 @@ export async function prepareUnbondPolyx(
 
   const rawAmount = bigNumberToBalance(amount, context);
 
-  return {
+  return Promise.resolve({
     transaction,
     args: [rawAmount],
     resolver: undefined,
-  };
+  });
 }
 
 /**

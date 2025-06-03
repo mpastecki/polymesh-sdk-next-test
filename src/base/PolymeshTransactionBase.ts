@@ -1,8 +1,10 @@
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ISubmittableResult, Signer as PolkadotSigner } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
+/* eslint-disable import/order */
 import P from 'bluebird';
 import { EventEmitter } from 'events';
+/* eslint-enable import/order */
 import { range } from 'lodash';
 
 import {
@@ -292,8 +294,8 @@ export abstract class PolymeshTransactionBase<
 
       const {
         resolver,
-        transformer = async (val): Promise<TransformedReturnValue> =>
-          val as unknown as TransformedReturnValue,
+        transformer = (val): Promise<TransformedReturnValue> =>
+          Promise.resolve(val as unknown as TransformedReturnValue),
       } = this;
 
       let value: ReturnValue;

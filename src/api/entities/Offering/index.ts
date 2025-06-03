@@ -2,6 +2,7 @@ import { Bytes, Option } from '@polkadot/types';
 import { PalletStoFundraiser } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
+import { Investment, OfferingDetails } from '~/api/entities/Offering/types';
 import {
   closeOffering,
   Context,
@@ -35,8 +36,6 @@ import {
   getAssetIdForMiddleware,
   toHumanReadable,
 } from '~/utils/internal';
-
-import { Investment, OfferingDetails } from './types';
 
 export interface UniqueIdentifiers {
   id: BigNumber;

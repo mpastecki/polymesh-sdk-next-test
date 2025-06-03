@@ -98,12 +98,12 @@ describe('createMultiSig procedure', () => {
       message: 'The number of required signatures should not exceed the number of signers',
     });
 
-    return expect(
+    return expect(() =>
       prepareCreateMultiSigAccount.call(proc, {
         signers,
         requiredSignatures,
       })
-    ).rejects.toThrowError(expectedError);
+    ).toThrowError(expectedError);
   });
 
   it('should throw an error if more Identity signers are provided', () => {
@@ -118,12 +118,12 @@ describe('createMultiSig procedure', () => {
       message: 'MultiSig signers must be accounts as of v7',
     });
 
-    return expect(
+    return expect(() =>
       prepareCreateMultiSigAccount.call(proc, {
         signers,
         requiredSignatures,
       })
-    ).rejects.toThrowError(expectedError);
+    ).toThrowError(expectedError);
   });
 });
 

@@ -56,8 +56,8 @@ let exists: boolean;
 // eslint-disable-next-line require-jsdoc
 class NonAbstract extends Portfolio {
   // eslint-disable-next-line require-jsdoc
-  public async exists(): Promise<boolean> {
-    return exists;
+  public exists(): Promise<boolean> {
+    return Promise.resolve(exists);
   }
 }
 

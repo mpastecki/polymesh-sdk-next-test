@@ -23,7 +23,12 @@ import {
   LegTypeEnum,
 } from '~/middleware/types';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
-import { createMockAssetId, createMockNfts, createMockU64 } from '~/testUtils/mocks/dataSources';
+import {
+  createMockAssetId,
+  createMockInstructionStatus,
+  createMockNfts,
+  createMockU64,
+} from '~/testUtils/mocks/dataSources';
 import { Mocked } from '~/testUtils/types';
 import {
   AffirmationStatus,
@@ -41,8 +46,6 @@ import { tuple } from '~/types/utils';
 import { hexToUuid } from '~/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
-
-import { createMockInstructionStatus } from './../../../../testUtils/mocks/dataSources';
 
 jest.mock(
   '~/api/entities/Identity',
@@ -317,7 +320,7 @@ describe('Instruction class', () => {
 
       const mockPendingStatus = dsMockUtils.createMockInstructionStatus(InstructionStatus.Pending);
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(createMockInstructionStatus(InternalInstructionStatus.Pending));
         return unsubCallback;
       });
@@ -329,7 +332,7 @@ describe('Instruction class', () => {
       expect(result).toEqual(unsubCallback);
       expect(callback).toBeCalledWith(InstructionStatus.Pending);
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.Failed));
         return unsubCallback;
       });
@@ -339,7 +342,7 @@ describe('Instruction class', () => {
       expect(result).toEqual(unsubCallback);
       expect(callback).toBeCalledWith(InstructionStatus.Failed);
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.Success));
         return unsubCallback;
       });
@@ -349,7 +352,7 @@ describe('Instruction class', () => {
       expect(result).toEqual(unsubCallback);
       expect(callback).toBeCalledWith(InstructionStatus.Success);
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.Rejected));
         return unsubCallback;
       });
@@ -359,7 +362,7 @@ describe('Instruction class', () => {
       expect(result).toEqual(unsubCallback);
       expect(callback).toBeCalledWith(InstructionStatus.Rejected);
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(
           dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.LockedForExecution)
         );
@@ -376,7 +379,7 @@ describe('Instruction class', () => {
       const unsubCallback = 'unsubCallback' as unknown as Promise<UnsubCallback>;
       const callback = jest.fn();
 
-      instructionStatusesMock.mockImplementationOnce(async (_, cbFunc) => {
+      instructionStatusesMock.mockImplementationOnce((_, cbFunc) => {
         cbFunc(createMockInstructionStatus(InternalInstructionStatus.Unknown));
         return unsubCallback;
       });
@@ -387,7 +390,7 @@ describe('Instruction class', () => {
 
       const expectedError = new Error('Unknown instruction status');
 
-      return expect(instruction.onStatusChange(callback)).rejects.toThrow(expectedError);
+      return expect(() => instruction.onStatusChange(callback)).toThrow(expectedError);
     });
   });
 
@@ -2585,7 +2588,7 @@ describe('Instruction class', () => {
       when(bigNumberToU64Spy).calledWith(legId, context).mockReturnValue(rawLegId);
     });
 
-    it('should throw an error for an invalid leg ID', async () => {
+    it('should throw an error for an invalid leg ID', () => {
       dsMockUtils.createQueryMock('settlement', 'instructionLegs', {
         returnValue: dsMockUtils.createMockOption(),
       });
@@ -2598,7 +2601,7 @@ describe('Instruction class', () => {
       ).rejects.toThrow('Leg does not exist');
     });
 
-    it('should throw an error for a non-offchain leg ID', async () => {
+    it('should throw an error for a non-offchain leg ID', () => {
       dsMockUtils.createQueryMock('settlement', 'instructionLegs', {
         returnValue: dsMockUtils.createMockOption(
           dsMockUtils.createMockInstructionLeg({

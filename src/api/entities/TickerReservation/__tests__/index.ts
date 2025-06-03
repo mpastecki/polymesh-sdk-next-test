@@ -213,7 +213,7 @@ describe('TickerReservation class', () => {
 
       const unsubCallback = 'unsubCallback';
 
-      queryMultiMock.mockImplementation(async (_, cbFunc) => {
+      queryMultiMock.mockImplementation((_, cbFunc) => {
         cbFunc([dsMockUtils.createMockOption(), dsMockUtils.createMockOption()]);
         return unsubCallback;
       });

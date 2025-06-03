@@ -130,7 +130,7 @@ export async function assertInstructionValidForManualExecution(
 /**
  * @hidden
  */
-export async function assertInstructionValidForLocking(details: InstructionDetails): Promise<void> {
+export function assertInstructionValidForLocking(details: InstructionDetails): void {
   const { status, type } = details;
 
   assertInstructionIsNotPruned(status);
@@ -400,9 +400,9 @@ export function assertRequirementsNotTooComplex(
  *
  * Asserts valid primary key rotation authorization
  */
-export async function assertPrimaryKeyRotationAuthorizationValid(
+export function assertPrimaryKeyRotationAuthorizationValid(
   authRequest: AuthorizationRequest
-): Promise<void> {
+): void {
   if (authRequest.target instanceof Identity) {
     throw new PolymeshError({
       code: ErrorCode.ValidationError,

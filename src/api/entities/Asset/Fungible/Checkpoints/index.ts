@@ -2,6 +2,7 @@ import { u64 } from '@polkadot/types';
 import { PolymeshPrimitivesTicker } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
 
+import { Schedules } from '~/api/entities/Asset/Fungible/Checkpoints/Schedules';
 import {
   Checkpoint,
   Context,
@@ -25,8 +26,6 @@ import {
   u64ToBigNumber,
 } from '~/utils/conversion';
 import { createProcedureMethod, requestPaginated } from '~/utils/internal';
-
-import { Schedules } from './Schedules';
 
 /**
  * Handles all Asset Checkpoints related functionality

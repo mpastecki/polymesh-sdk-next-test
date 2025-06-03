@@ -69,7 +69,7 @@ describe('revokeIdentityToCreatePortfolios procedure', () => {
     });
   });
 
-  it('should throw an error if the Identity already has can create portfolios', async () => {
+  it('should throw an error if the Identity already has can create portfolios', () => {
     dsMockUtils.createQueryMock('portfolio', 'allowedCustodians', {
       returnValue: dsMockUtils.createMockBool(false),
     });

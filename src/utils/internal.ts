@@ -157,7 +157,7 @@ export * from '~/generated/utils';
  *
  * @param amount - time to wait
  */
-export async function delay(amount: number): Promise<void> {
+export function delay(amount: number): Promise<void> {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve();
@@ -254,14 +254,14 @@ export function asDid(value: string | Identity): string {
  * @hidden
  * Given an Identity, return the Identity, given a DID returns the corresponding Identity, if value is falsy, then return currentIdentity
  */
-export async function getIdentity(
+export function getIdentity(
   value: string | Identity | undefined,
   context: Context
 ): Promise<Identity> {
   if (!value) {
     return context.getSigningIdentity();
   } else {
-    return asIdentity(value, context);
+    return Promise.resolve(asIdentity(value, context));
   }
 }
 
@@ -634,7 +634,7 @@ export async function requestMulti<T extends AugmentedQuery<'promise', AnyFuncti
   callback: Callback<QueryMultiReturnType<T>>
 ): Promise<UnsubCallback>;
 // eslint-disable-next-line require-jsdoc
-export async function requestMulti<T extends AugmentedQuery<'promise', AnyFunction>[]>(
+export function requestMulti<T extends AugmentedQuery<'promise', AnyFunction>[]>(
   context: Context,
   queries: QueryMultiParam<T>,
   callback?: Callback<QueryMultiReturnType<T>>
@@ -646,7 +646,7 @@ export async function requestMulti<T extends AugmentedQuery<'promise', AnyFuncti
   if (callback) {
     return queryMulti(queries, callback as unknown as Callback<Codec[]>);
   }
-  return queryMulti(queries) as unknown as QueryMultiReturnType<T>;
+  return queryMulti(queries) as unknown as Promise<QueryMultiReturnType<T>>;
 }
 
 /**
@@ -863,7 +863,7 @@ export function createProcedureMethod<
       return proc().prepare({ args: procArgs, transformer }, context, opts);
     };
 
-    voidMethod.checkAuthorization = async (
+    voidMethod.checkAuthorization = (
       opts: ProcedureOpts = {}
     ): Promise<ProcedureAuthorizationStatus> => {
       const [proc, procArgs] = getProcedureAndArgs();
@@ -883,7 +883,7 @@ export function createProcedureMethod<
       return proc().prepare({ args: procArgs, transformer }, context, opts);
     };
 
-    methodWithOptionalArgs.checkAuthorization = async (
+    methodWithOptionalArgs.checkAuthorization = (
       methodArgs?: MethodArgs,
       opts: ProcedureOpts = {}
     ): Promise<ProcedureAuthorizationStatus> => {
@@ -903,7 +903,7 @@ export function createProcedureMethod<
     return proc().prepare({ args: procArgs, transformer }, context, opts);
   };
 
-  method.checkAuthorization = async (
+  method.checkAuthorization = (
     methodArgs: MethodArgs,
     opts: ProcedureOpts = {}
   ): Promise<ProcedureAuthorizationStatus> => {
@@ -1401,10 +1401,7 @@ export function defusePromise<T>(promise: Promise<T>): Promise<T> {
  * @throws
  *   - if there are duplicated Identities/ScopeIDs
  */
-export async function getExemptedIds(
-  identities: (string | Identity)[],
-  context: Context
-): Promise<string[]> {
+export function getExemptedIds(identities: (string | Identity)[], context: Context): string[] {
   const exemptedIds: string[] = [];
 
   const identityEntities = identities.map(identity => asIdentity(identity, context));

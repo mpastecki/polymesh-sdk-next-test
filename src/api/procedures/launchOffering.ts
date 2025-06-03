@@ -170,10 +170,10 @@ export function getAuthorization(
 /**
  * @hidden
  */
-export async function prepareStorage(
+export function prepareStorage(
   this: Procedure<Params, Offering, Storage>,
   { offeringPortfolio, raisingPortfolio }: Params
-): Promise<Storage> {
+): Storage {
   return {
     offeringPortfolioId: portfolioLikeToPortfolioId(offeringPortfolio),
     raisingPortfolioId: portfolioLikeToPortfolioId(raisingPortfolio),

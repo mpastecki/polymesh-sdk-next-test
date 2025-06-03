@@ -97,7 +97,7 @@ describe('createTransactionBatch procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const tags = [
         TxTags.asset.RegisterUniqueTicker,
         TxTags.asset.CreateAsset,

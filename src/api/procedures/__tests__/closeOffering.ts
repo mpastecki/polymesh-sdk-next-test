@@ -82,7 +82,7 @@ describe('closeOffering procedure', () => {
     });
   });
 
-  it('should throw an error if the Offering is already closed', async () => {
+  it('should throw an error if the Offering is already closed', () => {
     entityMockUtils.configureMocks({
       offeringOptions: {
         details: {

@@ -27,7 +27,7 @@ export const createCreateVenueResolver =
 /**
  * @hidden
  */
-export async function prepareCreateVenue(
+export function prepareCreateVenue(
   this: Procedure<CreateVenueParams, Venue>,
   args: CreateVenueParams
 ): Promise<TransactionSpec<Venue, ExtrinsicParams<'settlement', 'createVenue'>>> {
@@ -61,11 +61,11 @@ export async function prepareCreateVenue(
     stringToAccountId(asAccount(signer, context).address, context)
   );
 
-  return {
+  return Promise.resolve({
     transaction: settlement.createVenue,
     args: [rawDetails, rawSigners, rawType],
     resolver: createCreateVenueResolver(context),
-  };
+  });
 }
 
 /**

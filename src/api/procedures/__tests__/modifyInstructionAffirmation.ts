@@ -535,7 +535,7 @@ describe('modifyInstructionAffirmation procedure', () => {
     });
   });
 
-  it('should throw an error if affirmed by a mediator without a pending affirmation', async () => {
+  it('should throw an error if affirmed by a mediator without a pending affirmation', () => {
     const rawAffirmationStatus = dsMockUtils.createMockAffirmationStatus('Unknown');
     dsMockUtils.createQueryMock('settlement', 'instructionMediatorsAffirmations', {
       returnValue: rawAffirmationStatus,
@@ -571,7 +571,7 @@ describe('modifyInstructionAffirmation procedure', () => {
     ).rejects.toThrow(expectedError);
   });
 
-  it('should throw an error if expiry is set at a point in the future', async () => {
+  it('should throw an error if expiry is set at a point in the future', () => {
     const rawAffirmationStatus = dsMockUtils.createMockAffirmationStatus('Pending');
     dsMockUtils.createQueryMock('settlement', 'instructionMediatorsAffirmations', {
       returnValue: rawAffirmationStatus,
@@ -609,10 +609,13 @@ describe('modifyInstructionAffirmation procedure', () => {
   });
 
   it('should return an affirm as mediator instruction transaction spec', async () => {
+    const transaction = dsMockUtils.createTxMock('settlement', 'affirmInstructionAsMediator');
+
     const rawAffirmationStatus = dsMockUtils.createMockAffirmationStatus('Pending');
     dsMockUtils.createQueryMock('settlement', 'instructionMediatorsAffirmations', {
       returnValue: rawAffirmationStatus,
     });
+
     when(mediatorAffirmationStatusToStatusSpy)
       .calledWith(rawAffirmationStatus)
       .mockReturnValue({ status: AffirmationStatus.Pending });
@@ -630,8 +633,6 @@ describe('modifyInstructionAffirmation procedure', () => {
       offChainLegIndices: [],
       instructionInfo: mockExecuteInfo,
     });
-
-    const transaction = dsMockUtils.createTxMock('settlement', 'affirmInstructionAsMediator');
 
     const result = await prepareModifyInstructionAffirmation.call(proc, {
       id,
@@ -766,7 +767,7 @@ describe('modifyInstructionAffirmation procedure', () => {
     });
   });
 
-  it('should throw an error if a mediator attempts to withdraw a non affirmed transaction', async () => {
+  it('should throw an error if a mediator attempts to withdraw a non affirmed transaction', () => {
     const rawAffirmationStatus = createMockMediatorAffirmationStatus(AffirmationStatus.Pending);
     dsMockUtils.createQueryMock('settlement', 'instructionMediatorsAffirmations', {
       returnValue: rawAffirmationStatus,
@@ -849,6 +850,7 @@ describe('modifyInstructionAffirmation procedure', () => {
     when(meshAffirmationStatusToAffirmationStatusSpy)
       .calledWith(rawAffirmationStatus)
       .mockReturnValue(AffirmationStatus.Pending);
+    const transaction = dsMockUtils.createTxMock('settlement', 'rejectInstructionWithCount');
 
     const isCustodiedBySpy = jest
       .fn()
@@ -876,8 +878,6 @@ describe('modifyInstructionAffirmation procedure', () => {
       offChainLegIndices: [],
       instructionInfo: mockExecuteInfo,
     });
-
-    const transaction = dsMockUtils.createTxMock('settlement', 'rejectInstructionWithCount');
 
     const result = await prepareModifyInstructionAffirmation.call(proc, {
       id,
@@ -933,6 +933,7 @@ describe('modifyInstructionAffirmation procedure', () => {
     dsMockUtils.createQueryMock('settlement', 'instructionMediatorsAffirmations', {
       returnValue: rawAffirmationStatus,
     });
+    const transaction = dsMockUtils.createTxMock('settlement', 'rejectInstructionAsMediator');
     when(mediatorAffirmationStatusToStatusSpy)
       .calledWith(rawAffirmationStatus)
       .mockReturnValue({ status: AffirmationStatus.Pending });
@@ -951,8 +952,6 @@ describe('modifyInstructionAffirmation procedure', () => {
       instructionInfo: mockExecuteInfo,
     });
 
-    const transaction = dsMockUtils.createTxMock('settlement', 'rejectInstructionAsMediator');
-
     const result = await prepareModifyInstructionAffirmation.call(proc, {
       id,
       operation: InstructionAffirmationOperation.RejectAsMediator,
@@ -966,7 +965,7 @@ describe('modifyInstructionAffirmation procedure', () => {
   });
 
   describe('getAuthorization', () => {
-    it('should return the appropriate roles and permissions', async () => {
+    it('should return the appropriate roles and permissions', () => {
       const args = {
         id: new BigNumber(1),
         operation: InstructionAffirmationOperation.Affirm,
@@ -989,7 +988,7 @@ describe('modifyInstructionAffirmation procedure', () => {
       });
       let boundFunc = getAuthorization.bind(proc);
 
-      let result = await boundFunc(args);
+      let result = boundFunc(args);
 
       expect(result).toEqual({
         permissions: {
@@ -1015,7 +1014,7 @@ describe('modifyInstructionAffirmation procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({
+      result = boundFunc({
         ...args,
         operation: InstructionAffirmationOperation.Affirm,
         receipts: ['receipts' as unknown as OffChainAffirmationReceipt],
@@ -1045,7 +1044,7 @@ describe('modifyInstructionAffirmation procedure', () => {
 
       boundFunc = getAuthorization.bind(proc);
 
-      result = await boundFunc({ ...args, operation: InstructionAffirmationOperation.Reject });
+      result = boundFunc({ ...args, operation: InstructionAffirmationOperation.Reject });
 
       expect(result).toEqual({
         permissions: {
@@ -1055,7 +1054,7 @@ describe('modifyInstructionAffirmation procedure', () => {
         },
       });
 
-      result = await boundFunc({ ...args, operation: InstructionAffirmationOperation.Withdraw });
+      result = boundFunc({ ...args, operation: InstructionAffirmationOperation.Withdraw });
 
       expect(result).toEqual({
         permissions: {
@@ -1065,7 +1064,7 @@ describe('modifyInstructionAffirmation procedure', () => {
         },
       });
 
-      result = await boundFunc({
+      result = boundFunc({
         ...args,
         operation: InstructionAffirmationOperation.AffirmAsMediator,
       });
@@ -1078,7 +1077,7 @@ describe('modifyInstructionAffirmation procedure', () => {
         },
       });
 
-      result = await boundFunc({
+      result = boundFunc({
         ...args,
         operation: InstructionAffirmationOperation.WithdrawAsMediator,
       });
@@ -1091,7 +1090,7 @@ describe('modifyInstructionAffirmation procedure', () => {
         },
       });
 
-      result = await boundFunc({
+      result = boundFunc({
         ...args,
         operation: InstructionAffirmationOperation.RejectAsMediator,
       });
