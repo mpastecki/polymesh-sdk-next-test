@@ -44,6 +44,7 @@ import {
   stringToIdentityId,
 } from '~/utils/conversion';
 import {
+  asAsset,
   asBaseAsset,
   calculateNextKey,
   createProcedureMethod,
@@ -116,7 +117,8 @@ export class AssetPermissions extends Namespace<Identity> {
 
     return P.map(assetEntries, async ([key]) => {
       const assetId = assetIdToString(key.args[1]);
-      const asset = new FungibleAsset({ assetId }, context);
+      const asset = await asAsset(assetId, context);
+
       const group = await this.getGroup({ asset });
 
       return {

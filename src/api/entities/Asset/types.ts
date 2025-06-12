@@ -364,7 +364,7 @@ export enum TransferError {
 }
 
 export interface AssetWithGroup {
-  asset: FungibleAsset;
+  asset: Asset;
   group: KnownPermissionGroup | CustomPermissionGroup;
 }
 

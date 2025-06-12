@@ -20,7 +20,14 @@ import {
 } from '~/middleware/queries/externalAgents';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
-import { ErrorCode, FungibleAsset, PermissionGroupType, PermissionType, TxTags } from '~/types';
+import {
+  ErrorCode,
+  FungibleAsset,
+  NftCollection,
+  PermissionGroupType,
+  PermissionType,
+  TxTags,
+} from '~/types';
 import { tuple } from '~/types/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
@@ -35,6 +42,7 @@ describe('AssetPermissions class', () => {
   const assetId = '12341234-1234-8234-8234-123412341234';
   const assetIdHex = '0x12341234123482348234123412341234';
   let asset: Mocked<FungibleAsset>;
+  let nftCollection: Mocked<NftCollection>;
 
   let context: Mocked<Context>;
   let assetPermissions: AssetPermissions;
@@ -51,6 +59,7 @@ describe('AssetPermissions class', () => {
     context = dsMockUtils.getContextInstance();
     identity = entityMockUtils.getIdentityInstance({ did });
     asset = entityMockUtils.getFungibleAssetInstance({ assetId });
+    nftCollection = entityMockUtils.getNftCollectionInstance({ assetId });
     assetPermissions = new AssetPermissions(identity, context);
     getAssetIdForMiddlewareSpy = jest.spyOn(utilsInternalModule, 'getAssetIdForMiddleware');
     when(getAssetIdForMiddlewareSpy).calledWith(assetId, context).mockResolvedValue(assetIdHex);
@@ -392,15 +401,18 @@ describe('AssetPermissions class', () => {
     let rawDid: PolymeshPrimitivesIdentityId;
     let rawAssetId: PolymeshPrimitivesAssetAssetId;
     let stringToIdentityIdSpy: jest.SpyInstance;
+    let asAssetSpy: jest.SpyInstance;
 
     beforeAll(() => {
       stringToIdentityIdSpy = jest.spyOn(utilsConversionModule, 'stringToIdentityId');
+      asAssetSpy = jest.spyOn(utilsInternalModule, 'asAsset');
       rawDid = dsMockUtils.createMockIdentityId(did);
       rawAssetId = dsMockUtils.createMockAssetId(assetIdHex);
     });
 
     beforeEach(() => {
       when(stringToIdentityIdSpy).calledWith(did, context).mockReturnValue(rawDid);
+      when(asAssetSpy).calledWith(assetId, context).mockResolvedValue(asset);
     });
 
     afterAll(() => {
@@ -408,6 +420,35 @@ describe('AssetPermissions class', () => {
     });
 
     it('should return a list of AgentWithGroup', async () => {
+      when(asAssetSpy).calledWith(assetId, context).mockResolvedValue(nftCollection);
+      const group = entityMockUtils.getKnownPermissionGroupInstance({
+        assetId,
+        type: PermissionGroupType.Full,
+        getPermissions: {
+          transactions: null,
+          transactionGroups: [],
+        },
+      });
+
+      entityMockUtils.configureMocks({
+        fungibleAssetOptions: {
+          assetId,
+        },
+      });
+
+      jest.spyOn(assetPermissions, 'getGroup').mockResolvedValue(group);
+
+      dsMockUtils.createQueryMock('externalAgents', 'agentOf', {
+        entries: [tuple([rawDid, rawAssetId], {})],
+      });
+
+      const result = await assetPermissions.get();
+      expect(result.length).toEqual(1);
+      expect(result[0].asset.id).toEqual(assetId);
+      expect(result[0].group instanceof KnownPermissionGroup).toEqual(true);
+    });
+
+    it('should return a list of AgentWithGroup for an NFT collection', async () => {
       const group = entityMockUtils.getKnownPermissionGroupInstance({
         assetId,
         type: PermissionGroupType.Full,
