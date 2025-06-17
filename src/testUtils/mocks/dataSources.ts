@@ -5027,6 +5027,6 @@ export const createMockCorporateBallotMeta = ({
       title: formattedTitle,
       motions: formattedMotions,
     },
-    !{ title, motions }
+    !title && !motions
   );
 };
