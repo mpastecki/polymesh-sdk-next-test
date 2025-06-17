@@ -4125,7 +4125,10 @@ export function checkpointToRecordDateSpec(
     value = { ExistingSchedule: bigNumberToU64(checkpoint.id, context) };
   }
 
-  return context.createType('PalletCorporateActionsRecordDateSpec', value);
+  return context.createType(
+    'PalletCorporateActionsRecordDateSpec',
+    value
+  ) as PalletCorporateActionsRecordDateSpec;
 }
 
 /**
