@@ -22,6 +22,7 @@ import {
   PalletCorporateActionsRecordDateSpec,
   PalletCorporateActionsTargetIdentities,
   PalletStakingRewardDestination,
+  PalletStoFundingMethod,
   PalletStoPriceTier,
   PolymeshCommonUtilitiesCheckpointScheduleCheckpoints,
   PolymeshCommonUtilitiesIdentityCreateChildIdentityWithAuth,
@@ -68,6 +69,7 @@ import {
   PolymeshPrimitivesStatisticsStatOpType,
   PolymeshPrimitivesStatisticsStatType,
   PolymeshPrimitivesStatisticsStatUpdate,
+  PolymeshPrimitivesStoFundraiserReceiptDetails,
   PolymeshPrimitivesTicker,
   PolymeshPrimitivesTransferComplianceTransferCondition,
   SpCoreEcdsaSignature,
@@ -255,6 +257,7 @@ import {
   expiryToMoment,
   extrinsicIdentifierToTxTag,
   fundingRoundToAssetFundingRound,
+  fundingToRawFunding,
   fundraiserTierToTier,
   fundraiserToOfferingDetails,
   fungibleMovementToPortfolioFund,
@@ -12422,5 +12425,54 @@ describe('transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey and transf
     );
 
     expect(result).toEqual(mockStat2ndKey);
+  });
+});
+
+describe('fundingToRawFunding', () => {
+  let mockContext: Context;
+
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+  });
+
+  beforeEach(() => {
+    mockContext = dsMockUtils.getContextInstance();
+  });
+
+  afterEach(() => {
+    dsMockUtils.reset();
+  });
+
+  it('should convert a funding to a raw funding', () => {
+    const mockResult = 'mockResult' as unknown as PalletStoFundingMethod;
+
+    const mockPortfolio = dsMockUtils.createMockPortfolioId();
+
+    when(mockContext.createType)
+      .calledWith('PalletStoFundingMethod', {
+        OnChain: mockPortfolio,
+      })
+      .mockReturnValue(mockResult);
+
+    let result = fundingToRawFunding(mockContext, {
+      portfolioId: mockPortfolio,
+    });
+
+    expect(result).toBe(mockResult);
+
+    const mockReceiptDetails =
+      'receipt' as unknown as PolymeshPrimitivesStoFundraiserReceiptDetails;
+
+    when(mockContext.createType)
+      .calledWith('PalletStoFundingMethod', {
+        OffChain: mockReceiptDetails,
+      })
+      .mockReturnValue(mockResult);
+
+    result = fundingToRawFunding(mockContext, {
+      receiptDetails: mockReceiptDetails,
+    });
+
+    expect(result).toBe(mockResult);
   });
 });
