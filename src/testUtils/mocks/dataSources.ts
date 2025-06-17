@@ -78,6 +78,7 @@ import {
   PalletStakingStakingLedger,
   PalletStakingUnlockChunk,
   PalletStakingValidatorPrefs,
+  PalletStoFundingMethod,
   PalletStoFundraiser,
   PalletStoFundraiserStatus,
   PalletStoFundraiserTier,
@@ -138,6 +139,7 @@ import {
   PolymeshPrimitivesStatisticsStatOpType,
   PolymeshPrimitivesStatisticsStatType,
   PolymeshPrimitivesStatisticsStatUpdate,
+  PolymeshPrimitivesStoFundraiserReceiptDetails,
   PolymeshPrimitivesSubsetSubsetRestrictionAssetId,
   PolymeshPrimitivesSubsetSubsetRestrictionExtrinsicName,
   PolymeshPrimitivesSubsetSubsetRestrictionPortfolioId,
@@ -5029,4 +5031,19 @@ export const createMockCorporateBallotMeta = ({
     },
     !title && !motions
   );
+};
+
+/**
+ * @hidden
+ */
+export const createMockFundingMethod = (
+  fundingMethod?:
+    | {
+        OnChain: PolymeshPrimitivesIdentityIdPortfolioId;
+      }
+    | {
+        OffChain: PolymeshPrimitivesStoFundraiserReceiptDetails;
+      }
+): MockCodec<PalletStoFundingMethod> => {
+  return createMockCodec<PalletStoFundingMethod>(fundingMethod, !fundingMethod);
 };
