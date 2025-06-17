@@ -27,6 +27,7 @@ import {
   PalletStakingNominations,
   PalletStakingStakingLedger,
   PalletStakingValidatorPrefs,
+  PalletStoFundingMethod,
   PalletStoFundraiser,
   PalletStoFundraiserTier,
   PalletStoPriceTier,
@@ -83,6 +84,7 @@ import {
   PolymeshPrimitivesStatisticsStatOpType,
   PolymeshPrimitivesStatisticsStatType,
   PolymeshPrimitivesStatisticsStatUpdate,
+  PolymeshPrimitivesStoFundraiserReceiptDetails,
   PolymeshPrimitivesTicker,
   PolymeshPrimitivesTransferComplianceTransferCondition,
   SpRuntimeMultiSignature,
@@ -6066,5 +6068,29 @@ export function transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
 
   return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
     claim: { [value.claim.type]: claimValue },
+  });
+}
+
+/**
+ * @hidden
+ */
+export function fundingToRawFunding(
+  context: Context,
+  args:
+    | {
+        portfolioId: PolymeshPrimitivesIdentityIdPortfolioId;
+      }
+    | {
+        receiptDetails: PolymeshPrimitivesStoFundraiserReceiptDetails;
+      }
+): PalletStoFundingMethod {
+  if ('portfolioId' in args) {
+    return context.createType('PalletStoFundingMethod', {
+      OnChain: args.portfolioId,
+    });
+  }
+
+  return context.createType('PalletStoFundingMethod', {
+    OffChain: args.receiptDetails,
   });
 }
