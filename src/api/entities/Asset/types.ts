@@ -392,3 +392,15 @@ export interface HeldNfts {
   collection: NftCollection;
   nfts: Nft[];
 }
+
+/**
+ * A Transfer Restriction along with its current value
+ */
+export interface TransferRestrictionValues {
+  restriction: TransferRestriction;
+
+  /**
+   * The current value of the transfer restriction
+   */
+  value: BigNumber;
+}

@@ -1035,6 +1035,7 @@ const MockFungibleAssetClass = createMockEntityClass<FungibleAssetOptions>(
       claimPercentage: {
         get: jest.Mock;
       };
+      getValues: jest.Mock;
     };
 
     corporateActions = {} as {

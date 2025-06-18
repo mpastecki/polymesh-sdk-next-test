@@ -62,6 +62,7 @@ import {
   PolymeshPrimitivesSettlementReceiptMetadata,
   PolymeshPrimitivesSettlementSettlementType,
   PolymeshPrimitivesSettlementVenueType,
+  PolymeshPrimitivesStatisticsStat1stKey,
   PolymeshPrimitivesStatisticsStat2ndKey,
   PolymeshPrimitivesStatisticsStatClaim,
   PolymeshPrimitivesStatisticsStatOpType,
@@ -383,6 +384,8 @@ import {
   transferConditionsToBtreeTransferConditions,
   transferConditionToTransferRestriction,
   transferReportToTransferBreakdown,
+  transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey,
+  transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey,
   transferRestrictionToPolymeshTransferCondition,
   transferRestrictionTypeToStatOpType,
   trustedClaimIssuerToTrustedIssuer,
@@ -8878,7 +8881,6 @@ describe('agentGroupToPermissionGroup', () => {
       when(context.createType)
         .calledWith('PolymeshPrimitivesStatisticsStatType', {
           operationType,
-          claimIssuer: undefined,
         })
         .mockReturnValue('statType' as unknown as PolymeshPrimitivesStatisticsStatType);
 
@@ -12142,5 +12144,304 @@ describe('meshBallotDetailsToCorporateBallotDetails', () => {
       meta: mockBallotMeta,
       rcv: true,
     });
+  });
+});
+
+describe('transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey and transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey', () => {
+  let countRestriction: TransferRestriction;
+  let claimCountRestriction: TransferRestriction;
+  let claimPercentageRestriction: TransferRestriction;
+  let percentageRestriction: TransferRestriction;
+  let jurisdictionClaimCountRestriction: TransferRestriction;
+  let mockContext: Context;
+  let rawAssetId: PolymeshPrimitivesAssetAssetId;
+  let mockStat1stKey: PolymeshPrimitivesStatisticsStat1stKey;
+  let mockStat2ndKey: PolymeshPrimitivesStatisticsStat2ndKey;
+  const issuerDid = 'someDid';
+  let rawDid: PolymeshPrimitivesIdentityId;
+  let rawAffiliateClaimType: PolymeshPrimitivesIdentityClaimClaimType;
+  let mockCountStatOpType: PolymeshPrimitivesStatisticsStatOpType;
+  let mockBalanceStatOpType: PolymeshPrimitivesStatisticsStatOpType;
+  let mockPolymeshPrimitivesStatisticsStatType: PolymeshPrimitivesStatisticsStatType;
+
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+  });
+
+  afterEach(() => {
+    dsMockUtils.reset();
+  });
+
+  beforeEach(() => {
+    mockContext = dsMockUtils.getContextInstance();
+    rawAssetId = dsMockUtils.createMockAssetId();
+    rawDid = dsMockUtils.createMockIdentityId(issuerDid);
+    rawAffiliateClaimType = dsMockUtils.createMockClaimType(ClaimType.Affiliate);
+    mockCountStatOpType = dsMockUtils.createMockCodec(
+      {
+        Count: true,
+        ClaimCount: false,
+        ClaimOwnership: false,
+        MaxInvestorCount: false,
+        MaxInvestorOwnership: false,
+        NoClaimStat: false,
+        Percentage: false,
+      },
+      false
+    );
+
+    mockBalanceStatOpType = dsMockUtils.createMockCodec(
+      {
+        Count: false,
+        ClaimCount: false,
+        ClaimOwnership: false,
+        MaxInvestorCount: false,
+        MaxInvestorOwnership: false,
+        NoClaimStat: false,
+        Percentage: true,
+      },
+      false
+    );
+
+    mockPolymeshPrimitivesStatisticsStatType = dsMockUtils.createMockCodec(
+      {
+        operationType: mockCountStatOpType,
+        claimIssuer: undefined,
+      },
+      false
+    );
+
+    mockStat1stKey = {
+      assetId: rawAssetId,
+      statType: 'MaxInvestorCount',
+    } as unknown as PolymeshPrimitivesStatisticsStat1stKey;
+    mockStat2ndKey = {
+      isNoClaimStat: true,
+      type: 'NoClaimStat',
+    } as unknown as PolymeshPrimitivesStatisticsStat2ndKey;
+
+    countRestriction = {
+      type: TransferRestrictionType.Count,
+      value: new BigNumber(10),
+    };
+
+    percentageRestriction = {
+      type: TransferRestrictionType.Percentage,
+      value: new BigNumber(10),
+    };
+
+    claimCountRestriction = {
+      type: TransferRestrictionType.ClaimCount,
+      value: {
+        min: new BigNumber(10),
+        issuer: entityMockUtils.getIdentityInstance({ did: issuerDid }),
+        claim: {
+          type: ClaimType.Affiliate,
+          affiliate: true,
+        },
+      },
+    };
+
+    claimPercentageRestriction = {
+      type: TransferRestrictionType.ClaimPercentage,
+      value: {
+        min: new BigNumber(10),
+        max: new BigNumber(20),
+        issuer: entityMockUtils.getIdentityInstance({ did: issuerDid }),
+        claim: {
+          type: ClaimType.Accredited,
+          accredited: true,
+        },
+      },
+    };
+
+    jurisdictionClaimCountRestriction = {
+      type: TransferRestrictionType.ClaimPercentage,
+      value: {
+        min: new BigNumber(10),
+        max: new BigNumber(20),
+        issuer: entityMockUtils.getIdentityInstance({ did: issuerDid }),
+        claim: {
+          type: ClaimType.Jurisdiction,
+          countryCode: CountryCode.Ad,
+        },
+      },
+    };
+
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStatOpType', StatType.Count)
+      .mockReturnValue(mockCountStatOpType);
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStatOpType', StatType.Balance)
+      .mockReturnValue(mockBalanceStatOpType);
+  });
+
+  it('should convert a Count TransferRestriction to a PolymeshPrimitivesStatisticsStat1stKey', () => {
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStatType', {
+        operationType: mockCountStatOpType,
+        claimIssuer: undefined,
+      })
+      .mockReturnValue(mockPolymeshPrimitivesStatisticsStatType);
+
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat1stKey', {
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+      .mockReturnValue(mockStat1stKey);
+
+    const result = transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
+      rawAssetId,
+      countRestriction,
+      mockContext
+    );
+
+    expect(mockContext.createType).toHaveBeenCalledWith(
+      'PolymeshPrimitivesStatisticsStat1stKey',
+      expect.objectContaining({
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+    );
+
+    expect(result).toEqual(mockStat1stKey);
+  });
+
+  it('should convert a Percentage TransferRestriction to a PolymeshPrimitivesStatisticsStat1stKey', () => {
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStatType', {
+        operationType: mockBalanceStatOpType,
+        claimIssuer: undefined,
+      })
+      .mockReturnValue(mockPolymeshPrimitivesStatisticsStatType);
+
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat1stKey', {
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+      .mockReturnValue(mockStat1stKey);
+
+    const result = transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
+      rawAssetId,
+      percentageRestriction,
+      mockContext
+    );
+
+    expect(mockContext.createType).toHaveBeenCalledWith(
+      'PolymeshPrimitivesStatisticsStat1stKey',
+      expect.objectContaining({
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+    );
+
+    expect(result).toEqual(mockStat1stKey);
+  });
+
+  it('should convert a ClaimCount TransferRestriction to a PolymeshPrimitivesStatisticsStat1stKey', () => {
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesIdentityClaimClaimType', ClaimType.Affiliate)
+      .mockReturnValue(rawAffiliateClaimType);
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesIdentityId', issuerDid)
+      .mockReturnValue(rawDid);
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStatType', {
+        operationType: mockCountStatOpType,
+        claimIssuer: [rawAffiliateClaimType, rawDid],
+      })
+      .mockReturnValue(mockPolymeshPrimitivesStatisticsStatType);
+
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat1stKey', {
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+      .mockReturnValue(mockStat1stKey);
+
+    const result = transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
+      rawAssetId,
+      claimCountRestriction,
+      mockContext
+    );
+
+    expect(mockContext.createType).toHaveBeenCalledWith(
+      'PolymeshPrimitivesStatisticsStat1stKey',
+      expect.objectContaining({
+        assetId: rawAssetId,
+        statType: mockPolymeshPrimitivesStatisticsStatType,
+      })
+    );
+
+    expect(result).toEqual(mockStat1stKey);
+  });
+
+  it('should convert a Count or Percentage TransferRestriction to a PolymeshPrimitivesStatisticsStat2ndKey', () => {
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
+        type: 'NoClaimStat',
+      })
+      .mockReturnValue(mockStat2ndKey);
+
+    let result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+      countRestriction,
+      mockContext
+    );
+
+    expect(result).toEqual(mockStat2ndKey);
+
+    result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+      percentageRestriction,
+      mockContext
+    );
+
+    expect(result).toEqual(mockStat2ndKey);
+  });
+
+  it('should convert a ClaimCount or ClaimPercentage TransferRestriction to a PolymeshPrimitivesStatisticsStat2ndKey', () => {
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
+        claim: {
+          [ClaimType.Affiliate]: true,
+        },
+      })
+      .mockReturnValue(mockStat2ndKey);
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
+        claim: {
+          [ClaimType.Accredited]: true,
+        },
+      })
+      .mockReturnValue(mockStat2ndKey);
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
+        claim: {
+          [ClaimType.Jurisdiction]: CountryCode.Ad,
+        },
+      })
+      .mockReturnValue(mockStat2ndKey);
+
+    let result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+      claimCountRestriction,
+      mockContext
+    );
+
+    expect(result).toEqual(mockStat2ndKey);
+
+    result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+      claimPercentageRestriction,
+      mockContext
+    );
+
+    expect(result).toEqual(mockStat2ndKey);
+
+    result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+      jurisdictionClaimCountRestriction,
+      mockContext
+    );
+
+    expect(result).toEqual(mockStat2ndKey);
   });
 });

@@ -77,6 +77,7 @@ import {
   PolymeshPrimitivesSettlementReceiptMetadata,
   PolymeshPrimitivesSettlementSettlementType,
   PolymeshPrimitivesSettlementVenueType,
+  PolymeshPrimitivesStatisticsStat1stKey,
   PolymeshPrimitivesStatisticsStat2ndKey,
   PolymeshPrimitivesStatisticsStatClaim,
   PolymeshPrimitivesStatisticsStatOpType,
@@ -5992,4 +5993,68 @@ export function meshBallotDetailsToCorporateBallotDetails(
     meta: meshCorporateBallotMetaToCorporateBallotMeta(rawMeta),
     rcv: boolToBoolean(rawRcv),
   };
+}
+
+/**
+ * @hidden
+ */
+export function transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
+  rawAssetId: PolymeshPrimitivesAssetAssetId,
+  restriction: TransferRestriction,
+  context: Context
+): PolymeshPrimitivesStatisticsStat1stKey {
+  const { type, value } = restriction;
+
+  const operationType = transferRestrictionTypeToStatOpType(type, context);
+
+  if (type === TransferRestrictionType.Count || type === TransferRestrictionType.Percentage) {
+    return context.createType('PolymeshPrimitivesStatisticsStat1stKey', {
+      assetId: rawAssetId,
+      statType: context.createType('PolymeshPrimitivesStatisticsStatType', {
+        operationType,
+        claimIssuer: undefined,
+      }),
+    });
+  }
+
+  return context.createType('PolymeshPrimitivesStatisticsStat1stKey', {
+    assetId: rawAssetId,
+    statType: context.createType('PolymeshPrimitivesStatisticsStatType', {
+      operationType,
+      claimIssuer: [
+        claimTypeToMeshClaimType(value.claim.type, context),
+        stringToIdentityId(value.issuer.did, context),
+      ],
+    }),
+  });
+}
+
+/**
+ * @hidden
+ */
+export function transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
+  restriction: TransferRestriction,
+  context: Context
+): PolymeshPrimitivesStatisticsStat2ndKey {
+  const { type, value } = restriction;
+
+  if (type === TransferRestrictionType.Count || type === TransferRestrictionType.Percentage) {
+    return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
+      type: 'NoClaimStat',
+    });
+  }
+
+  let claimValue: boolean | CountryCode | undefined;
+
+  if (value.claim.type === ClaimType.Accredited) {
+    claimValue = value.claim.accredited;
+  } else if (value.claim.type === ClaimType.Affiliate) {
+    claimValue = value.claim.affiliate;
+  } else if (value.claim.type === ClaimType.Jurisdiction) {
+    claimValue = value.claim.countryCode;
+  }
+
+  return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
+    claim: { [value.claim.type]: claimValue },
+  });
 }
