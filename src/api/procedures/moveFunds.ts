@@ -47,10 +47,10 @@ async function segregateItems(
 
   for (const item of items) {
     const { asset } = item;
-    const assetId = await asAssetId(asset, context);
+    const typedAsset = await asAsset(asset, context);
+    const assetId = typedAsset.id;
     assetIds.push(assetId);
 
-    const typedAsset = await asAsset(asset, context);
     if (isFungibleAsset(typedAsset)) {
       if (!('amount' in item)) {
         throw new PolymeshError({

@@ -1091,7 +1091,7 @@ export async function asAssetId(asset: string | BaseAsset, context: Context): Pr
     return asset.id;
   }
 
-  const base = await asBaseAsset(asUuid(asset), context);
+  const base = await asBaseAsset(asset, context);
 
   return base.id;
 }
@@ -1106,7 +1106,7 @@ export async function asAsset(asset: string | Asset, context: Context): Promise<
   if (typeof asset !== 'string') {
     assetId = asset.id;
   } else {
-    assetId = asUuid(asset);
+    assetId = await asAssetId(asset, context);
   }
 
   const fungible = new FungibleAsset({ assetId }, context);

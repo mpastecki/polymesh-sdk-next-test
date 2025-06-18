@@ -2,7 +2,6 @@
   "name": "@polymeshassociation/polymesh-sdk",
   "version": "0.0.0",
   "description": "High-level API to interact with the Polymesh blockchain",
-  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Polymesh Association",
   "license": "ISC",

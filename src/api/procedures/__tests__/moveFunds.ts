@@ -206,8 +206,12 @@ describe('moveFunds procedure', () => {
     const fromId = new BigNumber(1);
     const toId = new BigNumber(2);
     const did = 'someDid';
-    const asset1 = entityMockUtils.getFungibleAssetInstance({ assetId: '0x1111' });
-    const asset2 = entityMockUtils.getFungibleAssetInstance({ assetId: '0x2222' });
+    const asset1 = entityMockUtils.getFungibleAssetInstance({
+      assetId: '0x12341234123412341234123412341234',
+    });
+    const asset2 = entityMockUtils.getFungibleAssetInstance({
+      assetId: '0x22341234123412341234123412341234',
+    });
 
     entityMockUtils.configureMocks({
       nftCollectionOptions: { exists: false },
@@ -357,7 +361,7 @@ describe('moveFunds procedure', () => {
     const fromId = new BigNumber(1);
     const toId = new BigNumber(2);
     const did = 'someDid';
-    const assetId = 'TICKER';
+    const assetId = '0x12341234123412341234123412341234';
 
     entityMockUtils.configureMocks({
       fungibleAssetOptions: {
@@ -398,7 +402,7 @@ describe('moveFunds procedure', () => {
     const fromId = new BigNumber(1);
     const toId = new BigNumber(2);
     const did = 'someDid';
-    const assetId = '0x7777';
+    const assetId = '0x12341234123412341234123412341234';
 
     entityMockUtils.configureMocks({
       fungibleAssetOptions: { exists: false },
