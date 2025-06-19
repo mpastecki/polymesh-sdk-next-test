@@ -1,0 +1,30 @@
+# Interface: MiddlewarePaginationOptions
+
+[api/entities/types](../wiki/api.entities.types).MiddlewarePaginationOptions
+
+## Table of contents
+
+### Properties
+
+- [size](../wiki/api.entities.types.MiddlewarePaginationOptions#size)
+- [start](../wiki/api.entities.types.MiddlewarePaginationOptions#start)
+
+## Properties
+
+### size
+
+• **size**: `BigNumber`
+
+#### Defined in
+
+[api/entities/types.ts:95](https://github.com/PolymeshAssociation/polymesh-sdk/blob/8a9e72221/src/api/entities/types.ts#L95)
+
+___
+
+### start
+
+• `Optional` **start**: `BigNumber`
+
+#### Defined in
+
+[api/entities/types.ts:96](https://github.com/PolymeshAssociation/polymesh-sdk/blob/8a9e72221/src/api/entities/types.ts#L96)
