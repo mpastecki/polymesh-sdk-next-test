@@ -3284,6 +3284,10 @@ export function meshInstructionStatusToInstructionStatus(
     return InternalInstructionStatus.Success;
   }
 
+  if (instruction.isLockedForExecution) {
+    return InternalInstructionStatus.LockedForExecution;
+  }
+
   return InternalInstructionStatus.Unknown;
 }
 
@@ -3320,6 +3324,11 @@ export function meshSettlementTypeToEndCondition(
       endAfterBlock: u32ToBigNumber(type.asSettleManual),
     };
   }
+
+  if (type.isSettleAfterLock) {
+    return { type: InstructionType.SettleAfterLock };
+  }
+
   return { type: InstructionType.SettleOnAffirmation };
 }
 
@@ -3342,6 +3351,9 @@ export function endConditionToSettlementType(
       value = {
         [InstructionType.SettleManual]: bigNumberToU32(endCondition.endAfterBlock, context),
       };
+      break;
+    case InstructionType.SettleAfterLock:
+      value = InstructionType.SettleAfterLock;
       break;
     default:
       value = InstructionType.SettleOnAffirmation;
@@ -4906,6 +4918,7 @@ export function middlewareInstructionStatusToInstructionStatus(
     [InstructionStatusEnum.Executed]: InstructionStatus.Success,
     [InstructionStatusEnum.Rejected]: InstructionStatus.Rejected,
     [InstructionStatusEnum.Failed]: InstructionStatus.Failed,
+    [InstructionStatusEnum.Locked]: InstructionStatus.LockedForExecution,
   };
 
   return middlewareStatusToInstructionStatusMap[status];
@@ -4930,6 +4943,10 @@ export function middlewareInstructionToInstructionEndCondition(
     typeDetails = {
       type: InstructionType.SettleOnBlock,
       endBlock: new BigNumber(endBlock!),
+    };
+  } else if (type === InstructionTypeEnum.SettleAfterLock) {
+    typeDetails = {
+      type: InstructionType.SettleAfterLock,
     };
   } else {
     typeDetails = {
