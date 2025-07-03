@@ -44,8 +44,7 @@
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "format": "cross-env prettier-eslint $PWD\"/src/**/*.{ts,tsx,js,jsx}\" --write",
     "ts-node": "yarn build:ts && ts-node --",
-    "prepare": "is-ci || husky install",
-    "postinstall": "yarn generate:consts"
+    "prepare": "is-ci || husky install"
   },
   "devDependencies": {
     "@babel/core": "^7.22.11",
