@@ -86,7 +86,9 @@ import {
   PolymeshPrimitivesStatisticsStatUpdate,
   PolymeshPrimitivesStoFundraiserReceiptDetails,
   PolymeshPrimitivesTicker,
+  PolymeshPrimitivesTransferComplianceAssetTransferCompliance,
   PolymeshPrimitivesTransferComplianceTransferCondition,
+  PolymeshPrimitivesTransferComplianceTransferConditionExemptKey,
   SpRuntimeMultiSignature,
 } from '@polkadot/types/lookup';
 import type { IsError } from '@polkadot/types/metadata/decorate/types';
@@ -187,8 +189,11 @@ import {
 import {
   AccountWithSignature,
   ActiveEraInfo,
+  ActiveTransferRestrictions,
+  AddCountStatInput,
   AffirmationStatus,
   AssetDocument,
+  AssetStat,
   Authorization,
   AuthorizationType,
   ChildKeyWithAuth,
@@ -207,7 +212,6 @@ import {
   CorporateActionParams,
   CorporateActionTargets,
   CountryCode,
-  CountTransferRestrictionInput,
   CreateAssetParams,
   CreateNftCollectionParams,
   CustomClaimTypeWithDid,
@@ -281,6 +285,7 @@ import {
   TransactionPermissions,
   TransferBreakdown,
   TransferError,
+  TransferExemptKey,
   TransferRestriction,
   TransferRestrictionResult,
   TransferRestrictionType,
@@ -326,6 +331,7 @@ import {
   asAssetId,
   asBaseAsset,
   asDid,
+  asIdentity,
   asNftId,
   assertAddressValid,
   assertIsInteger,
@@ -3485,8 +3491,10 @@ export function claimIssuerToMeshClaimIssuer(
   claimIssuer: StatClaimIssuer,
   context: Context
 ): [PolymeshPrimitivesIdentityClaimClaimType, PolymeshPrimitivesIdentityId] {
+  const issuerId = asIdentity(claimIssuer.issuer, context);
+
   const claimType = claimTypeToMeshClaimType(claimIssuer.claimType, context);
-  const identityId = stringToIdentityId(claimIssuer.issuer.did, context);
+  const identityId = stringToIdentityId(issuerId.did, context);
   return [claimType, identityId];
 }
 
@@ -3594,44 +3602,6 @@ export function identitiesSetToIdentities(
 /**
  * @hidden
  */
-export function transferConditionToTransferRestriction(
-  transferCondition: PolymeshPrimitivesTransferComplianceTransferCondition,
-  context: Context
-): TransferRestriction {
-  if (transferCondition.isMaxInvestorCount) {
-    return {
-      type: TransferRestrictionType.Count,
-      value: u64ToBigNumber(transferCondition.asMaxInvestorCount),
-    };
-  } else if (transferCondition.isMaxInvestorOwnership) {
-    return {
-      type: TransferRestrictionType.Percentage,
-      value: permillToBigNumber(transferCondition.asMaxInvestorOwnership),
-    };
-  } else if (transferCondition.isClaimCount) {
-    return {
-      type: TransferRestrictionType.ClaimCount,
-      value: claimCountToClaimCountRestrictionValue(transferCondition.asClaimCount, context),
-    };
-  } else if (transferCondition.isClaimOwnership) {
-    return {
-      type: TransferRestrictionType.ClaimPercentage,
-      value: claimPercentageToClaimPercentageRestrictionValue(
-        transferCondition.asClaimOwnership,
-        context
-      ),
-    };
-  } else {
-    throw new PolymeshError({
-      code: ErrorCode.FatalError,
-      message: 'Unexpected transfer condition type',
-    });
-  }
-}
-
-/**
- * @hidden
- */
 export function assetDispatchErrorToTransferError(
   error: DispatchError,
   context: Context
@@ -3716,139 +3686,6 @@ export function nftDispatchErrorToTransferError(
     message: 'Received unknown NFT can transfer status',
   });
 }
-
-/**
- * @hidden
- */
-export function granularCanTransferResultToTransferBreakdown(
-  result: GranularCanTransferResult,
-  validateNftResult: DispatchResult | undefined,
-  context: Context
-): TransferBreakdown {
-  const {
-    invalidGranularity,
-    selfTransfer,
-    invalidReceiverCdd,
-    invalidSenderCdd,
-    senderInsufficientBalance: insufficientBalance,
-    assetFrozen,
-    portfolioValidityResult: {
-      senderPortfolioDoesNotExist,
-      receiverPortfolioDoesNotExist,
-      senderInsufficientBalance,
-    },
-    transferConditionResult,
-    complianceResult,
-    result: finalResult,
-  } = result;
-
-  const general = [];
-
-  if (boolToBoolean(invalidGranularity)) {
-    general.push(TransferError.InvalidGranularity);
-  }
-
-  if (boolToBoolean(selfTransfer)) {
-    general.push(TransferError.SelfTransfer);
-  }
-
-  if (boolToBoolean(invalidReceiverCdd)) {
-    general.push(TransferError.InvalidReceiverCdd);
-  }
-
-  if (boolToBoolean(invalidSenderCdd)) {
-    general.push(TransferError.InvalidSenderCdd);
-  }
-
-  if (boolToBoolean(insufficientBalance)) {
-    general.push(TransferError.InsufficientBalance);
-  }
-
-  if (boolToBoolean(assetFrozen)) {
-    general.push(TransferError.TransfersFrozen);
-  }
-
-  if (boolToBoolean(senderPortfolioDoesNotExist)) {
-    general.push(TransferError.InvalidSenderPortfolio);
-  }
-
-  if (boolToBoolean(receiverPortfolioDoesNotExist)) {
-    general.push(TransferError.InvalidReceiverPortfolio);
-  }
-
-  if (boolToBoolean(senderInsufficientBalance)) {
-    general.push(TransferError.InsufficientPortfolioBalance);
-  }
-
-  const restrictions = transferConditionResult.map(({ condition, result: tmResult }) => {
-    return {
-      restriction: transferConditionToTransferRestriction(condition, context),
-      result: boolToBoolean(tmResult),
-    };
-  });
-
-  let canTransfer = boolToBoolean(finalResult);
-
-  if (canTransfer && validateNftResult?.isErr) {
-    const transferError = nftDispatchErrorToTransferError(validateNftResult.asErr, context);
-    general.push(transferError);
-    canTransfer = false;
-  }
-
-  return {
-    general,
-    compliance: assetComplianceResultToCompliance(complianceResult, context),
-    restrictions,
-    result: canTransfer,
-  };
-}
-
-/**
- * @hidden
- */
-export function transferReportToTransferBreakdown(
-  result: Vec<DispatchError> | undefined,
-  validateNftResult: Vec<DispatchError> | undefined,
-  complianceResult: Result<ComplianceReport, DispatchError>,
-  transferRestrictionsReport: Result<Vec<TransferCondition>, DispatchError>,
-  context: Context
-): TransferBreakdown {
-  let general: TransferError[] = [];
-  let canTransfer = true;
-
-  if (validateNftResult?.length) {
-    const errors = validateNftResult.map(error => nftDispatchErrorToTransferError(error, context));
-    general = Array.from(new Set([...general, ...errors]));
-    canTransfer = false;
-  }
-
-  if (result?.length) {
-    const errors = result.map(error => assetDispatchErrorToTransferError(error, context));
-    general = Array.from(new Set([...general, ...errors]));
-    canTransfer = false;
-  }
-
-  let restrictions: TransferRestrictionResult[] = [];
-  const transferRestrictions = transferRestrictionsReport.asOk;
-  if (transferRestrictions.length) {
-    restrictions = transferRestrictions.map(condition => ({
-      restriction: transferConditionToTransferRestriction(condition, context),
-      result: true,
-    }));
-    canTransfer = false;
-  }
-
-  return {
-    general,
-    compliance: assetComplianceReportToCompliance(complianceResult, context),
-    restrictions,
-    result: canTransfer,
-  };
-}
-
-/**
- * @hidden
- */
 
 /**
  * @hidden
@@ -4592,7 +4429,7 @@ export function claimCountStatInputToStatUpdates(
  * transforms a non scoped count stat to a StatUpdate type
  */
 export function countStatInputToStatUpdates(
-  args: CountTransferRestrictionInput,
+  args: AddCountStatInput,
   context: Context
 ): BTreeSet<PolymeshPrimitivesStatisticsStatUpdate> {
   const { count } = args;
@@ -6084,6 +5921,217 @@ export function transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
   return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
     claim: { [value.claim.type]: claimValue },
   });
+}
+
+/**
+ * @hidden
+ */
+export function transferConditionToTransferRestriction(
+  transferCondition: PolymeshPrimitivesTransferComplianceTransferCondition,
+  context: Context
+): TransferRestriction {
+  if (transferCondition.isMaxInvestorCount) {
+    return {
+      type: TransferRestrictionType.Count,
+      value: u64ToBigNumber(transferCondition.asMaxInvestorCount),
+    };
+  } else if (transferCondition.isMaxInvestorOwnership) {
+    return {
+      type: TransferRestrictionType.Percentage,
+      value: permillToBigNumber(transferCondition.asMaxInvestorOwnership),
+    };
+  } else if (transferCondition.isClaimCount) {
+    return {
+      type: TransferRestrictionType.ClaimCount,
+      value: claimCountToClaimCountRestrictionValue(transferCondition.asClaimCount, context),
+    };
+  } else if (transferCondition.isClaimOwnership) {
+    return {
+      type: TransferRestrictionType.ClaimPercentage,
+      value: claimPercentageToClaimPercentageRestrictionValue(
+        transferCondition.asClaimOwnership,
+        context
+      ),
+    };
+  } else {
+    throw new PolymeshError({
+      code: ErrorCode.FatalError,
+      message: 'Unexpected transfer condition type',
+    });
+  }
+}
+
+/**
+ * @hidden
+ */
+export function assetComplianceToTransferRestrictions(
+  value: PolymeshPrimitivesTransferComplianceAssetTransferCompliance,
+  context: Context
+): ActiveTransferRestrictions {
+  const paused = boolToBoolean(value.paused);
+  const restrictions = [...value.requirements].map(req => {
+    return transferConditionToTransferRestriction(req, context);
+  });
+
+  return { paused, restrictions };
+}
+
+/**
+ * @hidden
+ */
+export function assetStatToStat(value: PolymeshPrimitivesStatisticsStatType): AssetStat {
+  const type = value.operationType.isCount ? StatType.Count : StatType.Balance;
+
+  return {
+    type,
+  };
+}
+
+/**
+ * @hidden
+ */
+export function exemptionToTransferExemption(
+  exemption: PolymeshPrimitivesTransferComplianceTransferConditionExemptKey
+): TransferExemptKey {
+  const { assetId, op, claimType } = exemption;
+
+  const opType = op.isCount ? StatType.Count : StatType.Balance;
+  const claim = claimType.isSome ? meshClaimTypeToClaimType(claimType.unwrap()) : null;
+
+  return {
+    assetId: assetIdToString(assetId),
+    opType,
+    claimType: claim,
+  };
+}
+
+/**
+ * @hidden
+ */
+export function transferReportToTransferBreakdown(
+  result: Vec<DispatchError> | undefined,
+  validateNftResult: Vec<DispatchError> | undefined,
+  complianceResult: Result<ComplianceReport, DispatchError>,
+  transferRestrictionsReport: Result<Vec<TransferCondition>, DispatchError>,
+  context: Context
+): TransferBreakdown {
+  let general: TransferError[] = [];
+  let canTransfer = true;
+
+  if (validateNftResult?.length) {
+    const errors = validateNftResult.map(error => nftDispatchErrorToTransferError(error, context));
+    general = Array.from(new Set([...general, ...errors]));
+    canTransfer = false;
+  }
+
+  if (result?.length) {
+    const errors = result.map(error => assetDispatchErrorToTransferError(error, context));
+    general = Array.from(new Set([...general, ...errors]));
+    canTransfer = false;
+  }
+
+  let restrictions: TransferRestrictionResult[] = [];
+  const transferRestrictions = transferRestrictionsReport.asOk;
+  if (transferRestrictions.length) {
+    restrictions = transferRestrictions.map(condition => ({
+      restriction: transferConditionToTransferRestriction(condition, context),
+      result: true,
+    }));
+    canTransfer = false;
+  }
+
+  return {
+    general,
+    compliance: assetComplianceReportToCompliance(complianceResult, context),
+    restrictions,
+    result: canTransfer,
+  };
+}
+
+/**
+ * @hidden
+ */
+export function granularCanTransferResultToTransferBreakdown(
+  result: GranularCanTransferResult,
+  validateNftResult: DispatchResult | undefined,
+  context: Context
+): TransferBreakdown {
+  const {
+    invalidGranularity,
+    selfTransfer,
+    invalidReceiverCdd,
+    invalidSenderCdd,
+    senderInsufficientBalance: insufficientBalance,
+    assetFrozen,
+    portfolioValidityResult: {
+      senderPortfolioDoesNotExist,
+      receiverPortfolioDoesNotExist,
+      senderInsufficientBalance,
+    },
+    transferConditionResult,
+    complianceResult,
+    result: finalResult,
+  } = result;
+
+  const general = [];
+
+  if (boolToBoolean(invalidGranularity)) {
+    general.push(TransferError.InvalidGranularity);
+  }
+
+  if (boolToBoolean(selfTransfer)) {
+    general.push(TransferError.SelfTransfer);
+  }
+
+  if (boolToBoolean(invalidReceiverCdd)) {
+    general.push(TransferError.InvalidReceiverCdd);
+  }
+
+  if (boolToBoolean(invalidSenderCdd)) {
+    general.push(TransferError.InvalidSenderCdd);
+  }
+
+  if (boolToBoolean(insufficientBalance)) {
+    general.push(TransferError.InsufficientBalance);
+  }
+
+  if (boolToBoolean(assetFrozen)) {
+    general.push(TransferError.TransfersFrozen);
+  }
+
+  if (boolToBoolean(senderPortfolioDoesNotExist)) {
+    general.push(TransferError.InvalidSenderPortfolio);
+  }
+
+  if (boolToBoolean(receiverPortfolioDoesNotExist)) {
+    general.push(TransferError.InvalidReceiverPortfolio);
+  }
+
+  if (boolToBoolean(senderInsufficientBalance)) {
+    general.push(TransferError.InsufficientPortfolioBalance);
+  }
+
+  const restrictions = transferConditionResult.map(({ condition, result: tmResult }) => {
+    return {
+      restriction: transferConditionToTransferRestriction(condition, context),
+      result: boolToBoolean(tmResult),
+    };
+  });
+
+  let canTransfer = boolToBoolean(finalResult);
+
+  if (canTransfer && validateNftResult?.isErr) {
+    const transferError = nftDispatchErrorToTransferError(validateNftResult.asErr, context);
+    general.push(transferError);
+    canTransfer = false;
+  }
+
+  return {
+    general,
+    compliance: assetComplianceResultToCompliance(complianceResult, context),
+    restrictions,
+    result: canTransfer,
+  };
 }
 
 /**

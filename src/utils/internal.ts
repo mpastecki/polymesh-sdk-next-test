@@ -15,7 +15,6 @@ import {
   PalletCorporateActionsCorporateAction,
   PolymeshPrimitivesIdentityId,
   PolymeshPrimitivesSecondaryKeyKeyRecord,
-  PolymeshPrimitivesStatisticsStatClaim,
   PolymeshPrimitivesStatisticsStatType,
   PolymeshPrimitivesTransferComplianceTransferCondition,
 } from '@polkadot/types/lookup';
@@ -81,11 +80,9 @@ import {
   ProcedureAuthorizationStatus,
   ProcedureMethod,
   ProcedureOpts,
-  RemoveAssetStatParams,
   Scope,
   StatType,
   SubCallback,
-  TransferRestriction,
   TransferRestrictionType,
   TxTag,
   UnsubCallback,
@@ -126,15 +123,11 @@ import {
   boolToBoolean,
   claimIssuerToMeshClaimIssuer,
   corporateActionIdentifierToCaId,
-  identitiesToBtreeSet,
   identityIdToString,
-  meshClaimTypeToClaimType,
   meshCorporateBallotMetaToCorporateBallotMeta,
   meshPermissionsToPermissionsV2,
-  meshStatToStatType,
   middlewareScopeToScope,
   momentToDate,
-  permillToBigNumber,
   signerToString,
   stakingRewardDestinationToRaw,
   statisticsOpTypeToStatType,
@@ -1123,7 +1116,7 @@ export async function asAsset(asset: string | Asset, context: Context): Promise<
 
   throw new PolymeshError({
     code: ErrorCode.DataUnavailable,
-    message: `No asset exists with asset ID: "${asset}"`,
+    message: `No asset exists with asset ID: "${assetId}"`,
   });
 }
 
@@ -1659,48 +1652,6 @@ export function assertExpectedChainVersion(nodeUrl: string): Promise<number> {
 
 /**
  * @hidden
- * @returns true is the given stat is able to track the data for the given args
- */
-export function compareStatsToInput(
-  rawStatType: PolymeshPrimitivesStatisticsStatType,
-  args: RemoveAssetStatParams
-): boolean {
-  let claimIssuer;
-  const { type } = args;
-
-  if (type === StatType.ScopedCount || type === StatType.ScopedBalance) {
-    claimIssuer = { issuer: args.issuer, claimType: args.claimType };
-  }
-
-  if (rawStatType.claimIssuer.isNone && !!claimIssuer) {
-    return false;
-  }
-
-  if (rawStatType.claimIssuer.isSome) {
-    if (!claimIssuer) {
-      return false;
-    }
-
-    const { issuer, claimType } = claimIssuer;
-    const [meshType, meshIssuer] = rawStatType.claimIssuer.unwrap();
-    const issuerDid = identityIdToString(meshIssuer);
-    const statType = meshClaimTypeToClaimType(meshType);
-    if (issuerDid !== issuer.did) {
-      return false;
-    }
-
-    if (statType !== claimType) {
-      return false;
-    }
-  }
-
-  const stat = meshStatToStatType(rawStatType);
-
-  return stat === type;
-}
-
-/**
- * @hidden
  * @returns true if the given StatType is able to track the data for the given transfer condition
  */
 export function compareTransferRestrictionToStat(
@@ -1743,77 +1694,6 @@ export function compareTransferRestrictionToStat(
 
 /**
  * @hidden
- */
-function getClaimType(statClaim: PolymeshPrimitivesStatisticsStatClaim): ClaimType {
-  if (statClaim.isAccredited) {
-    return ClaimType.Accredited;
-  } else if (statClaim.isAffiliate) {
-    return ClaimType.Affiliate;
-  } else {
-    return ClaimType.Jurisdiction;
-  }
-}
-
-/**
- * @hidden
- */
-function compareOptionalBigNumbers(a: BigNumber | undefined, b: BigNumber | undefined): boolean {
-  if (a === undefined && b === undefined) {
-    return true;
-  }
-  if (a === undefined || b === undefined) {
-    return false;
-  }
-  return a.eq(b);
-}
-
-/**
- * @hidden
- */
-export function compareTransferRestrictionToInput(
-  rawRestriction: PolymeshPrimitivesTransferComplianceTransferCondition,
-  inputRestriction: TransferRestriction
-): boolean {
-  const { type, value } = inputRestriction;
-  if (rawRestriction.isMaxInvestorCount && type === TransferRestrictionType.Count) {
-    const currentCount = u64ToBigNumber(rawRestriction.asMaxInvestorCount);
-    return currentCount.eq(value);
-  } else if (rawRestriction.isMaxInvestorOwnership && type === TransferRestrictionType.Percentage) {
-    const currentOwnership = permillToBigNumber(rawRestriction.asMaxInvestorOwnership);
-    return currentOwnership.eq(value);
-  } else if (rawRestriction.isClaimCount && type === TransferRestrictionType.ClaimCount) {
-    const [statClaim, rawIssuerId, rawMin, maybeMax] = rawRestriction.asClaimCount;
-    const issuerDid = identityIdToString(rawIssuerId);
-    const min = u64ToBigNumber(rawMin);
-    const max = maybeMax.isSome ? u64ToBigNumber(maybeMax.unwrap()) : undefined;
-    const { min: valueMin, max: valueMax, claim: valueClaim, issuer: valueIssuer } = value;
-
-    return (
-      valueMin.eq(min) &&
-      compareOptionalBigNumbers(max, valueMax) &&
-      valueClaim.type === getClaimType(statClaim) &&
-      issuerDid === valueIssuer.did
-    );
-  } else if (rawRestriction.isClaimOwnership && type === TransferRestrictionType.ClaimPercentage) {
-    const { min: valueMin, max: valueMax, claim: valueClaim, issuer: valueIssuer } = value;
-    const [statClaim, rawIssuerId, rawMin, rawMax] = rawRestriction.asClaimOwnership;
-    const issuerDid = identityIdToString(rawIssuerId);
-    const min = permillToBigNumber(rawMin);
-    const max = permillToBigNumber(rawMax);
-
-    return (
-      valueMin.eq(min) &&
-      valueMax.eq(max) &&
-      valueClaim.type === getClaimType(statClaim) &&
-      issuerDid === valueIssuer.did
-    );
-  }
-
-  return false;
-}
-
-/**
- * @hidden
  * @param args.type TransferRestriction type that was given
  * @param args.claimIssuer optional Issuer and ClaimType for the scope of the Stat
  * @param context
@@ -1844,8 +1724,7 @@ export function assertStatIsSet(
   if (needStat) {
     throw new PolymeshError({
       code: ErrorCode.UnmetPrerequisite,
-      message:
-        'The appropriate stat type for this restriction is not set. Try calling enableStat in the namespace first',
+      message: 'The appropriate stat type for this restriction is not set',
     });
   }
 }
@@ -1934,19 +1813,6 @@ export async function getSecondaryAccountPermissions(
   const rawResults = await identityQuery.keyRecords.multi(identityKeys);
 
   return assembleResult(rawResults);
-}
-
-/**
- * @hidden
- */
-export async function getExemptedBtreeSet(
-  identities: (string | Identity)[],
-  context: Context
-): Promise<BTreeSet<PolymeshPrimitivesIdentityId>> {
-  const exemptedIds = await getExemptedIds(identities, context);
-  const mapped = exemptedIds.map(exemptedId => asIdentity(exemptedId, context));
-
-  return identitiesToBtreeSet(mapped, context);
 }
 
 /**

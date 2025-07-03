@@ -2,7 +2,6 @@ import {
   PolymeshPrimitivesAssetAssetId,
   PolymeshPrimitivesIdentityClaimClaimType,
   PolymeshPrimitivesIdentityId,
-  PolymeshPrimitivesStatisticsStat2ndKey,
   PolymeshPrimitivesStatisticsStatOpType,
   PolymeshPrimitivesStatisticsStatType,
   PolymeshPrimitivesStatisticsStatUpdate,
@@ -12,20 +11,15 @@ import { BTreeSet } from '@polkadot/types-codec';
 import BigNumber from 'bignumber.js';
 import { when } from 'jest-when';
 
-import { getAuthorization, prepareAddAssetStat } from '~/api/procedures/addAssetStat';
-import { Context, PolymeshError } from '~/internal';
+import {
+  getAuthorization,
+  prepareSetAssetStats,
+  SetAssetStatParams,
+} from '~/api/procedures/setAssetStats';
+import { Context } from '~/internal';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
-import {
-  AddAssetStatParams,
-  ClaimType,
-  CountryCode,
-  ErrorCode,
-  FungibleAsset,
-  StatClaimType,
-  StatType,
-  TxTags,
-} from '~/types';
+import { ClaimType, FungibleAsset, StatType, TxTags } from '~/types';
 import { PolymeshTx } from '~/types/internal';
 import * as utilsConversionModule from '~/utils/conversion';
 
@@ -34,18 +28,17 @@ jest.mock(
   require('~/testUtils/mocks/entities').mockFungibleAssetModule('~/api/entities/Asset/Fungible')
 );
 
-describe('addAssetStat procedure', () => {
+describe('setAssetStats procedure', () => {
   let mockContext: Mocked<Context>;
   let assetToMeshAssetIdSpy: jest.SpyInstance;
   let assetId: string;
   let asset: FungibleAsset;
   let count: BigNumber;
   let rawAssetId: PolymeshPrimitivesAssetAssetId;
-  let args: AddAssetStatParams;
+  let args: SetAssetStatParams;
   let rawStatType: PolymeshPrimitivesStatisticsStatType;
   let rawStatBtreeSet: BTreeSet<PolymeshPrimitivesStatisticsStatType>;
   let rawStatUpdate: PolymeshPrimitivesStatisticsStatUpdate;
-  let raw2ndKey: PolymeshPrimitivesStatisticsStat2ndKey;
 
   let setActiveAssetStatsTxMock: PolymeshTx<
     [PolymeshPrimitivesAssetAssetId, PolymeshPrimitivesTransferComplianceTransferCondition]
@@ -75,14 +68,6 @@ describe('addAssetStat procedure', () => {
     BTreeSet<PolymeshPrimitivesStatisticsStatUpdate>,
     [PolymeshPrimitivesStatisticsStatUpdate[], Context]
   >;
-  let createStat2ndKeySpy: jest.SpyInstance<
-    PolymeshPrimitivesStatisticsStat2ndKey,
-    [
-      type: 'NoClaimStat' | StatClaimType,
-      context: Context,
-      claimStat?: CountryCode | 'yes' | 'no' | undefined
-    ]
-  >;
   let statUpdateBtreeSet: BTreeSet<PolymeshPrimitivesStatisticsStatUpdate>;
   let activeAssetStatsMock: jest.Mock;
   let statSpy: jest.SpyInstance;
@@ -96,7 +81,6 @@ describe('addAssetStat procedure', () => {
     asset = entityMockUtils.getFungibleAssetInstance({ assetId });
     count = new BigNumber(10);
     assetToMeshAssetIdSpy = jest.spyOn(utilsConversionModule, 'assetToMeshAssetId');
-    createStat2ndKeySpy = jest.spyOn(utilsConversionModule, 'createStat2ndKey');
     statisticsOpTypeToStatOpTypeSpy = jest.spyOn(
       utilsConversionModule,
       'statisticsOpTypeToStatType'
@@ -128,9 +112,6 @@ describe('addAssetStat procedure', () => {
     rawStatUpdate = dsMockUtils.createMockStatUpdate();
     statUpdateBtreeSet = dsMockUtils.createMockBtreeSet([rawStatUpdate]);
 
-    when(createStat2ndKeySpy)
-      .calledWith('NoClaimStat', mockContext, undefined)
-      .mockReturnValue(raw2ndKey);
     when(statUpdatesToBtreeStatUpdateSpy)
       .calledWith([rawStatUpdate], mockContext)
       .mockReturnValue(statUpdateBtreeSet);
@@ -154,12 +135,12 @@ describe('addAssetStat procedure', () => {
 
   it('should add an setAssetStats transaction to the queue', async () => {
     args = {
-      type: StatType.Balance,
+      stats: [{ type: StatType.Balance }],
       asset,
     };
-    const proc = procedureMockUtils.getInstance<AddAssetStatParams, void>(mockContext, {});
+    const proc = procedureMockUtils.getInstance<SetAssetStatParams, void>(mockContext, {});
 
-    let result = await prepareAddAssetStat.call(proc, args);
+    let result = await prepareSetAssetStats.call(proc, args);
 
     expect(result).toEqual({
       transactions: [
@@ -172,15 +153,19 @@ describe('addAssetStat procedure', () => {
     });
 
     args = {
-      type: StatType.Count,
       asset,
-      count,
+      stats: [
+        {
+          type: StatType.Count,
+          count,
+        },
+      ],
     };
 
     jest
       .spyOn(utilsConversionModule, 'countStatInputToStatUpdates')
       .mockReturnValue(statUpdateBtreeSet);
-    result = await prepareAddAssetStat.call(proc, args);
+    result = await prepareSetAssetStats.call(proc, args);
 
     expect(result).toEqual({
       transactions: [
@@ -197,21 +182,25 @@ describe('addAssetStat procedure', () => {
     });
 
     args = {
-      type: StatType.ScopedCount,
       asset,
-      issuer: entityMockUtils.getIdentityInstance(),
-      claimType: ClaimType.Accredited,
-      value: {
-        accredited: new BigNumber(1),
-        nonAccredited: new BigNumber(2),
-      },
+      stats: [
+        {
+          type: StatType.ScopedCount,
+          issuer: entityMockUtils.getIdentityInstance(),
+          claimType: ClaimType.Accredited,
+          value: {
+            accredited: new BigNumber(1),
+            nonAccredited: new BigNumber(2),
+          },
+        },
+      ],
     };
 
     jest
       .spyOn(utilsConversionModule, 'claimCountStatInputToStatUpdates')
       .mockReturnValue(statUpdateBtreeSet);
 
-    result = await prepareAddAssetStat.call(proc, args);
+    result = await prepareSetAssetStats.call(proc, args);
 
     expect(result).toEqual({
       transactions: [
@@ -228,34 +217,19 @@ describe('addAssetStat procedure', () => {
     });
   });
 
-  it('should throw an error if the appropriate stat is not set', () => {
-    const proc = procedureMockUtils.getInstance<AddAssetStatParams, void>(mockContext, {});
-    args = {
-      type: StatType.Balance,
-      asset,
-    };
-
-    activeAssetStatsMock.mockReturnValue([rawStatType]);
-
-    statSpy.mockReturnValue(StatType.Balance);
-
-    const expectedError = new PolymeshError({
-      code: ErrorCode.NoDataChange,
-      message: 'Stat is already enabled',
-    });
-
-    return expect(prepareAddAssetStat.call(proc, args)).rejects.toThrowError(expectedError);
-  });
-
   describe('getAuthorization', () => {
     it('should return the appropriate roles and permissions', () => {
       args = {
         asset,
-        count,
-        type: StatType.Count,
+        stats: [
+          {
+            count,
+            type: StatType.Count,
+          },
+        ],
       };
 
-      const proc = procedureMockUtils.getInstance<AddAssetStatParams, void>(mockContext);
+      const proc = procedureMockUtils.getInstance<SetAssetStatParams, void>(mockContext);
       const boundFunc = getAuthorization.bind(proc);
 
       expect(boundFunc(args)).toEqual({
@@ -268,7 +242,7 @@ describe('addAssetStat procedure', () => {
           portfolios: [],
         },
       });
-      expect(boundFunc({ asset, type: StatType.Balance })).toEqual({
+      expect(boundFunc({ asset, stats: [{ type: StatType.Balance }] })).toEqual({
         permissions: {
           assets: [asset],
           transactions: [TxTags.statistics.SetActiveAssetStats],

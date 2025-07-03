@@ -298,6 +298,11 @@ export enum StatType {
    */
   ScopedBalance = 'ScopedBalance',
 }
+
+export enum NewStatType {
+  Count = 'Count',
+  Balance = 'Balance',
+}
 export interface IdentityWithClaims {
   identity: Identity;
   claims: ClaimData[];
@@ -539,20 +544,6 @@ export interface ClaimPercentageTransferRestriction extends TransferRestrictionB
   max: BigNumber;
 
   issuer: Identity;
-}
-
-export interface ActiveTransferRestrictions<
-  Restriction extends
-    | CountTransferRestriction
-    | PercentageTransferRestriction
-    | ClaimCountTransferRestriction
-    | ClaimPercentageTransferRestriction
-> {
-  restrictions: Restriction[];
-  /**
-   * amount of restrictions that can be added before reaching the shared limit
-   */
-  availableSlots: BigNumber;
 }
 
 export interface AddCountStatInput {

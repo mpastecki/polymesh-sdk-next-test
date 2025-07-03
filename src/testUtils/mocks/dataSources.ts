@@ -146,6 +146,7 @@ import {
   PolymeshPrimitivesTicker,
   PolymeshPrimitivesTransferComplianceAssetTransferCompliance,
   PolymeshPrimitivesTransferComplianceTransferCondition,
+  PolymeshPrimitivesTransferComplianceTransferConditionExemptKey,
 } from '@polkadot/types/lookup';
 import {
   Codec,
@@ -5055,4 +5056,22 @@ export const createMockFundingMethod = (
       }
 ): MockCodec<PalletStoFundingMethod> => {
   return createMockCodec<PalletStoFundingMethod>(fundingMethod, !fundingMethod);
+};
+
+/**
+ * @hidden
+ */
+export const createMockExemptKey = (key?: {
+  assetId: PolymeshPrimitivesAssetAssetId | Parameters<typeof createMockAssetId>[0];
+  op: PolymeshPrimitivesStatisticsStatOpType | Parameters<typeof createMockStatisticsOpType>[0];
+  claimType:
+    | Option<PolymeshPrimitivesIdentityClaimClaimType>
+    | Parameters<typeof createMockClaimType>[0];
+}): MockCodec<PolymeshPrimitivesTransferComplianceTransferConditionExemptKey> => {
+  const { assetId, op, claimType } = key || {};
+
+  return createMockCodec<PolymeshPrimitivesTransferComplianceTransferConditionExemptKey>(
+    { assetId, op, claimType },
+    !key
+  );
 };

@@ -7707,6 +7707,38 @@ describe('transferConditionToTransferRestriction', () => {
     expect(() =>
       transferConditionToTransferRestriction(transferCondition, mockContext)
     ).toThrowError(expectedError);
+
+    transferCondition = dsMockUtils.createMockTransferCondition({
+      ClaimCount: [
+        dsMockUtils.createMockStatisticsStatClaim({ Accredited: dsMockUtils.createMockBool() }),
+        dsMockUtils.createMockIdentityId('someDid'),
+        dsMockUtils.createMockU64(),
+        dsMockUtils.createMockOption(),
+      ],
+    });
+
+    result = transferConditionToTransferRestriction(transferCondition, mockContext);
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: TransferRestrictionType.ClaimCount,
+      })
+    );
+
+    transferCondition = dsMockUtils.createMockTransferCondition({
+      ClaimOwnership: [
+        dsMockUtils.createMockStatisticsStatClaim({ Accredited: dsMockUtils.createMockBool() }),
+        dsMockUtils.createMockIdentityId('someDid'),
+        dsMockUtils.createMockPermill(),
+        dsMockUtils.createMockPermill(),
+      ],
+    });
+
+    result = transferConditionToTransferRestriction(transferCondition, mockContext);
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: TransferRestrictionType.ClaimPercentage,
+      })
+    );
   });
 });
 
@@ -8938,7 +8970,7 @@ describe('agentGroupToPermissionGroup', () => {
       dsMockUtils.cleanup();
     });
 
-    it('should return the type', () => {
+    it('should return Count', () => {
       const rawStat = {
         operationType: { type: 'Count' },
         claimIssuer: createMockOption(),
@@ -8947,6 +8979,39 @@ describe('agentGroupToPermissionGroup', () => {
       const result = meshStatToStatType(rawStat);
 
       expect(result).toEqual(StatType.Count);
+    });
+
+    it('should return Balance', () => {
+      const rawStat = {
+        operationType: { type: 'Balance' },
+        claimIssuer: createMockOption(),
+      } as unknown as PolymeshPrimitivesStatisticsStatType;
+
+      const result = meshStatToStatType(rawStat);
+
+      expect(result).toEqual(StatType.Balance);
+    });
+
+    it('should return ScopedCount', () => {
+      const rawStat = {
+        operationType: { type: 'Count' },
+        claimIssuer: createMockOption(dsMockUtils.createMockIdentityId()),
+      } as unknown as PolymeshPrimitivesStatisticsStatType;
+
+      const result = meshStatToStatType(rawStat);
+
+      expect(result).toEqual(StatType.ScopedCount);
+    });
+
+    it('should return ScopedBalance', () => {
+      const rawStat = {
+        operationType: { type: 'Balance' },
+        claimIssuer: createMockOption(dsMockUtils.createMockIdentityId()),
+      } as unknown as PolymeshPrimitivesStatisticsStatType;
+
+      const result = meshStatToStatType(rawStat);
+
+      expect(result).toEqual(StatType.ScopedBalance);
     });
   });
 

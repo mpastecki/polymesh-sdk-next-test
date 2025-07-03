@@ -39,7 +39,6 @@ import { entityMockUtils } from '~/testUtils/mocks';
 import { Mocked } from '~/testUtils/types';
 import {
   AccountBalance,
-  ActiveTransferRestrictions,
   AgentWithGroup,
   Asset,
   AssetDetails,
@@ -53,7 +52,6 @@ import {
   CorporateActionDefaultConfig,
   CorporateActionKind,
   CorporateActionTargets,
-  CountTransferRestriction,
   DistributionParticipant,
   DividendDistributionDetails,
   ExtrinsicData,
@@ -75,7 +73,6 @@ import {
   OfferingDetails,
   OfferingSaleStatus,
   OfferingTimingStatus,
-  PercentageTransferRestriction,
   PermissionedAccount,
   PermissionGroups,
   PermissionGroupType,
@@ -191,16 +188,6 @@ interface BaseAssetOptions extends EntityOptions {
 }
 
 interface FungibleAssetOptions extends BaseAssetOptions {
-  transferRestrictionsCountGet?: EntityGetter<ActiveTransferRestrictions<CountTransferRestriction>>;
-  transferRestrictionsPercentageGet?: EntityGetter<
-    ActiveTransferRestrictions<PercentageTransferRestriction>
-  >;
-  transferRestrictionsClaimCountGet?: EntityGetter<
-    ActiveTransferRestrictions<CountTransferRestriction>
-  >;
-  transferRestrictionsClaimPercentageGet?: EntityGetter<
-    ActiveTransferRestrictions<PercentageTransferRestriction>
-  >;
   corporateActionsGetAgents?: EntityGetter<Identity[]>;
   corporateActionsGetDefaultConfig?: EntityGetter<CorporateActionDefaultConfig>;
   checkpointsGetOne?: EntityGetter<Checkpoint>;
@@ -1090,18 +1077,6 @@ const MockFungibleAssetClass = createMockEntityClass<FungibleAssetOptions>(
       this.isFrozen = createEntityGetterMock(opts.isFrozen);
       this.transfers.canTransfer = createEntityGetterMock(opts.transfersCanTransfer);
       this.getIdentifiers = createEntityGetterMock(opts.getIdentifiers);
-      this.transferRestrictions.count.get = createEntityGetterMock(
-        opts.transferRestrictionsCountGet
-      );
-      this.transferRestrictions.percentage.get = createEntityGetterMock(
-        opts.transferRestrictionsPercentageGet
-      );
-      this.transferRestrictions.claimCount.get = createEntityGetterMock(
-        opts.transferRestrictionsClaimCountGet
-      );
-      this.transferRestrictions.claimPercentage.get = createEntityGetterMock(
-        opts.transferRestrictionsClaimPercentageGet
-      );
       this.corporateActions.getAgents = createEntityGetterMock(opts.corporateActionsGetAgents);
       this.corporateActions.getDefaultConfig = createEntityGetterMock(
         opts.corporateActionsGetDefaultConfig

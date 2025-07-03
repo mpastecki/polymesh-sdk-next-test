@@ -1016,7 +1016,7 @@ describe('authorization request validations', () => {
 
       const expectedError = new PolymeshError({
         code: ErrorCode.UnmetPrerequisite,
-        message: 'No asset exists with asset ID: "0x12341234123412341234123412341234"',
+        message: 'No asset exists with asset ID: "12341234-1234-1234-1234-123412341234"',
       });
 
       return expect(assertAuthorizationRequestValid(auth, mockContext)).rejects.toThrowError(

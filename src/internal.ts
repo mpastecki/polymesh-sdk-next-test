@@ -9,7 +9,6 @@ export { Procedure } from '~/base/Procedure';
 export { Entity } from '~/api/entities/Entity';
 export { Namespace } from '~/api/entities/Namespace';
 export { Authorizations } from '~/api/entities/common/namespaces/Authorizations';
-export { TransferRestrictionBase } from '~/api/entities/Asset/Fungible/TransferRestrictions/TransferRestrictionBase';
 export {
   consumeAddMultiSigSignerAuthorization,
   ConsumeAddMultiSigSignerAuthorizationParams,
@@ -79,15 +78,16 @@ export { moveFunds } from '~/api/procedures/moveFunds';
 export { setCustodian } from '~/api/procedures/setCustodian';
 export { redeemTokens } from '~/api/procedures/redeemTokens';
 export { redeemNft } from '~/api/procedures/redeemNft';
-export {
-  addTransferRestriction,
-  AddTransferRestrictionParams,
-} from '~/api/procedures/addTransferRestriction';
 export { launchOffering } from '~/api/procedures/launchOffering';
 export {
   setTransferRestrictions,
-  Storage as SetTransferRestrictionsStorage,
+  Params as SetTransferRestrictionParams,
 } from '~/api/procedures/setTransferRestrictions';
+export { setAssetStats, SetAssetStatParams } from '~/api/procedures/setAssetStats';
+export {
+  setTransferRestrictionsExemptions,
+  Params as SetTransferExemptionsParams,
+} from '~/api/procedures/setTransferRestrictionExemptions';
 export {
   toggleFreezeOffering,
   ToggleFreezeOfferingParams,
@@ -162,14 +162,6 @@ export { removeAssetMediators } from '~/api/procedures/removeAssetMediators';
 export { Storage as ModifyMultiSigStorage, modifyMultiSig } from '~/api/procedures/modifyMultiSig';
 export { removeMultiSigPayer } from '~/api/procedures/removeMultiSigPayer';
 export { setMultiSigAdmin } from '~/api/procedures/setMultiSigAdmin';
-export {
-  SetCountTransferRestrictionsParams,
-  SetPercentageTransferRestrictionsParams,
-  SetClaimCountTransferRestrictionsParams,
-  SetClaimPercentageTransferRestrictionsParams,
-} from '~/api/procedures/types';
-export { addAssetStat } from '~/api/procedures/addAssetStat';
-export { removeAssetStat } from '~/api/procedures/removeAssetStat';
 export { setVenueFiltering } from '~/api/procedures/setVenueFiltering';
 export { registerCustomClaimType } from '~/api/procedures/registerCustomClaimType';
 export { toggleAssetPreApproval } from '~/api/procedures/toggleAssetPreApproval';

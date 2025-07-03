@@ -1,95 +1,214 @@
+import { setTransferRestrictionsExemptions } from '~/api/procedures/setTransferRestrictionExemptions';
 import {
-  PolymeshPrimitivesStatisticsStat1stKey,
-  PolymeshPrimitivesStatisticsStat2ndKey,
-} from '@polkadot/types/lookup';
-
-import { TransferRestrictionValues } from '~/api/entities/Asset/types';
-import { TransferRestriction } from '~/api/procedures/types';
-import { Context, FungibleAsset, Namespace } from '~/internal';
+  Context,
+  FungibleAsset,
+  Identity,
+  Namespace,
+  SetAssetStatParams,
+  setAssetStats,
+  SetTransferExemptionsParams,
+  SetTransferRestrictionParams,
+  setTransferRestrictions,
+} from '~/internal';
 import {
-  assetToMeshAssetId,
-  transferConditionToTransferRestriction,
-  transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey,
-  transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey,
-  u128ToBigNumber,
+  ActiveTransferRestrictions,
+  AssetStat,
+  ProcedureMethod,
+  SetTransferRestrictionStatParams,
+  TransferRestrictionExemption,
+  TransferRestrictionExemptionParams,
+  TransferRestrictionParams,
+} from '~/types';
+import {
+  assetComplianceToTransferRestrictions,
+  assetStatToStat,
+  exemptionToTransferExemption,
+  identityIdToString,
+  stringToAssetId,
 } from '~/utils/conversion';
-import { requestMulti } from '~/utils/internal';
-
-import { ClaimCount } from './ClaimCount';
-import { ClaimPercentage } from './ClaimPercentage';
-import { Count } from './Count';
-import { Percentage } from './Percentage';
+import { createProcedureMethod } from '~/utils/internal';
 
 /**
- * Handles all Asset Transfer Restrictions related functionality
+ * Handles all Transfer Restriction related functionality
  */
 export class TransferRestrictions extends Namespace<FungibleAsset> {
-  public count: Count;
-  public percentage: Percentage;
-  public claimCount: ClaimCount;
-  public claimPercentage: ClaimPercentage;
-
   /**
    * @hidden
    */
   constructor(parent: FungibleAsset, context: Context) {
     super(parent, context);
 
-    this.count = new Count(parent, context);
-    this.percentage = new Percentage(parent, context);
-    this.claimCount = new ClaimCount(parent, context);
-    this.claimPercentage = new ClaimPercentage(parent, context);
+    this.setRestrictions = createProcedureMethod<
+      TransferRestrictionParams,
+      SetTransferRestrictionParams,
+      void
+    >(
+      {
+        getProcedureAndArgs: args => [setTransferRestrictions, { ...args, asset: parent }],
+      },
+      context
+    );
+
+    this.setStats = createProcedureMethod<
+      SetTransferRestrictionStatParams,
+      SetAssetStatParams,
+      void
+    >(
+      {
+        getProcedureAndArgs: args => [
+          setAssetStats,
+          {
+            ...args,
+            asset: parent,
+          },
+        ],
+      },
+      context
+    );
+
+    this.addExemptions = createProcedureMethod<
+      TransferRestrictionExemptionParams,
+      SetTransferExemptionsParams,
+      void
+    >(
+      {
+        getProcedureAndArgs: args => [
+          setTransferRestrictionsExemptions,
+          {
+            ...args,
+            asset: parent,
+            isExempt: true,
+          },
+        ],
+      },
+      context
+    );
+
+    this.removeExemptions = createProcedureMethod<
+      TransferRestrictionExemptionParams,
+      SetTransferExemptionsParams,
+      void
+    >(
+      {
+        getProcedureAndArgs: args => [
+          setTransferRestrictionsExemptions,
+          {
+            ...args,
+            asset: parent,
+            isExempt: false,
+          },
+        ],
+      },
+      context
+    );
   }
 
   /**
-   * Get the values of all active transfer restrictions for this Asset
-   * @returns an array of objects containing the values of all active transfer restrictions for this Asset
+   * Get all current restrictions for this asset
    */
-  public async getValues(): Promise<TransferRestrictionValues[]> {
+  public async getRestrictions(): Promise<ActiveTransferRestrictions> {
     const {
-      parent,
       context,
       context: {
         polymeshApi: {
           query: { statistics },
         },
       },
+      parent,
     } = this;
 
-    const rawAssetId = assetToMeshAssetId(parent, context);
+    const rawAssetId = stringToAssetId(parent.id, context);
+    const result = await statistics.assetTransferCompliances(rawAssetId);
 
-    const { requirements } = await statistics.assetTransferCompliances(rawAssetId);
+    return assetComplianceToTransferRestrictions(result, context);
+  }
 
-    const queries: [
-      typeof statistics.assetStats,
-      [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
-    ][] = [];
+  /**
+   * Returns active asset stats
+   */
+  public async getStats(): Promise<AssetStat[]> {
+    const {
+      context,
+      context: {
+        polymeshApi: {
+          query: { statistics },
+        },
+      },
+      parent,
+    } = this;
 
-    const restrictions: TransferRestriction[] = [];
+    const rawAssetId = stringToAssetId(parent.id, context);
+    const rawStats = await statistics.activeAssetStats(rawAssetId);
 
-    requirements.forEach(requirement => {
-      const restriction = transferConditionToTransferRestriction(requirement, context);
+    const stats = [...rawStats].map(stat => assetStatToStat(stat));
 
-      const stat1stKey = transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
-        rawAssetId,
-        restriction,
-        context
-      );
-      const stat2ndKey = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
-        restriction,
-        context
-      );
+    return stats;
+  }
 
-      queries.push([statistics.assetStats, [stat1stKey, stat2ndKey]]);
+  /**
+   * Returns identities with exemptions
+   */
+  public async getExemptions(): Promise<TransferRestrictionExemption[]> {
+    const {
+      context,
+      context: {
+        polymeshApi: {
+          query: { statistics },
+        },
+      },
+      parent,
+    } = this;
 
-      restrictions.push(restriction);
+    const rawAssetId = stringToAssetId(parent.id, context);
+    const rawExemptions = await statistics.transferConditionExemptEntities.entries(rawAssetId);
+
+    const exemptions = rawExemptions.map(([exemption]) => {
+      const [rawExemptKey, rawIdentity] = exemption.args;
+      const exemptKey = exemptionToTransferExemption(rawExemptKey);
+      const did = identityIdToString(rawIdentity);
+
+      return {
+        exemptKey,
+        identity: new Identity({ did }, context),
+      };
     });
 
-    const values = await requestMulti(context, queries);
-
-    return restrictions.map((restriction, index) => ({
-      restriction,
-      value: u128ToBigNumber(values[index]),
-    }));
+    return exemptions;
   }
+
+  /**
+   * Sets all Transfer Restrictions on this Asset
+   *
+   * Transfer Restrictions control ownership requirements based on investor statistics.
+   * For example TransferRestrictionType.Count can limit the number of investors.
+   * TransferRestrictionType.Percentage can limit the maximum percentage an individual investor may hold.
+   *
+   * @note the relevant stat must be enabled before the restriction can be created
+   *
+   */
+  public setRestrictions: ProcedureMethod<TransferRestrictionParams, void>;
+
+  /**
+   * Enables statistics on an Asset.
+   *
+   * Transfer Restrictions require the relevant stat to be enabled before they can be set.
+   *
+   * @note Count based stats must be given an initial value. The counter is only updated automatically with each transfer of tokens after the stat has been enabled.
+   * As such the initial value for the stat should be passed in, which can be fetched with {@link api/entities/Asset/Fungible/TransferRestrictions/Count!Count.investorCount | Count.investorCount }
+   *
+   */
+  public setStats: ProcedureMethod<SetTransferRestrictionStatParams, void>;
+
+  /**
+   * Exempt identities from Transfer Restrictions. These identities will not be subject
+   * to Transfer Restriction rules
+   */
+  public addExemptions: ProcedureMethod<TransferRestrictionExemptionParams, void>;
+
+  /**
+   * Remove identities from Transfer Restriction exemptions
+   *
+   * Given identities will no longer be exempt from Transfer Restrictions
+   */
+  public removeExemptions: ProcedureMethod<TransferRestrictionExemptionParams, void>;
 }

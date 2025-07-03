@@ -11,11 +11,14 @@ import {
 } from '~/internal';
 import { EventIdEnum } from '~/middleware/types';
 import {
+  ClaimType,
   Compliance,
   EventIdentifier,
   MetadataDetails,
   MetadataType,
   Nft,
+  StatClaimIssuer,
+  StatType,
   TransferRestriction,
   Venue,
 } from '~/types';
@@ -403,4 +406,43 @@ export interface TransferRestrictionValues {
    * The current value of the transfer restriction
    */
   value: BigNumber;
+}
+
+/**
+ * The active Transfer Restrictions enabled on an Asset
+ */
+export interface ActiveTransferRestrictions {
+  paused: boolean;
+  restrictions: TransferRestriction[];
+}
+
+/**
+ * An enabled statistic on an Asset
+ */
+export interface AssetStat {
+  type: StatType;
+  claimIssuer?: StatClaimIssuer;
+}
+
+/**
+ * An identifier that specifies the exact Transfer Restriction for an exemption
+ */
+export interface TransferExemptKey {
+  assetId: string;
+  opType: StatType;
+  claimType: ClaimType | null;
+}
+
+/**
+ * Identities that are exempt from Transfer Restrictions.
+ *
+ * @note if these entities are removed from exemptions but are
+ * in violation of any Transfer Restrictions then they will only
+ * be able to trade in a manner that brings them more inline. e.g.
+ * Exceeding a percentage restriction means tokens can only be sent
+ * and not received
+ */
+export interface TransferRestrictionExemption {
+  identity: Identity;
+  exemptKey: TransferExemptKey;
 }

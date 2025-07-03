@@ -39,7 +39,6 @@ import {
   OptionalArgsProcedureMethod,
   PermissionedAccount,
   ProcedureMethod,
-  RemoveAssetStatParams,
   ScopedClaim,
   ScopeType,
   StatType,
@@ -77,10 +76,9 @@ import {
   assertIsPositive,
   assertMetaLength,
   assertNoPendingAuthorizationExists,
+  assertStatIsSet,
   assertTickerValid,
   calculateNextKey,
-  compareStatsToInput,
-  compareTransferRestrictionToInput,
   compareTransferRestrictionToStat,
   createClaim,
   createProcedureMethod,
@@ -1515,317 +1513,6 @@ describe('neededStatTypeForRestrictionInput', () => {
   });
 });
 
-describe('compareTransferRestrictionToInput', () => {
-  beforeAll(() => {
-    dsMockUtils.initMocks();
-  });
-
-  afterEach(() => {
-    dsMockUtils.reset();
-  });
-
-  afterAll(() => {
-    dsMockUtils.cleanup();
-  });
-
-  it('should return true when the input matches the TransferRestriction type', () => {
-    const countTransferRestriction = dsMockUtils.createMockTransferCondition({
-      MaxInvestorCount: dsMockUtils.createMockU64(new BigNumber(10)),
-    });
-    let result = compareTransferRestrictionToInput(countTransferRestriction, {
-      type: TransferRestrictionType.Count,
-      value: new BigNumber(10),
-    });
-    expect(result).toEqual(true);
-
-    const percentTransferRestriction = dsMockUtils.createMockTransferCondition({
-      MaxInvestorOwnership: dsMockUtils.createMockPermill(new BigNumber(100000)),
-    });
-
-    result = compareTransferRestrictionToInput(percentTransferRestriction, {
-      type: TransferRestrictionType.Percentage,
-      value: new BigNumber(10),
-    });
-    expect(result).toEqual(true);
-
-    const claimCountTransferRestriction = dsMockUtils.createMockTransferCondition({
-      ClaimCount: [
-        dsMockUtils.createMockStatisticsStatClaim({ Accredited: dsMockUtils.createMockBool(true) }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockU64(new BigNumber(10)),
-        dsMockUtils.createMockOption(),
-      ],
-    });
-
-    result = compareTransferRestrictionToInput(claimCountTransferRestriction, {
-      value: {
-        min: new BigNumber(10),
-        claim: { type: ClaimType.Accredited, accredited: true },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimCount,
-    });
-
-    expect(result).toEqual(true);
-
-    const claimCountTransferRestrictionWithMax = dsMockUtils.createMockTransferCondition({
-      ClaimCount: [
-        dsMockUtils.createMockStatisticsStatClaim({ Affiliate: dsMockUtils.createMockBool(true) }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockU64(new BigNumber(10)),
-        dsMockUtils.createMockOption(dsMockUtils.createMockU64(new BigNumber(20))),
-      ],
-    });
-
-    result = compareTransferRestrictionToInput(claimCountTransferRestrictionWithMax, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(20),
-        claim: { type: ClaimType.Affiliate, affiliate: true },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimCount,
-    });
-
-    expect(result).toEqual(true);
-
-    const claimPercentageTransferRestriction = dsMockUtils.createMockTransferCondition({
-      ClaimOwnership: [
-        dsMockUtils.createMockStatisticsStatClaim({
-          Jurisdiction: dsMockUtils.createMockOption(
-            dsMockUtils.createMockCountryCode(CountryCode.Ca)
-          ),
-        }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockPermill(new BigNumber(100000)),
-        dsMockUtils.createMockPermill(new BigNumber(200000)),
-      ],
-    });
-
-    result = compareTransferRestrictionToInput(claimPercentageTransferRestriction, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(20),
-        claim: { type: ClaimType.Jurisdiction, countryCode: CountryCode.Ca },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimPercentage,
-    });
-
-    expect(result).toEqual(true);
-  });
-
-  it('should return false if things do not match', () => {
-    const claimCountTransferRestrictionWithMax = dsMockUtils.createMockTransferCondition({
-      ClaimCount: [
-        dsMockUtils.createMockStatisticsStatClaim({ Affiliate: dsMockUtils.createMockBool(true) }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockU64(new BigNumber(10)),
-        dsMockUtils.createMockOption(dsMockUtils.createMockU64(new BigNumber(20))),
-      ],
-    });
-
-    let result = compareTransferRestrictionToInput(claimCountTransferRestrictionWithMax, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(21),
-        claim: { type: ClaimType.Affiliate, affiliate: true },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimCount,
-    });
-
-    expect(result).toEqual(false);
-
-    const claimPercentageTransferRestrictionNoMax = dsMockUtils.createMockTransferCondition({
-      ClaimCount: [
-        dsMockUtils.createMockStatisticsStatClaim({
-          Accredited: dsMockUtils.createMockBool(true),
-        }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockU64(new BigNumber(10)),
-        dsMockUtils.createMockOption(),
-      ],
-    });
-
-    result = compareTransferRestrictionToInput(claimPercentageTransferRestrictionNoMax, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(20),
-        claim: { type: ClaimType.Affiliate, affiliate: true },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimCount,
-    });
-
-    expect(result).toEqual(false);
-
-    const claimPercentageTransferRestriction = dsMockUtils.createMockTransferCondition({
-      ClaimOwnership: [
-        dsMockUtils.createMockStatisticsStatClaim({
-          Jurisdiction: dsMockUtils.createMockOption(
-            dsMockUtils.createMockCountryCode(CountryCode.Ca)
-          ),
-        }),
-        dsMockUtils.createMockIdentityId('someDid'),
-        dsMockUtils.createMockPermill(new BigNumber(100000)),
-        dsMockUtils.createMockPermill(new BigNumber(200000)),
-      ],
-    });
-
-    result = compareTransferRestrictionToInput(claimPercentageTransferRestriction, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(21),
-        claim: { type: ClaimType.Jurisdiction, countryCode: CountryCode.Ca },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimPercentage,
-    });
-
-    expect(result).toEqual(false);
-
-    result = compareTransferRestrictionToInput(claimPercentageTransferRestriction, {
-      value: {
-        min: new BigNumber(10),
-        max: new BigNumber(21),
-        claim: { type: ClaimType.Jurisdiction, countryCode: CountryCode.Ca },
-        issuer: entityMockUtils.getIdentityInstance({ did: 'someDid' }),
-      },
-      type: TransferRestrictionType.ClaimPercentage,
-    });
-
-    expect(result).toEqual(false);
-  });
-});
-
-describe('compareStatsToInput', () => {
-  const did = 'someDid';
-  const issuer = entityMockUtils.getIdentityInstance({ did });
-  const issuerId = dsMockUtils.createMockIdentityId(did);
-  const asset = entityMockUtils.getFungibleAssetInstance({
-    assetId: '0x12341234123412341234123412341234',
-  });
-
-  it('should return true if input matches stat', () => {
-    const countStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
-      claimIssuer: dsMockUtils.createMockOption(),
-    });
-
-    let args: RemoveAssetStatParams = {
-      type: StatType.Count,
-      asset,
-    };
-
-    let result = compareStatsToInput(countStat, args);
-    expect(result).toEqual(true);
-
-    const percentStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
-      claimIssuer: dsMockUtils.createMockOption(),
-    });
-    args = { type: StatType.Balance, asset };
-    result = compareStatsToInput(percentStat, args);
-    expect(result).toEqual(true);
-
-    const claimCountStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
-      claimIssuer: dsMockUtils.createMockOption([
-        dsMockUtils.createMockClaimType(ClaimType.Affiliate),
-        issuerId,
-      ]),
-    });
-    args = {
-      type: StatType.ScopedCount,
-      issuer,
-      claimType: ClaimType.Affiliate,
-      asset,
-    };
-    result = compareStatsToInput(claimCountStat, args);
-    expect(result).toEqual(true);
-
-    const claimPercentageStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
-      claimIssuer: dsMockUtils.createMockOption([
-        dsMockUtils.createMockClaimType(ClaimType.Affiliate),
-        issuerId,
-      ]),
-    });
-    args = {
-      type: StatType.ScopedBalance,
-      issuer,
-      claimType: ClaimType.Affiliate,
-      asset,
-    };
-    result = compareStatsToInput(claimPercentageStat, args);
-    expect(result).toEqual(true);
-  });
-
-  it('should return false if input does not match the stat', () => {
-    const countStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
-      claimIssuer: dsMockUtils.createMockOption(),
-    });
-
-    let args: RemoveAssetStatParams = {
-      type: StatType.Balance,
-      asset,
-    };
-    let result = compareStatsToInput(countStat, args);
-    expect(result).toEqual(false);
-
-    const percentStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
-      claimIssuer: dsMockUtils.createMockOption(),
-    });
-    args = {
-      type: StatType.ScopedBalance,
-      issuer,
-      claimType: ClaimType.Accredited,
-      asset,
-    };
-    result = compareStatsToInput(percentStat, args);
-    expect(result).toEqual(false);
-
-    const claimCountStat = dsMockUtils.createMockStatisticsStatType({
-      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
-      claimIssuer: dsMockUtils.createMockOption([
-        dsMockUtils.createMockClaimType(ClaimType.Jurisdiction),
-        issuerId,
-      ]),
-    });
-    args = {
-      type: StatType.ScopedCount,
-      issuer,
-      claimType: ClaimType.Affiliate,
-      asset,
-    };
-    result = compareStatsToInput(claimCountStat, args);
-    expect(result).toEqual(false);
-
-    args = {
-      type: StatType.ScopedCount,
-      issuer: entityMockUtils.getIdentityInstance({ did: 'differentDid' }),
-      claimType: ClaimType.Jurisdiction,
-      asset,
-    };
-    result = compareStatsToInput(claimCountStat, args);
-    expect(result).toEqual(false);
-
-    result = compareStatsToInput(percentStat, args);
-    expect(result).toEqual(false);
-
-    args = {
-      type: StatType.Count,
-      asset,
-    };
-
-    result = compareStatsToInput(claimCountStat, args);
-    expect(result).toEqual(false);
-  });
-});
-
 describe('compareTransferRestrictionToStat', () => {
   beforeAll(() => {
     dsMockUtils.initMocks();
@@ -2981,5 +2668,19 @@ describe('getCorporateActionWithDescription', () => {
     return expect(() => getCorporateActionWithDescription(asset, id, mockContext)).rejects.toThrow(
       'The CorporateAction does not exist'
     );
+  });
+});
+
+describe('assertStatIsSet', () => {
+  it('should throw an error', () => {
+    const current = dsMockUtils.createMockBtreeSet<PolymeshPrimitivesStatisticsStatType>();
+    const needed = dsMockUtils.createMockStatisticsStatType();
+
+    const expectedError = new PolymeshError({
+      code: ErrorCode.UnmetPrerequisite,
+      message: 'The appropriate stat type for this restriction is not set',
+    });
+
+    expect(() => assertStatIsSet(current, needed)).toThrow(expectedError);
   });
 });

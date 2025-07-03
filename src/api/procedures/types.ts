@@ -21,18 +21,15 @@ import {
   Venue,
 } from '~/internal';
 import {
-  ActiveTransferRestrictions,
   AddCountStatInput,
   AssetDocument,
   CheckPermissionsResult,
   CheckRolesResult,
   ClaimCountStatInput,
-  ClaimCountTransferRestriction,
-  ClaimPercentageTransferRestriction,
   ClaimTarget,
+  ClaimType,
   CorporateActionKind,
   CorporateActionTargets,
-  CountTransferRestriction,
   InputCaCheckpoint,
   InputCondition,
   InputStatClaim,
@@ -47,7 +44,6 @@ import {
   MetadataValueDetails,
   NftCollection,
   OfferingTier,
-  PercentageTransferRestriction,
   PermissionedAccount,
   PermissionsLike,
   PortfolioLike,
@@ -402,44 +398,11 @@ export enum TxGroup {
   StoManagement = 'StoManagement',
 }
 
-export type AddRestrictionParams<T> = Omit<
-  T extends TransferRestrictionType.Count
-    ? AddCountTransferRestrictionParams
-    : T extends TransferRestrictionType.Percentage
-    ? AddPercentageTransferRestrictionParams
-    : T extends TransferRestrictionType.ClaimCount
-    ? AddClaimCountTransferRestrictionParams
-    : AddClaimPercentageTransferRestrictionParams,
-  'type'
->;
-
-export type SetRestrictionsParams<T> = Omit<
-  T extends TransferRestrictionType.Count
-    ? SetCountTransferRestrictionsParams
-    : T extends TransferRestrictionType.Percentage
-    ? SetPercentageTransferRestrictionsParams
-    : T extends TransferRestrictionType.ClaimCount
-    ? SetClaimCountTransferRestrictionsParams
-    : SetClaimPercentageTransferRestrictionsParams,
-  'type'
->;
-
-export type GetTransferRestrictionReturnType<T> = ActiveTransferRestrictions<
-  T extends TransferRestrictionType.Count
-    ? CountTransferRestriction
-    : T extends TransferRestrictionType.Percentage
-    ? PercentageTransferRestriction
-    : T extends TransferRestrictionType.ClaimCount
-    ? ClaimCountTransferRestriction
-    : ClaimPercentageTransferRestriction
->;
-
-export type RemoveAssetStatParams = { asset: FungibleAsset } & (
-  | RemoveCountStatParams
-  | RemoveBalanceStatParams
-  | RemoveScopedCountParams
-  | RemoveScopedBalanceParams
-);
+export type SetTransferRestrictionParams =
+  | CountTransferRestrictionInput
+  | PercentageTransferRestrictionInput
+  | ClaimCountTransferRestrictionInput
+  | ClaimPercentageTransferRestrictionInput;
 
 export type AddCountStatParams = AddCountStatInput & {
   type: StatType.Count;
@@ -464,32 +427,14 @@ export type AddAssetStatParams = { asset: FungibleAsset } & (
   | AddClaimPercentageStatParams
 );
 
-export type RemoveCountStatParams = {
-  type: StatType.Count;
+export type SetTransferRestrictionStatParams = {
+  stats: (
+    | AddCountStatParams
+    | AddPercentageStatParams
+    | AddClaimCountStatParams
+    | AddClaimPercentageStatParams
+  )[];
 };
-
-export type RemoveBalanceStatParams = {
-  type: StatType.Balance;
-};
-
-export type RemoveScopedCountParams = StatClaimIssuer & {
-  type: StatType.ScopedCount;
-};
-
-export type RemoveScopedBalanceParams = StatClaimIssuer & {
-  type: StatType.ScopedBalance;
-};
-
-export type SetAssetStatParams<T> = Omit<
-  T extends TransferRestrictionType.Count
-    ? AddCountStatParams
-    : T extends TransferRestrictionType.Percentage
-    ? AddPercentageStatParams
-    : T extends TransferRestrictionType.ClaimCount
-    ? AddClaimCountStatParams
-    : AddClaimPercentageStatParams,
-  'type'
->;
 
 export enum TransferRestrictionType {
   Count = 'Count',
@@ -527,60 +472,80 @@ export type TransferRestriction =
       value: ClaimPercentageRestrictionValue;
     };
 
-interface TransferRestrictionInputBase {
-  /**
-   * array of Identities (or DIDs) that are exempted from the Restriction
-   */
-  exemptedIdentities?: (Identity | string)[];
-  /**
-   * (optional) Set to `true` to skip stat is enabled check, useful for batch transactions
-   */
-  skipStatIsEnabledCheck?: boolean;
+export interface TransferRestrictionInputCount {
+  count: BigNumber;
+  type: TransferRestrictionType.Count;
 }
 
-export interface CountTransferRestrictionInput extends TransferRestrictionInputBase {
+export interface CountTransferRestrictionInput {
   /**
    * limit on the amount of different (unique) investors that can hold the Asset at once
    */
   count: BigNumber;
+  type: TransferRestrictionType.Count;
 }
 
-export interface PercentageTransferRestrictionInput extends TransferRestrictionInputBase {
+export interface PercentageTransferRestrictionInput {
   /**
    * maximum percentage (0-100) of the total supply of the Asset that can be held by a single investor at once
    */
   percentage: BigNumber;
+  type: TransferRestrictionType.Percentage;
 }
 
-export interface ClaimCountTransferRestrictionInput extends TransferRestrictionInputBase {
+export interface ClaimCountTransferRestrictionInput {
   min: BigNumber;
   max?: BigNumber;
   issuer: Identity;
   claim: InputStatClaim;
+  type: TransferRestrictionType.ClaimCount;
 }
-export interface ClaimPercentageTransferRestrictionInput extends TransferRestrictionInputBase {
+export interface ClaimPercentageTransferRestrictionInput {
   min: BigNumber;
   max: BigNumber;
   issuer: Identity;
   claim: InputStatClaim;
+  type: TransferRestrictionType.ClaimPercentage;
 }
+
+export interface TransferRestrictionInputPercentage {
+  percentage: BigNumber;
+  type: TransferRestrictionType.Percentage;
+}
+
+export interface TransferRestrictionClaimCountInput {
+  min: BigNumber;
+  max?: BigNumber;
+  issuer: Identity;
+  claim: InputStatClaim;
+  type: TransferRestrictionType.ClaimCount;
+}
+export interface TransferRestrictionInputClaimPercentage {
+  min: BigNumber;
+  max: BigNumber;
+  issuer: Identity;
+  claim: InputStatClaim;
+  type: TransferRestrictionType.ClaimPercentage;
+}
+
+export type TransferRestrictionParams = {
+  restrictions: (
+    | TransferRestrictionInputCount
+    | TransferRestrictionInputPercentage
+    | TransferRestrictionClaimCountInput
+    | TransferRestrictionInputClaimPercentage
+  )[];
+};
 
 export type AddCountTransferRestrictionParams = CountTransferRestrictionInput & {
   type: TransferRestrictionType.Count;
 };
 
-export type AddPercentageTransferRestrictionParams = PercentageTransferRestrictionInput & {
-  type: TransferRestrictionType.Percentage;
+export type TransferRestrictionExemptionParams = {
+  type: StatType;
+  identities: (Identity | string)[];
+  claim?: ClaimType;
 };
-
-export type AddClaimCountTransferRestrictionParams = ClaimCountTransferRestrictionInput & {
-  type: TransferRestrictionType.ClaimCount;
-};
-
-export type AddClaimPercentageTransferRestrictionParams =
-  ClaimPercentageTransferRestrictionInput & {
-    type: TransferRestrictionType.ClaimPercentage;
-  };
 
 export interface SetCountTransferRestrictionsParams {
   /**
@@ -588,14 +553,6 @@ export interface SetCountTransferRestrictionsParams {
    */
   restrictions: CountTransferRestrictionInput[];
   type: TransferRestrictionType.Count;
-}
-
-export interface SetPercentageTransferRestrictionsParams {
-  /**
-   * array of Percentage Transfer Restrictions with their corresponding exemptions (if applicable)
-   */
-  restrictions: PercentageTransferRestrictionInput[];
-  type: TransferRestrictionType.Percentage;
 }
 
 export interface SetClaimCountTransferRestrictionsParams {

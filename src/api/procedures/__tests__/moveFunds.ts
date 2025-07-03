@@ -422,7 +422,7 @@ describe('moveFunds procedure', () => {
 
     const expectedError = new PolymeshError({
       code: ErrorCode.DataUnavailable,
-      message: `No asset exists with asset ID: "${assetId}"`,
+      message: 'No asset exists with asset ID: "12341234-1234-1234-1234-123412341234"',
     });
 
     await expect(
