@@ -6068,9 +6068,7 @@ export function transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
   const { type, value } = restriction;
 
   if (type === TransferRestrictionType.Count || type === TransferRestrictionType.Percentage) {
-    return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
-      type: 'NoClaimStat',
-    });
+    return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', 'NoClaimStat');
   }
 
   let claimValue: boolean | CountryCode | undefined;

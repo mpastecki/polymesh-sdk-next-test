@@ -12370,9 +12370,7 @@ describe('transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey and transf
 
   it('should convert a Count or Percentage TransferRestriction to a PolymeshPrimitivesStatisticsStat2ndKey', () => {
     when(mockContext.createType)
-      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
-        type: 'NoClaimStat',
-      })
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', 'NoClaimStat')
       .mockReturnValue(mockStat2ndKey);
 
     let result = transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
