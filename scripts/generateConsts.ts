@@ -19,14 +19,19 @@ function assembleCountryCodes() {
   let countryCodeFunctions = `/**
  * @hidden
  */
-export function countryCodeToMeshCountryCode(countryCode: CountryCode, context: Context): PolymeshPrimitivesJurisdictionCountryCode {
+export function countryCodeToMeshCountryCode(
+  countryCode: CountryCode,
+  context: Context
+): PolymeshPrimitivesJurisdictionCountryCode {
   return context.createType('PolymeshPrimitivesJurisdictionCountryCode', countryCode);
 }
 
 /**
  * @hidden
  */
-export function meshCountryCodeToCountryCode(meshCountryCode: PolymeshPrimitivesJurisdictionCountryCode): CountryCode {`;
+export function meshCountryCodeToCountryCode(
+  meshCountryCode: PolymeshPrimitivesJurisdictionCountryCode
+): CountryCode {`;
 
   countryCodes.forEach((code, index) => {
     const isLast = index === countryCodes.length - 1;
@@ -38,6 +43,8 @@ export function meshCountryCodeToCountryCode(meshCountryCode: PolymeshPrimitives
       countryCodeFunctions = `${countryCodeFunctions}\n  if (meshCountryCode.is${code}) {\n    ${returnStatement};\n  }\n`;
     }
   });
+
+  countryCodeFunctions = `${countryCodeFunctions}\n`;
 
   return {
     countryCodeFunctions,
