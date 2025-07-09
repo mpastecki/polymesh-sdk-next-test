@@ -13,6 +13,7 @@ import { EventIdEnum } from '~/middleware/types';
 import {
   ClaimType,
   Compliance,
+  CountryCode,
   EventIdentifier,
   MetadataDetails,
   MetadataType,
@@ -396,14 +397,66 @@ export interface HeldNfts {
   nfts: Nft[];
 }
 
-/**
- * A Transfer Restriction along with its current value
- */
-export interface TransferRestrictionValues {
-  restriction: TransferRestriction;
+export type AccreditedValue = {
+  /**
+   * The count or percentage of Asset holders that are accredited
+   */
+  accredited: BigNumber;
 
   /**
-   * The current value of the transfer restriction
+   * The count or percentage of Asset holders that are not accredited
+   */
+  nonAccredited: BigNumber;
+};
+
+export type AffiliateValue = {
+  /**
+   * The count or percentage of Asset holders that are affiliates
+   */
+  affiliate: BigNumber;
+
+  /**
+   * The count or percentage of Asset holders that are not affiliates
+   */
+  nonAffiliate: BigNumber;
+};
+
+export type JurisdictionValue = {
+  /**
+   * The country code of the jurisdiction
+   * @note null if the jurisdiction is not specified
+   */
+  countryCode: CountryCode | null;
+
+  /**
+   * The count or percentage of Asset holders with the jurisdiction
+   */
+  count: BigNumber;
+};
+
+/**
+ * Asset Stat along with its current value
+ */
+export interface TransferRestrictionStatValues {
+  /**
+   * The claim of the stat
+   * @note for scoped stats, this is the claim of the stat
+   * @note for count stats, this is undefined
+   */
+  claim?: {
+    issuer: Identity;
+    claimType: ClaimType;
+    value: AccreditedValue | AffiliateValue | JurisdictionValue[];
+  };
+
+  /**
+   * The type of the stat
+   */
+  type: StatType;
+  /**
+   * The total value of of the Asset Stat
+   * @note for scoped stats, this is the total value of all claims
+   * @note for count stats, this is the value of the stat
    */
   value: BigNumber;
 }

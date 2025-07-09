@@ -569,7 +569,7 @@ export type ClaimCountStatInput =
   | {
       issuer: Identity;
       claimType: ClaimType.Jurisdiction;
-      value: { countryCode: CountryCode; count: BigNumber }[];
+      value: { countryCode: CountryCode | undefined; count: BigNumber }[];
     };
 
 export interface ScheduleWithDetails {

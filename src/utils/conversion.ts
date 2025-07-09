@@ -4290,7 +4290,7 @@ export function transferRestrictionTypeToStatOpType(
 export function createStat2ndKey(
   type: 'NoClaimStat' | StatClaimType,
   context: Context,
-  claimStat?: 'yes' | 'no' | CountryCode
+  claimStat?: 'yes' | 'no' | CountryCode | undefined
 ): PolymeshPrimitivesStatisticsStat2ndKey {
   if (type === 'NoClaimStat') {
     return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', type);
@@ -5864,62 +5864,31 @@ export function meshBallotDetailsToCorporateBallotDetails(
 /**
  * @hidden
  */
-export function transferRestrictionToPolymeshPrimitivesStatisticsStat1stKey(
+export function getStat1stKey(
   rawAssetId: PolymeshPrimitivesAssetAssetId,
-  restriction: TransferRestriction,
+  statType: PolymeshPrimitivesStatisticsStatType,
   context: Context
 ): PolymeshPrimitivesStatisticsStat1stKey {
-  const { type, value } = restriction;
-
-  const operationType = transferRestrictionTypeToStatOpType(type, context);
-
-  if (type === TransferRestrictionType.Count || type === TransferRestrictionType.Percentage) {
-    return context.createType('PolymeshPrimitivesStatisticsStat1stKey', {
-      assetId: rawAssetId,
-      statType: context.createType('PolymeshPrimitivesStatisticsStatType', {
-        operationType,
-        claimIssuer: undefined,
-      }),
-    });
-  }
-
   return context.createType('PolymeshPrimitivesStatisticsStat1stKey', {
     assetId: rawAssetId,
-    statType: context.createType('PolymeshPrimitivesStatisticsStatType', {
-      operationType,
-      claimIssuer: [
-        claimTypeToMeshClaimType(value.claim.type, context),
-        stringToIdentityId(value.issuer.did, context),
-      ],
-    }),
+    statType,
   });
 }
 
 /**
  * @hidden
  */
-export function transferRestrictionToPolymeshPrimitivesStatisticsStat2ndKey(
-  restriction: TransferRestriction,
-  context: Context
+export function getStat2ndKey(
+  context: Context,
+  claimType?: ClaimType,
+  claimValue?: boolean | CountryCode
 ): PolymeshPrimitivesStatisticsStat2ndKey {
-  const { type, value } = restriction;
-
-  if (type === TransferRestrictionType.Count || type === TransferRestrictionType.Percentage) {
+  if (!claimType) {
     return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', 'NoClaimStat');
   }
 
-  let claimValue: boolean | CountryCode | undefined;
-
-  if (value.claim.type === ClaimType.Accredited) {
-    claimValue = value.claim.accredited;
-  } else if (value.claim.type === ClaimType.Affiliate) {
-    claimValue = value.claim.affiliate;
-  } else if (value.claim.type === ClaimType.Jurisdiction) {
-    claimValue = value.claim.countryCode;
-  }
-
   return context.createType('PolymeshPrimitivesStatisticsStat2ndKey', {
-    claim: { [value.claim.type]: claimValue },
+    claim: { [claimType]: claimValue },
   });
 }
 
