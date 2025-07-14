@@ -398,42 +398,43 @@ export interface HeldNfts {
   nfts: Nft[];
 }
 
-export type AccreditedValue = {
+/**
+ * For all claim types except Jurisdiction - tracks holders with and without the claim
+ */
+export type ClaimValue = {
   /**
-   * The count or percentage of Asset holders that are accredited
+   * The number of individual Asset holders that have the claim, or the total balance of tokens held by all holders with the claim
    */
-  accredited: BigNumber;
+  withClaim: BigNumber;
 
   /**
-   * The count or percentage of Asset holders that are not accredited
+   * The number of individual Asset holders that do not have the claim, or the total balance of tokens held by all holders without the claim
    */
-  nonAccredited: BigNumber;
+  withoutClaim: BigNumber;
 };
 
-export type AffiliateValue = {
-  /**
-   * The count or percentage of Asset holders that are affiliates
-   */
-  affiliate: BigNumber;
-
-  /**
-   * The count or percentage of Asset holders that are not affiliates
-   */
-  nonAffiliate: BigNumber;
-};
-
+/**
+ * For Jurisdiction claims - tracks holders by country code and those without jurisdiction
+ */
 export type JurisdictionValue = {
   /**
    * The country code of the jurisdiction
-   * @note null if the jurisdiction is not specified
+   * @note null if the jurisdiction is not specified (no jurisdiction claim)
    */
   countryCode: CountryCode | null;
 
   /**
-   * The count or percentage of Asset holders with the jurisdiction
+   * The number of individual Asset holders with this jurisdiction (or without any jurisdiction if countryCode is null), or the total balance of tokens held by all such holders
    */
-  count: BigNumber;
+  value: BigNumber;
 };
+
+/**
+ * Maps claim types to their corresponding statistical value types
+ */
+export type ClaimStatValue<T extends TrustedFor> = T extends ClaimType.Jurisdiction
+  ? JurisdictionValue[]
+  : ClaimValue;
 
 /**
  * Asset Stat along with its current value
@@ -446,8 +447,8 @@ export interface TransferRestrictionStatValues {
    */
   claim?: {
     issuer: Identity;
-    claimType: ClaimType;
-    value: AccreditedValue | AffiliateValue | JurisdictionValue[];
+    claimType: TrustedFor;
+    value?: ClaimStatValue<TrustedFor>; // value is undefined for claim types not tracked onchain
   };
 
   /**

@@ -1,3 +1,4 @@
+import { StorageKey, u128 } from '@polkadot/types';
 import {
   PolymeshPrimitivesStatisticsStat1stKey,
   PolymeshPrimitivesStatisticsStat2ndKey,
@@ -17,9 +18,7 @@ import {
   setTransferRestrictions,
 } from '~/internal';
 import {
-  AccreditedValue,
   ActiveTransferRestrictions,
-  AffiliateValue,
   AssetStat,
   ClaimType,
   CountryCode,
@@ -31,6 +30,7 @@ import {
   TransferRestrictionExemptionParams,
   TransferRestrictionParams,
   TransferRestrictionStatValues,
+  TrustedFor,
 } from '~/types';
 import {
   assetComplianceToTransferRestrictions,
@@ -40,9 +40,10 @@ import {
   getStat1stKey,
   getStat2ndKey,
   identityIdToString,
+  meshClaimTypeToClaimType,
   meshStatToStatType,
   stringToAssetId,
-  u128ToBigNumber,
+  u128ToStatValue,
 } from '~/utils/conversion';
 import { createProcedureMethod, requestMulti } from '~/utils/internal';
 
@@ -181,19 +182,35 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
     const rawAssetId = assetToMeshAssetId(parent, context);
     const activeStats = await statistics.activeAssetStats(rawAssetId);
 
-    const queries: [
+    if (activeStats.isEmpty) {
+      return [];
+    }
+
+    const result: TransferRestrictionStatValues[] = [];
+    const jurisdictionQueries: Promise<
+      [
+        StorageKey<
+          [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
+        >,
+        u128
+      ][]
+    >[] = [];
+    const jurisdictionMappings: {
+      statType: StatType;
+      issuer: Identity;
+      claimType: TrustedFor;
+    }[] = [];
+
+    // Prepare non-jurisdiction queries using requestMulti
+    const nonJurisdictionQueries: [
       typeof statistics.assetStats,
       [PolymeshPrimitivesStatisticsStat1stKey, PolymeshPrimitivesStatisticsStat2ndKey]
     ][] = [];
-
-    const stats: {
-      type: StatType;
+    const nonJurisdictionMappings: {
+      statType: StatType;
       issuer?: Identity;
-      claimType?: ClaimType.Accredited | ClaimType.Affiliate | ClaimType.Jurisdiction;
-      claimValue?: boolean | CountryCode | null;
+      claimType?: TrustedFor;
     }[] = [];
-
-    const result: TransferRestrictionStatValues[] = [];
 
     activeStats.forEach(stat => {
       const stat1stKey = getStat1stKey(rawAssetId, stat, context);
@@ -202,168 +219,150 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
       if (stat.claimIssuer.isSome) {
         const [rawClaimClaimType, rawIssuer] = stat.claimIssuer.unwrap();
         const issuer = new Identity({ did: identityIdToString(rawIssuer) }, context);
+        const claimType = meshClaimTypeToClaimType(rawClaimClaimType);
+        const claimTypeForComparison = typeof claimType === 'object' ? claimType.type : claimType;
 
-        const { type } = rawClaimClaimType;
-
-        if (type === ClaimType.Accredited || type === ClaimType.Affiliate) {
-          const claimType = type as ClaimType.Accredited | ClaimType.Affiliate;
-
-          result.push({
-            type: statType,
-            value: new BigNumber(0),
-            claim: {
-              issuer,
-              claimType,
-              value:
-                claimType === ClaimType.Accredited
-                  ? { accredited: new BigNumber(0), nonAccredited: new BigNumber(0) }
-                  : { affiliate: new BigNumber(0), nonAffiliate: new BigNumber(0) },
-            },
-          });
-
-          stats.push({
-            type: statType,
+        if (claimTypeForComparison === ClaimType.Jurisdiction) {
+          // Handle jurisdiction claims with entries query
+          jurisdictionQueries.push(statistics.assetStats.entries(stat1stKey));
+          jurisdictionMappings.push({
+            statType,
             issuer,
             claimType,
-            claimValue: true,
           });
-          stats.push({
-            type: statType,
+        } else if (
+          claimTypeForComparison === ClaimType.Accredited ||
+          claimTypeForComparison === ClaimType.Affiliate
+        ) {
+          // Handle Accredited and Affiliate claims with specific true/false queries only
+          const trueStat2ndKey = getStat2ndKey(context, claimTypeForComparison, true);
+          const falseStat2ndKey = getStat2ndKey(context, claimTypeForComparison, false);
+          nonJurisdictionQueries.push(
+            [statistics.assetStats, [stat1stKey, trueStat2ndKey]],
+            [statistics.assetStats, [stat1stKey, falseStat2ndKey]]
+          );
+          nonJurisdictionMappings.push({
+            statType,
             issuer,
             claimType,
-            claimValue: false,
           });
-
-          queries.push([
-            statistics.assetStats,
-            [stat1stKey, getStat2ndKey(context, claimType, true)],
-          ]);
-          queries.push([
-            statistics.assetStats,
-            [stat1stKey, getStat2ndKey(context, claimType, false)],
-          ]);
-        } else if (type === ClaimType.Jurisdiction) {
-          result.push({
-            type: statType,
-            value: new BigNumber(0),
-            claim: {
-              issuer,
-              claimType: ClaimType.Jurisdiction,
-              value: [],
-            },
-          });
-
-          const countryCodes = Object.values(CountryCode);
-
-          countryCodes.forEach(countryCode => {
-            stats.push({
-              type: statType,
-              issuer,
-              claimType: ClaimType.Jurisdiction,
-              claimValue: countryCode,
-            });
-          });
-
-          stats.push({
-            type: statType,
+        } else {
+          // Handle all other claim types (Custom, etc.) with NoClaimStat only
+          const noClaimStat2ndKey = getStat2ndKey(context);
+          nonJurisdictionQueries.push([statistics.assetStats, [stat1stKey, noClaimStat2ndKey]]);
+          nonJurisdictionMappings.push({
+            statType,
             issuer,
-            claimType: ClaimType.Jurisdiction,
-            claimValue: null,
+            claimType,
           });
-
-          countryCodes.forEach(countryCode => {
-            queries.push([
-              statistics.assetStats,
-              [stat1stKey, getStat2ndKey(context, ClaimType.Jurisdiction, countryCode)],
-            ]);
-          });
-
-          queries.push([
-            statistics.assetStats,
-            [stat1stKey, getStat2ndKey(context, ClaimType.Jurisdiction)],
-          ]);
         }
       } else {
-        stats.push({
-          type: statType,
-        });
-
-        queries.push([statistics.assetStats, [stat1stKey, getStat2ndKey(context)]]);
-
-        result.push({
-          type: statType,
-          value: new BigNumber(0),
+        // Handle non-claim stats
+        const noClaimStat2ndKey = getStat2ndKey(context);
+        nonJurisdictionQueries.push([statistics.assetStats, [stat1stKey, noClaimStat2ndKey]]);
+        nonJurisdictionMappings.push({
+          statType,
         });
       }
     });
 
-    const values = await requestMulti(context, queries);
+    // Execute all queries in parallel
+    const [jurisdictionResults, nonJurisdictionResults] = await Promise.all([
+      Promise.all(jurisdictionQueries),
+      nonJurisdictionQueries.length > 0 ? requestMulti(context, nonJurisdictionQueries) : [],
+    ]);
 
-    const statsWithValue = stats
-      .map((stat, index) => {
-        return {
-          ...stat,
-          value:
-            stat.type === StatType.Count || stat.type === StatType.ScopedCount
-              ? u128ToBigNumber(values[index])
-              : u128ToBigNumber(values[index]).shiftedBy(-6),
-        };
-      })
-      .filter(stat => stat.value.gt(0));
+    // Process jurisdiction results
+    jurisdictionMappings.forEach((mapping, index) => {
+      const entries = jurisdictionResults[index];
+      const { statType, issuer, claimType } = mapping;
 
-    const isClaimStat = (
-      stat: TransferRestrictionStatValues
-    ): stat is TransferRestrictionStatValues & {
-      claim: {
-        issuer: Identity;
-        claimType: ClaimType.Accredited | ClaimType.Affiliate | ClaimType.Jurisdiction;
-        value: AccreditedValue | AffiliateValue | JurisdictionValue[];
-      };
-    } => {
-      return stat.claim !== undefined;
-    };
+      const jurisdictionValues: JurisdictionValue[] = [];
 
-    statsWithValue.forEach(stat => {
-      const { claimType, issuer, claimValue } = stat;
+      entries.forEach(([key, rawValue]) => {
+        const secondKey = key.args[1];
+
+        if (secondKey.isNoClaimStat) {
+          // No jurisdiction claim
+          jurisdictionValues.push({
+            countryCode: null,
+            value: u128ToStatValue(rawValue, statType),
+          });
+        } else if (secondKey.isClaim && secondKey.asClaim.isJurisdiction) {
+          // Specific jurisdiction
+          const countryCode = secondKey.asClaim.asJurisdiction.toString() as CountryCode;
+          jurisdictionValues.push({
+            countryCode,
+            value: u128ToStatValue(rawValue, statType),
+          });
+        }
+      });
+
+      const totalValue = jurisdictionValues.reduce(
+        (sum, jv) => sum.plus(jv.value),
+        new BigNumber(0)
+      );
+
+      result.push({
+        type: statType,
+        value: totalValue,
+        claim: {
+          issuer,
+          claimType,
+          value: jurisdictionValues,
+        },
+      });
+    });
+
+    // Process non-jurisdiction results
+    let resultIndex = 0;
+    nonJurisdictionMappings.forEach(mapping => {
+      const { statType, issuer, claimType } = mapping;
 
       if (claimType && issuer) {
-        const statResult = result
-          .filter(isClaimStat)
-          .find(
-            resultStat =>
-              resultStat.type === stat.type &&
-              resultStat.claim.issuer.did === issuer.did &&
-              resultStat.claim.claimType === claimType
+        const claimTypeForComparison = typeof claimType === 'object' ? claimType.type : claimType;
+
+        if (
+          claimTypeForComparison === ClaimType.Accredited ||
+          claimTypeForComparison === ClaimType.Affiliate
+        ) {
+          // Get the specific claim values (true/false queries only)
+          const withClaimValue = u128ToStatValue(nonJurisdictionResults[resultIndex], statType);
+          const withoutClaimValue = u128ToStatValue(
+            nonJurisdictionResults[resultIndex + 1],
+            statType
           );
+          resultIndex += 2;
 
-        statResult!.value = statResult!.value.plus(stat.value);
-
-        if (claimType === ClaimType.Jurisdiction) {
-          (statResult!.claim!.value as JurisdictionValue[]).push({
-            countryCode: stat.claimValue as CountryCode | null,
-            count: stat.value,
+          const totalValue = withClaimValue.plus(withoutClaimValue);
+          result.push({
+            type: statType,
+            value: totalValue,
+            claim: {
+              issuer,
+              claimType,
+              value: { withClaim: withClaimValue, withoutClaim: withoutClaimValue },
+            },
           });
-        } else if (claimType === ClaimType.Accredited) {
-          const value = statResult!.claim!.value as AccreditedValue;
-          if (claimValue === true) {
-            value.accredited = value.accredited.plus(stat.value);
-          } else {
-            value.nonAccredited = value.nonAccredited.plus(stat.value);
-          }
-        } else if (claimType === ClaimType.Affiliate) {
-          const value = statResult!.claim!.value as AffiliateValue;
-          if (claimValue === true) {
-            value.affiliate = value.affiliate.plus(stat.value);
-          } else {
-            value.nonAffiliate = value.nonAffiliate.plus(stat.value);
-          }
+        } else {
+          // Custom claims and other unsupported types - get NoClaimStat total holder/balance value only
+          result.push({
+            claim: {
+              issuer,
+              claimType,
+            },
+            type: statType,
+            value: u128ToStatValue(nonJurisdictionResults[resultIndex], statType),
+          });
+          resultIndex++;
         }
       } else {
-        const statResult = result
-          .filter(resultStat => !isClaimStat(resultStat))
-          .find(resultStat => resultStat.type === stat.type);
-
-        statResult!.value = statResult!.value.plus(stat.value);
+        // Handle non-claim stats
+        result.push({
+          type: statType,
+          value: u128ToStatValue(nonJurisdictionResults[resultIndex], statType),
+        });
+        resultIndex++;
       }
     });
 

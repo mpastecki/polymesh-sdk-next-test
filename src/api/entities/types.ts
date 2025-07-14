@@ -313,7 +313,9 @@ export interface ClaimScope {
   assetId?: string;
 }
 
-export type TrustedFor = ClaimType | { type: ClaimType.Custom; customClaimTypeId: BigNumber };
+export type TrustedFor =
+  | Exclude<ClaimType, ClaimType.Custom>
+  | { type: ClaimType.Custom; customClaimTypeId: BigNumber };
 
 /**
  * @param IsDefault - whether the Identity is a default trusted claim issuer for an asset or just
@@ -833,5 +835,5 @@ export type PortfolioMovement = FungiblePortfolioMovement | NonFungiblePortfolio
 
 export type ActiveStats = {
   isSet: boolean;
-  claims?: { claimType: ClaimType; customClaimTypeId?: BigNumber; issuer: Identity }[];
+  claims?: { claimType: ClaimType; issuer: Identity }[];
 };

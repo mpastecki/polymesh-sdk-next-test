@@ -619,6 +619,20 @@ export function u128ToBigNumber(value: u128): BigNumber {
 
 /**
  * @hidden
+ *
+ * Converts a u128 value to BigNumber with proper balance/count formatting
+ * Balance and ScopedBalance types are shifted by -6 decimal places
+ * Count and ScopedCount types are kept as whole numbers
+ */
+export function u128ToStatValue(value: u128, statType: StatType): BigNumber {
+  const rawValue = u128ToBigNumber(value);
+  return statType === StatType.Count || statType === StatType.ScopedCount
+    ? rawValue
+    : rawValue.shiftedBy(-6);
+}
+
+/**
+ * @hidden
  */
 export function bigNumberToU16(value: BigNumber, context: Context): u16 {
   assertIsInteger(value);

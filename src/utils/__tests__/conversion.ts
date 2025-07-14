@@ -197,6 +197,7 @@ import { DUMMY_ACCOUNT_ID, MAX_BALANCE, MAX_DECIMALS, MAX_TICKER_LENGTH } from '
 import * as utilsInternalModule from '~/utils/internal';
 import { padString } from '~/utils/internal';
 
+import * as utilsConversionModule from '../conversion';
 import {
   accountIdToString,
   activeEraStakingToActiveEraInfo,
@@ -205,11 +206,13 @@ import {
   agentGroupToPermissionGroupIdentifier,
   assetComplianceReportToCompliance,
   assetComplianceResultToCompliance,
+  assetComplianceToTransferRestrictions,
   assetCountToRaw,
   assetDispatchErrorToTransferError,
   assetDocumentToDocument,
   assetIdentifierToSecurityIdentifier,
   assetIdToString,
+  assetStatToStat,
   assetToMeshAssetId,
   assetTypeToKnownOrId,
   authorizationDataToAuthorization,
@@ -254,6 +257,7 @@ import {
   documentHashToString,
   documentToAssetDocument,
   endConditionToSettlementType,
+  exemptionToTransferExemption,
   expiryToMoment,
   extrinsicIdentifierToTxTag,
   fundingRoundToAssetFundingRound,
@@ -401,6 +405,7 @@ import {
   u32ToBigNumber,
   u64ToBigNumber,
   u128ToBigNumber,
+  u128ToStatValue,
   venueTypeToMeshVenueType,
 } from '../conversion';
 
@@ -2674,6 +2679,30 @@ describe('u128ToBigNumber', () => {
 
     const result = u128ToBigNumber(num);
     expect(result).toEqual(new BigNumber(fakeResult));
+  });
+});
+
+describe('u128ToStatValue', () => {
+  it('should convert u128 to BigNumber without shifting for Count stat types', () => {
+    const fakeValue = new BigNumber(1000000);
+    const num = dsMockUtils.createMockU128(fakeValue);
+
+    const resultCount = u128ToStatValue(num, StatType.Count);
+    const resultScopedCount = u128ToStatValue(num, StatType.ScopedCount);
+
+    expect(resultCount).toEqual(fakeValue);
+    expect(resultScopedCount).toEqual(fakeValue);
+  });
+
+  it('should convert u128 to BigNumber with -6 decimal shift for Balance stat types', () => {
+    const fakeValue = new BigNumber(1000000);
+    const num = dsMockUtils.createMockU128(fakeValue);
+
+    const resultBalance = u128ToStatValue(num, StatType.Balance);
+    const resultScopedBalance = u128ToStatValue(num, StatType.ScopedBalance);
+
+    expect(resultBalance).toEqual(new BigNumber(1)); // 1000000 / 10^6 = 1
+    expect(resultScopedBalance).toEqual(new BigNumber(1)); // 1000000 / 10^6 = 1
   });
 });
 
@@ -12324,10 +12353,6 @@ describe('getStat1stKey', () => {
 
 describe('getStat2ndKey', () => {
   let mockContext: Context;
-  let claimType: ClaimType;
-  let claimValue: boolean | CountryCode;
-
-  let mockResult: PolymeshPrimitivesStatisticsStat2ndKey;
 
   beforeAll(() => {
     dsMockUtils.initMocks();
@@ -12345,23 +12370,192 @@ describe('getStat2ndKey', () => {
     dsMockUtils.cleanup();
   });
 
-  it('should create a stat 2nd key', () => {
+  it('should create a stat 2nd key with claim type and value', () => {
+    const claimType = ClaimType.Jurisdiction;
+    const claimValue = CountryCode.Us;
+    const mockResult = 'stat2ndKey' as unknown as PolymeshPrimitivesStatisticsStat2ndKey;
+
     when(mockContext.createType)
       .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
         claim: { [claimType]: claimValue },
       })
       .mockReturnValue(mockResult);
 
+    const result = getStat2ndKey(mockContext, claimType, claimValue);
+
+    expect(result).toBe(mockResult);
+  });
+
+  it('should create a stat 2nd key with boolean claim value', () => {
+    const claimType = ClaimType.Accredited;
+    const claimValue = true;
+    const mockResult = 'stat2ndKey' as unknown as PolymeshPrimitivesStatisticsStat2ndKey;
+
+    when(mockContext.createType)
+      .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', {
+        claim: { [claimType]: claimValue },
+      })
+      .mockReturnValue(mockResult);
+
+    const result = getStat2ndKey(mockContext, claimType, claimValue);
+
+    expect(result).toBe(mockResult);
+  });
+
+  it('should create a stat 2nd key without claim when no claimType provided', () => {
+    const mockResult = 'noClaimStat2ndKey' as unknown as PolymeshPrimitivesStatisticsStat2ndKey;
+
     when(mockContext.createType)
       .calledWith('PolymeshPrimitivesStatisticsStat2ndKey', 'NoClaimStat')
       .mockReturnValue(mockResult);
 
-    let result = getStat2ndKey(mockContext, claimType, claimValue);
+    const result = getStat2ndKey(mockContext);
 
     expect(result).toBe(mockResult);
+  });
+});
 
-    result = getStat2ndKey(mockContext);
+describe('assetComplianceToTransferRestrictions', () => {
+  let mockContext: Context;
 
-    expect(result).toBe(mockResult);
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+  });
+
+  beforeEach(() => {
+    mockContext = dsMockUtils.getContextInstance();
+  });
+
+  afterEach(() => {
+    dsMockUtils.reset();
+  });
+
+  afterAll(() => {
+    dsMockUtils.cleanup();
+  });
+
+  it('should convert asset compliance to transfer restrictions', () => {
+    const mockTransferCondition = dsMockUtils.createMockTransferCondition({
+      MaxInvestorCount: dsMockUtils.createMockU64(new BigNumber(100)),
+    });
+    const mockComplianceValue = dsMockUtils.createMockAssetTransferCompliance({
+      paused: dsMockUtils.createMockBool(false),
+      requirements: [mockTransferCondition],
+    });
+
+    const mockTransferRestriction: TransferRestriction = {
+      type: TransferRestrictionType.Count,
+      value: new BigNumber(100),
+    };
+
+    jest
+      .spyOn(utilsConversionModule, 'transferConditionToTransferRestriction')
+      .mockReturnValue(mockTransferRestriction);
+
+    const result = assetComplianceToTransferRestrictions(mockComplianceValue, mockContext);
+
+    expect(result).toEqual({
+      paused: false,
+      restrictions: [mockTransferRestriction],
+    });
+  });
+
+  it('should handle paused compliance', () => {
+    const mockComplianceValue = dsMockUtils.createMockAssetTransferCompliance({
+      paused: dsMockUtils.createMockBool(true),
+      requirements: [],
+    });
+
+    const result = assetComplianceToTransferRestrictions(mockComplianceValue, mockContext);
+
+    expect(result).toEqual({
+      paused: true,
+      restrictions: [],
+    });
+  });
+});
+
+describe('assetStatToStat', () => {
+  it('should convert asset stat with Count operation to Count stat type', () => {
+    const mockStatType = dsMockUtils.createMockStatisticsStatType({
+      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+      claimIssuer: dsMockUtils.createMockOption(),
+    });
+
+    const result = assetStatToStat(mockStatType);
+
+    expect(result).toEqual({
+      type: StatType.Count,
+    });
+  });
+
+  it('should convert asset stat with Balance operation to Balance stat type', () => {
+    const mockStatType = dsMockUtils.createMockStatisticsStatType({
+      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+      claimIssuer: dsMockUtils.createMockOption(),
+    });
+
+    const result = assetStatToStat(mockStatType);
+
+    expect(result).toEqual({
+      type: StatType.Balance,
+    });
+  });
+});
+
+describe('exemptionToTransferExemption', () => {
+  it('should convert exemption to transfer exemption with Count operation and Some claim type', () => {
+    const assetId = '12341234-1234-1234-1234-123412341234';
+    const mockExemption = dsMockUtils.createMockExemptKey({
+      assetId: dsMockUtils.createMockAssetId(uuidToHex(assetId)),
+      op: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+      claimType: dsMockUtils.createMockOption(
+        dsMockUtils.createMockClaimType(ClaimType.Accredited)
+      ),
+    });
+
+    const result = exemptionToTransferExemption(mockExemption);
+
+    expect(result).toEqual({
+      assetId,
+      opType: StatType.Count,
+      claimType: ClaimType.Accredited,
+    });
+  });
+
+  it('should convert exemption to transfer exemption with Balance operation and None claim type', () => {
+    const assetId = '12341234-1234-1234-1234-123412341234';
+    const mockExemption = dsMockUtils.createMockExemptKey({
+      assetId: dsMockUtils.createMockAssetId(uuidToHex(assetId)),
+      op: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+      claimType: dsMockUtils.createMockOption(),
+    });
+
+    const result = exemptionToTransferExemption(mockExemption);
+
+    expect(result).toEqual({
+      assetId,
+      opType: StatType.Balance,
+      claimType: null,
+    });
+  });
+
+  it('should convert exemption with Jurisdiction claim type', () => {
+    const assetId = '87654321-4321-4321-4321-876543218765';
+    const mockExemption = dsMockUtils.createMockExemptKey({
+      assetId: dsMockUtils.createMockAssetId(uuidToHex(assetId)),
+      op: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+      claimType: dsMockUtils.createMockOption(
+        dsMockUtils.createMockClaimType(ClaimType.Jurisdiction)
+      ),
+    });
+
+    const result = exemptionToTransferExemption(mockExemption);
+
+    expect(result).toEqual({
+      assetId,
+      opType: StatType.Count,
+      claimType: ClaimType.Jurisdiction,
+    });
   });
 });
