@@ -7,6 +7,7 @@ import BigNumber from 'bignumber.js';
 import P from 'bluebird';
 
 import { executeManualInstruction } from '~/api/procedures/executeManualInstruction';
+import { lockInstructionForExecution } from '~/api/procedures/lockInstructionForExecution';
 import {
   Account,
   Context,
@@ -90,6 +91,7 @@ import {
   AffirmationStatus,
   InstructionAffirmation,
   InstructionDetails,
+  InstructionLockedInfo,
   InstructionStatus,
   InstructionStatusResult,
   Leg,
@@ -206,6 +208,14 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
       },
       context
     );
+
+    this.lockForExecution = createProcedureMethod(
+      {
+        getProcedureAndArgs: () => [lockInstructionForExecution, { id }],
+        voidArgs: true,
+      },
+      context
+    );
   }
 
   /**
@@ -239,6 +249,29 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
   }
 
   /**
+   * Get the number of affirmations pending before instruction can be executed
+   *
+   * @note The count is returned as 0 for pruned instructions as well
+   */
+  public async getPendingAffirmationCount(): Promise<BigNumber> {
+    const {
+      context: {
+        polymeshApi: {
+          query: { settlement },
+        },
+      },
+      id,
+      context,
+    } = this;
+
+    const rawPendingAffirmations = await settlement.instructionAffirmsPending(
+      bigNumberToU64(id, context)
+    );
+
+    return u64ToBigNumber(rawPendingAffirmations);
+  }
+
+  /**
    * Retrieve whether the Instruction is still pending on chain
    */
   public async isPending(): Promise<boolean> {
@@ -262,22 +295,51 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
   /**
    * Retrieve whether the Instruction is locked for execution on chain
    */
-  public async isLockedForExecution(): Promise<boolean> {
+  public async getLockedInfo(): Promise<InstructionLockedInfo> {
     const {
       context: {
         polymeshApi: {
           query: { settlement },
+          consts: {
+            settlement: { maximumLockPeriod },
+          },
         },
       },
       id,
       context,
     } = this;
 
-    const status = await settlement.instructionStatuses(bigNumberToU64(id, context));
+    const rawId = bigNumberToU64(id, context);
 
-    const statusResult = meshInstructionStatusToInstructionStatus(status);
+    const [rawStatus, rawLockedTimestamp] = await requestMulti<
+      [typeof settlement.instructionStatuses, typeof settlement.lockedTimestamp]
+    >(context, [
+      [settlement.instructionStatuses, rawId],
+      [settlement.lockedTimestamp, rawId],
+    ]);
 
-    return statusResult === InternalInstructionStatus.LockedForExecution;
+    const statusResult = meshInstructionStatusToInstructionStatus(rawStatus);
+
+    if (statusResult === InternalInstructionStatus.LockedForExecution) {
+      if (rawLockedTimestamp.isSome) {
+        const lockedAt = momentToDate(rawLockedTimestamp.unwrap());
+        const expiry = u64ToBigNumber(maximumLockPeriod);
+        const unlocksAt = new Date(lockedAt.getTime() + expiry.toNumber());
+        return {
+          isLocked: true,
+          lockedAt,
+          expiry,
+          unlocksAt,
+        };
+      }
+    }
+
+    return {
+      isLocked: false,
+      lockedAt: null,
+      expiry: null,
+      unlocksAt: null,
+    };
   }
 
   /**
@@ -856,6 +918,23 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
    * Executes an Instruction either of type `SettleManual` or a `Failed` instruction
    */
   public executeManually: OptionalArgsProcedureMethod<ExecuteManualInstructionParams, Instruction>;
+
+  /**
+   * Locks an Instruction of type `SettleAfterLock` for execution. Only a mediator of the instruction can lock the instruction.
+   *
+   * @note An Instruction can only be locked if
+   *  - it has been affirmed by all parties
+   *  - it is pending or has failed at least one time
+   *  - all mediator affirmations are valid
+   *  - all assets are in allowed venue list
+   *  - all senders have the right amount of assets being transferred
+   *  - all senders and receivers are compliant and have valid CDD claims
+   *  - all assets' statistics are still valid
+   *  - there are no frozen assets
+   *
+   * @throws if any of the above conditions are not met
+   */
+  public lockForExecution: NoArgsProcedureMethod<Instruction>;
 
   /**
    * @hidden

@@ -135,15 +135,20 @@ function getEndCondition(
   instruction: AddInstructionParams,
   latestBlock: BigNumber,
   index: number
-): { endCondition: InstructionEndCondition; errorIndex: number | null } {
+): {
+  endCondition: InstructionEndCondition;
+  errorEndBlockIndex: number | null;
+  errorMediatorIndex: number | null;
+} {
   let endCondition: InstructionEndCondition;
-  let errorIndex = null;
+  let errorEndBlockIndex = null;
+  let errorMediatorIndex = null;
 
   if ('endBlock' in instruction && instruction.endBlock) {
     const { endBlock } = instruction;
 
     if (endBlock.lte(latestBlock)) {
-      errorIndex = index;
+      errorEndBlockIndex = index;
     }
 
     endCondition = { type: InstructionType.SettleOnBlock, endBlock };
@@ -151,13 +156,17 @@ function getEndCondition(
     endCondition = { type: InstructionType.SettleManual, endAfterBlock: instruction.endAfterBlock };
   } else if ('endAfterLock' in instruction && instruction.endAfterLock) {
     endCondition = { type: InstructionType.SettleAfterLock };
+    if (!instruction.mediators?.length) {
+      errorMediatorIndex = index;
+    }
   } else {
     endCondition = { type: InstructionType.SettleOnAffirmation };
   }
 
   return {
     endCondition,
-    errorIndex,
+    errorEndBlockIndex,
+    errorMediatorIndex,
   };
 }
 
@@ -305,6 +314,7 @@ async function getTxArgsAndErrors(
     datesErrIndexes: number[];
     sameIdentityErrIndexes: number[];
     offChainNoVenueErrIndexes: number[];
+    mediatorErrIndexes: number[];
   };
   addAndAffirmInstructionParams: InternalAddAndAffirmInstructionParams;
   addInstructionParams: InternalAddInstructionParams;
@@ -316,6 +326,7 @@ async function getTxArgsAndErrors(
   const legLengthErrIndexes: number[] = [];
   const legAmountErrIndexes: number[] = [];
   const endBlockErrIndexes: number[] = [];
+  const mediatorErrIndexes: number[] = [];
   const sameIdentityErrIndexes: number[] = [];
   const offChainNoVenueErrIndexes: number[] = [];
   /**
@@ -369,10 +380,18 @@ async function getTxArgsAndErrors(
       sameIdentityErrIndexes.push(i);
     }
 
-    const { endCondition, errorIndex } = getEndCondition(instruction, latestBlock, i);
+    const { endCondition, errorEndBlockIndex, errorMediatorIndex } = getEndCondition(
+      instruction,
+      latestBlock,
+      i
+    );
 
-    if (errorIndex !== null) {
-      endBlockErrIndexes.push(errorIndex);
+    if (errorEndBlockIndex !== null) {
+      endBlockErrIndexes.push(errorEndBlockIndex);
+    }
+
+    if (errorMediatorIndex !== null) {
+      mediatorErrIndexes.push(errorMediatorIndex);
     }
 
     if (tradeDate && valueDate && tradeDate > valueDate) {
@@ -386,7 +405,8 @@ async function getTxArgsAndErrors(
       !endBlockErrIndexes.length &&
       !datesErrIndexes.length &&
       !sameIdentityErrIndexes.length &&
-      !offChainNoVenueErrIndexes.length
+      !offChainNoVenueErrIndexes.length &&
+      !mediatorErrIndexes.length
     ) {
       const rawVenueId = optionize(bigNumberToU64)(venueId, context);
       const rawSettlementType = endConditionToSettlementType(endCondition, context);
@@ -510,6 +530,7 @@ async function getTxArgsAndErrors(
       datesErrIndexes,
       sameIdentityErrIndexes,
       offChainNoVenueErrIndexes,
+      mediatorErrIndexes,
     },
     addAndAffirmInstructionParams,
     addInstructionParams,
@@ -565,6 +586,7 @@ export async function prepareAddInstruction(
       datesErrIndexes,
       sameIdentityErrIndexes,
       offChainNoVenueErrIndexes,
+      mediatorErrIndexes,
     },
     addAndAffirmInstructionParams,
     addInstructionParams,
@@ -637,6 +659,16 @@ export async function prepareAddInstruction(
       message: 'Instruction legs cannot be offchain without a venue',
       data: {
         failedInstructionIndexes: offChainNoVenueErrIndexes,
+      },
+    });
+  }
+
+  if (mediatorErrIndexes.length) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'Instruction must have at least one mediator',
+      data: {
+        failedInstructionIndexes: mediatorErrIndexes,
       },
     });
   }

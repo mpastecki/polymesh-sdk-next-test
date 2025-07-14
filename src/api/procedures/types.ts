@@ -950,6 +950,8 @@ export type AddInstructionParams = {
   memo?: string;
   /**
    * additional identities that must affirm the instruction
+   *
+   * @note mediators are mandatory if settlement is to be locked for execution (providing `endAfterLock`)
    */
   mediators?: (string | Identity)[];
 } & (

@@ -483,6 +483,38 @@ describe('addInstruction procedure', () => {
     expect(error.data.failedInstructionIndexes[0]).toBe(0);
   });
 
+  it('should throw an error if any instruction of type SettleAfterLock has no mediators', async () => {
+    const proc = procedureMockUtils.getInstance<Params, Instruction[], Storage>(mockContext, {
+      portfoliosToAffirm: [],
+    });
+
+    entityMockUtils.configureMocks({
+      venueOptions: { exists: true },
+      fungibleAssetOptions: { exists: true },
+      nftCollectionOptions: { exists: false },
+    });
+
+    let error;
+    const legs = Array(2).fill({
+      from,
+      to,
+      amount: new BigNumber(10),
+      asset: entityMockUtils.getFungibleAssetInstance({ assetId: asset }),
+    });
+    try {
+      await prepareAddInstruction.call(proc, {
+        venueId,
+        instructions: [{ legs, endAfterLock: true }],
+      });
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error.message).toBe('Instruction must have at least one mediator');
+    expect(error.code).toBe(ErrorCode.ValidationError);
+    expect(error.data.failedInstructionIndexes[0]).toBe(0);
+  });
+
   it('should throw an error if any instruction contains leg with zero NFTs', async () => {
     const proc = procedureMockUtils.getInstance<Params, Instruction[], Storage>(mockContext, {
       portfoliosToAffirm: [],
@@ -1095,6 +1127,7 @@ describe('addInstruction procedure', () => {
         {
           ...instructionDetails,
           endAfterLock: true,
+          mediators: [mediatorDid],
         },
       ],
     });
@@ -1110,7 +1143,7 @@ describe('addInstruction procedure', () => {
             rawValueDate,
             [rawLeg],
             rawInstructionMemo,
-            rawEmptyMediatorSet,
+            rawMediatorSet,
           ],
         },
       ],

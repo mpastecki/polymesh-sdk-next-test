@@ -1,6 +1,6 @@
 import { SubmittableResult } from '@polkadot/api';
 import { getTypeDef, u32 } from '@polkadot/types';
-import { Hash, SignedBlock } from '@polkadot/types/interfaces';
+import { DispatchError, Hash, SignedBlock } from '@polkadot/types/interfaces';
 import { SpRuntimeDispatchError } from '@polkadot/types/lookup';
 import { RegistryError, TypeDef, TypeDefInfo } from '@polkadot/types/types';
 import { polymesh } from '@polymeshassociation/polymesh-types/polkadot/definitions';
@@ -151,16 +151,8 @@ export const processType = (rawType: TypeDef, name: string): TransactionArgument
   }
 };
 
-/**
- * @hidden
- */
-export const handleExtrinsicFailure = (
-  error: SpRuntimeDispatchError,
-  data?: Record<string, unknown>
-): PolymeshError => {
-  // get revert message from event
+export const dispatchErrorToMessage = (error: SpRuntimeDispatchError | DispatchError): string => {
   let message: string;
-
   if (error.isModule) {
     // known error
     const mod = error.asModule;
@@ -174,6 +166,18 @@ export const handleExtrinsicFailure = (
   } else {
     message = 'Unknown error';
   }
+  return message;
+};
+
+/**
+ * @hidden
+ */
+export const handleExtrinsicFailure = (
+  error: SpRuntimeDispatchError,
+  data?: Record<string, unknown>
+): PolymeshError => {
+  // get revert message from event
+  const message = dispatchErrorToMessage(error);
 
   return new PolymeshError({ code: ErrorCode.TransactionReverted, message, data });
 };

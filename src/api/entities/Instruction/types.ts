@@ -160,3 +160,22 @@ export interface GroupedInvolvedInstructions {
    */
   owned: Omit<GroupedInstructions, 'affirmed'>;
 }
+
+export interface InstructionLockedInfo {
+  /**
+   * Whether the instruction is locked for execution
+   */
+  isLocked: boolean;
+  /**
+   * The date and time when the instruction was locked for execution
+   */
+  lockedAt: Date | null;
+  /**
+   * Time in milliseconds after which the instruction will no longer be locked for execution
+   */
+  expiry: BigNumber | null;
+  /**
+   * The date when the instruction will no longer be locked for execution
+   */
+  unlocksAt: Date | null;
+}

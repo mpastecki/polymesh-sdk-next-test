@@ -274,6 +274,25 @@ function validateMediatorStatusForWithdrawl(
 /**
  * @hidden
  */
+async function validateInstructionNotLocked(instruction: Instruction): Promise<void> {
+  const { lockedAt, unlocksAt } = await instruction.getLockedInfo();
+
+  if (unlocksAt && unlocksAt >= new Date()) {
+    throw new PolymeshError({
+      code: ErrorCode.UnmetPrerequisite,
+      message: 'The instruction is locked for execution',
+      data: {
+        instructionId: instruction.id.toString(),
+        lockedAt,
+        unlocksAt,
+      },
+    });
+  }
+}
+
+/**
+ * @hidden
+ */
 export async function prepareModifyInstructionAffirmation(
   this: Procedure<ModifyInstructionAffirmationParams, Instruction, Storage>,
   args: ModifyInstructionAffirmationParams
@@ -417,6 +436,8 @@ export async function prepareModifyInstructionAffirmation(
     }
 
     case InstructionAffirmationOperation.Reject: {
+      await validateInstructionNotLocked(instruction);
+
       const rawAssetCount = getAssetCount(context, instructionInfo);
 
       return {
@@ -441,6 +462,8 @@ export async function prepareModifyInstructionAffirmation(
     }
 
     case InstructionAffirmationOperation.Withdraw: {
+      await validateInstructionNotLocked(instruction);
+
       excludeCriteria.push(AffirmationStatus.Pending);
       errorMessage = 'The instruction is not affirmed';
       transaction = settlementTx.withdrawAffirmationWithCount;

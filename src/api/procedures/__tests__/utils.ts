@@ -10,6 +10,7 @@ import {
   assertDistributionDatesValid,
   assertGroupDoesNotExist,
   assertInstructionValid,
+  assertInstructionValidForLocking,
   assertInstructionValidForManualExecution,
   assertPortfolioExists,
   assertRequirementsNotTooComplex,
@@ -143,7 +144,7 @@ describe('assertInstructionValid', () => {
     instruction = entityMockUtils.getInstructionInstance();
 
     return expect(assertInstructionValid(instruction, mockContext)).rejects.toThrow(
-      'The Instruction must be in pending or failed state'
+      'The Instruction has already been executed'
     );
   });
 
@@ -224,6 +225,40 @@ describe('assertInstructionValid', () => {
     result = await assertInstructionValid(instruction, mockContext);
 
     expect(result).toBeUndefined();
+  });
+});
+
+describe('assertInstructionValidForLocking', () => {
+  it('should throw an error if instruction is not in pending or failed state', async () => {
+    await expect(
+      assertInstructionValidForLocking({
+        status: InstructionStatus.Success,
+      } as InstructionDetails)
+    ).rejects.toThrow('The Instruction has already been executed');
+
+    await expect(
+      assertInstructionValidForLocking({
+        status: InstructionStatus.Rejected,
+      } as InstructionDetails)
+    ).rejects.toThrow('The Instruction has already been executed');
+  });
+
+  it('should throw an error if the instruction is not of type SettleAfterLock', async () => {
+    await expect(
+      assertInstructionValidForLocking({
+        status: InstructionStatus.Pending,
+        type: InstructionType.SettleOnAffirmation,
+      } as InstructionDetails)
+    ).rejects.toThrow("You cannot lock instruction of type 'SettleOnAffirmation'");
+  });
+
+  it('should not throw an error for valid instruction', async () => {
+    await expect(
+      assertInstructionValidForLocking({
+        status: InstructionStatus.Pending,
+        type: InstructionType.SettleAfterLock,
+      } as InstructionDetails)
+    ).resolves.not.toThrow();
   });
 });
 

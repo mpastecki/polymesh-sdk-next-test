@@ -14,6 +14,7 @@ import {
   Compact,
   Enum,
   Option,
+  Result,
   Text,
   u8,
   U8aFixed,
@@ -164,7 +165,6 @@ import {
   AssetComplianceResult,
   AssetCount,
   AuthorizationType as MeshAuthorizationType,
-  CanTransferGranularReturn,
   CddStatus,
   ComplianceReport,
   ComplianceRequirementResult,
@@ -4641,22 +4641,6 @@ export const createMockNfts = (nfts?: {
  * @hidden
  * NOTE: `isEmpty` will be set to true if no value is passed
  */
-export const createMockCanTransferGranularReturn = (
-  result?:
-    | {
-        Ok: GranularCanTransferResult;
-      }
-    | {
-        Err: DispatchError;
-      }
-): MockCodec<CanTransferGranularReturn> => {
-  return createMockEnum<CanTransferGranularReturn>(result);
-};
-
-/**
- * @hidden
- * NOTE: `isEmpty` will be set to true if no value is passed
- */
 export const createMockStoredSchedule = (storedSchedule?: {
   schedule: Parameters<typeof createMockCheckpointSchedule>[0];
   id: u64 | Parameters<typeof createMockU64>[0];
@@ -5082,4 +5066,20 @@ export const createMockExemptKey = (key?: {
     { assetId, op, claimType },
     !key
   );
+};
+
+/**
+ * @hidden
+ * NOTE: `isEmpty` will be set to true if no value is passed
+ */
+export const createMockLockInstructionWeight = (
+  result?:
+    | {
+        Ok: Weight;
+      }
+    | {
+        Err: DispatchError;
+      }
+): MockCodec<Result<Weight, DispatchError>> => {
+  return createMockEnum<Result<Weight, DispatchError>>(result);
 };

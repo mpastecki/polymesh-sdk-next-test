@@ -58,11 +58,13 @@ import {
   GroupPermissions,
   IdentityBalance,
   InstructionDetails,
+  InstructionLockedInfo,
   InstructionStatus,
   InstructionType,
   KnownAssetType,
   KnownNftType,
   Leg,
+  MediatorAffirmation,
   MetadataDetails,
   MetadataLockStatus,
   MetadataType,
@@ -305,6 +307,9 @@ interface InstructionOptions extends EntityOptions {
   getLegsFromChain?: EntityGetter<ResultSet<Leg>>;
   detailsFromChain?: EntityGetter<InstructionDetails>;
   isPending?: EntityGetter<boolean>;
+  getLockedInfo?: EntityGetter<InstructionLockedInfo>;
+  getPendingAffirmationCount?: EntityGetter<BigNumber>;
+  getMediators?: EntityGetter<MediatorAffirmation[]>;
 }
 
 interface OfferingOptions extends EntityOptions {
@@ -1546,6 +1551,9 @@ const MockInstructionClass = createMockEntityClass<InstructionOptions>(
     getLegsFromChain!: jest.Mock;
     detailsFromChain!: jest.Mock;
     isPending!: jest.Mock;
+    getLockedInfo!: jest.Mock;
+    getPendingAffirmationCount!: jest.Mock;
+    getMediators!: jest.Mock;
 
     /**
      * @hidden
@@ -1565,6 +1573,9 @@ const MockInstructionClass = createMockEntityClass<InstructionOptions>(
       this.isPending = createEntityGetterMock(opts.isPending);
       this.getLegsFromChain = createEntityGetterMock(opts.getLegsFromChain);
       this.detailsFromChain = createEntityGetterMock(opts.detailsFromChain);
+      this.getLockedInfo = createEntityGetterMock(opts.getLockedInfo);
+      this.getPendingAffirmationCount = createEntityGetterMock(opts.getPendingAffirmationCount);
+      this.getMediators = createEntityGetterMock(opts.getMediators);
     }
   },
   () => ({
@@ -1608,6 +1619,14 @@ const MockInstructionClass = createMockEntityClass<InstructionOptions>(
       next: null,
     },
     isPending: false,
+    getLockedInfo: {
+      isLocked: false,
+      lockedAt: null,
+      expiry: null,
+      unlocksAt: null,
+    },
+    getPendingAffirmationCount: new BigNumber(0),
+    getMediators: [],
   }),
   ['Instruction']
 );

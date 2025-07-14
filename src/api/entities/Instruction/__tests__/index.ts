@@ -1,6 +1,7 @@
 import { Option, StorageKey, u64 } from '@polkadot/types';
 import {
   PolymeshPrimitivesIdentityIdPortfolioId,
+  PolymeshPrimitivesSettlementInstructionStatus,
   PolymeshPrimitivesSettlementLeg,
 } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
@@ -22,12 +23,7 @@ import {
   LegTypeEnum,
 } from '~/middleware/types';
 import { dsMockUtils, entityMockUtils, procedureMockUtils } from '~/testUtils/mocks';
-import {
-  createMockAssetId,
-  createMockInstructionStatus,
-  createMockNfts,
-  createMockU64,
-} from '~/testUtils/mocks/dataSources';
+import { createMockAssetId, createMockNfts, createMockU64 } from '~/testUtils/mocks/dataSources';
 import { Mocked } from '~/testUtils/types';
 import {
   AffirmationStatus,
@@ -45,6 +41,8 @@ import { tuple } from '~/types/utils';
 import { hexToUuid } from '~/utils';
 import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
+
+import { createMockInstructionStatus } from './../../../../testUtils/mocks/dataSources';
 
 jest.mock(
   '~/api/entities/Identity',
@@ -208,47 +206,88 @@ describe('Instruction class', () => {
     });
   });
 
-  describe('method: isLockedForExecution', () => {
+  describe('method: getPendingAffirmationCount', () => {
+    it('should return number of pending affirmations for an instruction', async () => {
+      const bigNumberToU64Spy = jest.spyOn(utilsConversionModule, 'bigNumberToU64');
+      when(bigNumberToU64Spy).calledWith(id, context).mockReturnValue(rawId);
+
+      const pendingAffirmations = new BigNumber(3);
+      const rawPendingAffirmations = dsMockUtils.createMockU64(pendingAffirmations);
+
+      const instructionAffirmsPendingMock = dsMockUtils.createQueryMock(
+        'settlement',
+        'instructionAffirmsPending'
+      );
+
+      when(instructionAffirmsPendingMock)
+        .calledWith(rawId)
+        .mockResolvedValue(rawPendingAffirmations);
+
+      const result = await instruction.getPendingAffirmationCount();
+
+      expect(result).toEqual(pendingAffirmations);
+    });
+  });
+
+  describe('method: getLockedInfo', () => {
     afterAll(() => {
       jest.restoreAllMocks();
     });
 
     let bigNumberToU64Spy: jest.SpyInstance;
+    const lockedTime = new Date('2025-07-01');
+    let rawInstructionStatus: PolymeshPrimitivesSettlementInstructionStatus;
+    const maxLockPeriod = new BigNumber(86400000);
 
     beforeAll(() => {
       bigNumberToU64Spy = jest.spyOn(utilsConversionModule, 'bigNumberToU64');
+      dsMockUtils.createQueryMock('settlement', 'instructionStatuses');
+      dsMockUtils.createQueryMock('settlement', 'lockedTimestamp');
     });
 
     beforeEach(() => {
+      rawInstructionStatus = dsMockUtils.createMockInstructionStatus('LockedForExecution');
       when(bigNumberToU64Spy).calledWith(id, context).mockReturnValue(rawId);
+      dsMockUtils
+        .getQueryMultiMock()
+        .mockResolvedValue([
+          rawInstructionStatus,
+          dsMockUtils.createMockOption(
+            dsMockUtils.createMockU64(new BigNumber(lockedTime.getTime()))
+          ),
+        ]);
+
+      dsMockUtils.setConstMock('settlement', 'maximumLockPeriod', {
+        returnValue: dsMockUtils.createMockU64(maxLockPeriod),
+      });
     });
 
-    it('should return whether the instruction is locked for execution', async () => {
-      const owner = 'someDid';
+    it('should return all the details for a locked instruction', async () => {
+      const result = await instruction.getLockedInfo();
 
-      entityMockUtils.configureMocks({ identityOptions: { did: owner } });
+      expect(result).toEqual({
+        isLocked: true,
+        lockedAt: lockedTime,
+        expiry: maxLockPeriod,
+        unlocksAt: new Date(lockedTime.getTime() + maxLockPeriod.toNumber()),
+      });
+    });
 
-      const instructionStatusesMock = dsMockUtils.createQueryMock(
-        'settlement',
-        'instructionStatuses'
-      );
-      when(instructionStatusesMock)
-        .calledWith(rawId)
-        .mockResolvedValue(
-          dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.LockedForExecution)
-        );
+    it('should return all the details for a unlocked instruction', async () => {
+      dsMockUtils
+        .getQueryMultiMock()
+        .mockResolvedValue([
+          dsMockUtils.createMockInstructionStatus('Pending'),
+          dsMockUtils.createMockOption(),
+        ]);
+      const result = await instruction.getLockedInfo();
 
-      let result = await instruction.isLockedForExecution();
-
-      expect(result).toBe(true);
-
-      instructionStatusesMock.mockResolvedValue(
-        dsMockUtils.createMockInstructionStatus(InternalInstructionStatus.Success)
-      );
-
-      result = await instruction.isLockedForExecution();
-
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        isLocked: false,
+        lockedAt: null,
+        expiry: null,
+        unlocksAt: null,
+      });
     });
   });
 
@@ -1381,6 +1420,31 @@ describe('Instruction class', () => {
         .mockResolvedValue(expectedTransaction);
 
       const tx = await instruction.withdraw();
+
+      expect(tx).toBe(expectedTransaction);
+    });
+  });
+
+  describe('method: lockForExecution', () => {
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should prepare the procedure and return the resulting transaction', async () => {
+      const expectedTransaction = 'someTransaction' as unknown as PolymeshTransaction<Instruction>;
+
+      when(procedureMockUtils.getPrepareMock())
+        .calledWith(
+          {
+            args: { id },
+            transformer: undefined,
+          },
+          context,
+          {}
+        )
+        .mockResolvedValue(expectedTransaction);
+
+      const tx = await instruction.lockForExecution();
 
       expect(tx).toBe(expectedTransaction);
     });

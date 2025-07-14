@@ -676,6 +676,58 @@ describe('modifyInstructionAffirmation procedure', () => {
     ).rejects.toThrow('The instruction is not affirmed');
   });
 
+  it('should throw an error if operation is Withdraw/Reject and the current status of the instruction is LockedForExecution', async () => {
+    const rawAffirmationStatus = dsMockUtils.createMockAffirmationStatus('Affirmed');
+    dsMockUtils.createQueryMock('settlement', 'userAffirmations', {
+      multi: [rawAffirmationStatus, rawAffirmationStatus],
+    });
+    when(meshAffirmationStatusToAffirmationStatusSpy)
+      .calledWith(rawAffirmationStatus)
+      .mockReturnValue(AffirmationStatus.Affirmed);
+
+    const lockedAt = new Date();
+    const unlocksAt = new Date(lockedAt.getTime() + 84400000);
+
+    entityMockUtils.configureMocks({
+      instructionOptions: {
+        getLockedInfo: {
+          isLocked: true,
+          lockedAt,
+          expiry: new BigNumber(84400000),
+          unlocksAt,
+        },
+      },
+    });
+
+    const proc = procedureMockUtils.getInstance<
+      ModifyInstructionAffirmationParams,
+      Instruction,
+      Storage
+    >(mockContext, {
+      portfolios: [portfolio, portfolio],
+      portfolioParams: [],
+      senderLegAmount: legAmount,
+      totalLegAmount: legAmount,
+      signer,
+      offChainLegIndices: [],
+      instructionInfo: mockExecuteInfo,
+    });
+
+    await expect(
+      prepareModifyInstructionAffirmation.call(proc, {
+        id,
+        operation: InstructionAffirmationOperation.Withdraw,
+      })
+    ).rejects.toThrow('The instruction is locked for execution');
+
+    await expect(
+      prepareModifyInstructionAffirmation.call(proc, {
+        id,
+        operation: InstructionAffirmationOperation.Reject,
+      })
+    ).rejects.toThrow('The instruction is locked for execution');
+  });
+
   it('should return a withdraw instruction transaction spec', async () => {
     const rawAffirmationStatus = dsMockUtils.createMockAffirmationStatus('Affirmed');
     dsMockUtils.createQueryMock('settlement', 'userAffirmations', {

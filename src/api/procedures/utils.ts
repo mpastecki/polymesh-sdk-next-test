@@ -54,10 +54,10 @@ export async function assertInstructionValid(
   const details = await instruction.detailsFromChain();
   const { status, type } = details;
 
-  if (status !== InstructionStatus.Pending && status !== InstructionStatus.Failed) {
+  if (status === InstructionStatus.Success || status === InstructionStatus.Rejected) {
     throw new PolymeshError({
-      code: ErrorCode.UnmetPrerequisite,
-      message: 'The Instruction must be in pending or failed state',
+      code: ErrorCode.NoDataChange,
+      message: 'The Instruction has already been executed',
     });
   }
 
@@ -81,18 +81,28 @@ export async function assertInstructionValid(
 /**
  * @hidden
  */
+function assertInstructionIsNotPruned(status: InstructionStatus): void {
+  if (status === InstructionStatus.Success || status === InstructionStatus.Rejected) {
+    throw new PolymeshError({
+      code: ErrorCode.NoDataChange,
+      message: 'The Instruction has already been executed',
+      data: {
+        currentStatus: status,
+      },
+    });
+  }
+}
+
+/**
+ * @hidden
+ */
 export async function assertInstructionValidForManualExecution(
   details: InstructionDetails,
   context: Context
 ): Promise<void> {
   const { status, type } = details;
 
-  if (status === InstructionStatus.Success || status === InstructionStatus.Rejected) {
-    throw new PolymeshError({
-      code: ErrorCode.NoDataChange,
-      message: 'The Instruction has already been executed',
-    });
-  }
+  assertInstructionIsNotPruned(status);
 
   if (type !== InstructionType.SettleManual && status !== InstructionStatus.Failed) {
     throw new PolymeshError({
@@ -114,6 +124,22 @@ export async function assertInstructionValidForManualExecution(
         },
       });
     }
+  }
+}
+
+/**
+ * @hidden
+ */
+export async function assertInstructionValidForLocking(details: InstructionDetails): Promise<void> {
+  const { status, type } = details;
+
+  assertInstructionIsNotPruned(status);
+
+  if (type !== InstructionType.SettleAfterLock) {
+    throw new PolymeshError({
+      code: ErrorCode.UnmetPrerequisite,
+      message: `You cannot lock instruction of type '${type}'`,
+    });
   }
 }
 
