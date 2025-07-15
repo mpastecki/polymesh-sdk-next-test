@@ -24,6 +24,9 @@ trap cleanup EXIT
 
 cd "$SDK_DIR"
 
+# Enable corepack to use correct Yarn version
+corepack enable
+
 # Install SDK packages and link it
 yarn
 yarn build:ts
@@ -35,6 +38,9 @@ cd dist
 yarn link
 
 cd "$TEST_DIR"
+
+# Enable corepack for test environment
+corepack enable
 
 # Link the built SDK version
 echo "[SDK] Linking built SDK version"

@@ -15,7 +15,10 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Enable Corepack
+        run: corepack enable
       - name: install dependencies
-        run: yarn --frozen-lockfile
+        run: yarn install --immutable
       - name: test
         run: yarn test:integration
