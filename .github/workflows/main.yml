@@ -12,13 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: 'yarn'
           registry-url: 'https://registry.npmjs.org'
-      - name: Enable Corepack
-        run: corepack enable
       - name: install dependencies
         run: yarn install --immutable
       - name: lint
@@ -32,13 +31,12 @@ jobs:
         shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
       - name: Enable Corepack
         run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
       - name: install dependencies
         run: yarn install --immutable
       - name: test
@@ -85,13 +83,12 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
       - name: Enable Corepack
         run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
       - name: install dependencies
         run: yarn install --immutable
       - name: build
