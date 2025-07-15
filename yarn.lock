@@ -2829,7 +2829,7 @@ __metadata:
     "@polkadot/util": "npm:12.6.2"
     "@polkadot/util-crypto": "npm:12.6.2"
     "@polymeshassociation/local-signing-manager": "npm:^3.0.1"
-    "@polymeshassociation/polymesh-types": "npm:^6.0.0"
+    "@polymeshassociation/polymesh-types": "npm:^6.2.0"
     "@polymeshassociation/signing-manager-types": "npm:^3.0.0"
     "@polymeshassociation/typedoc-theme": "npm:^1.2.0"
     "@semantic-release/changelog": "npm:^6.0.3"
@@ -2899,7 +2899,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@polymeshassociation/polymesh-types@npm:^6.0.0":
+"@polymeshassociation/polymesh-types@npm:^6.2.0":
   version: 6.2.0
   resolution: "@polymeshassociation/polymesh-types@npm:6.2.0"
   dependencies:
