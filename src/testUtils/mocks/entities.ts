@@ -567,7 +567,13 @@ function createMockEntityClass<Options extends EntityOptions>(
  * Make an entity getter mock that returns a value or calls a specific function
  */
 function createEntityGetterMock<Result>(args: EntityGetter<Result>, isAsync = true) {
-  if (typeof args === 'function' && 'withArgs' in args) {
+  // Type-safe check for jest.Mock: check for multiple jest.Mock-specific properties
+  if (
+    typeof args === 'function' &&
+    'mockImplementation' in args &&
+    'mockReturnValue' in args &&
+    typeof args.mockImplementation === 'function'
+  ) {
     return args;
   }
 

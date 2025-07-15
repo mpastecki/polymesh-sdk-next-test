@@ -25,7 +25,7 @@ jest.mock(
 
 describe('addAssetRequirement procedure', () => {
   let mockContext: Mocked<Context>;
-  let stringToAssetIdSpy: jest.SpyInstance<PolymeshPrimitivesAssetAssetId, [string, Context]>;
+  let assetToMeshAssetIdSpy: jest.SpyInstance<PolymeshPrimitivesAssetAssetId, [BaseAsset, Context]>;
   let requirementToComplianceRequirementSpy: jest.SpyInstance<
     Promise<PolymeshPrimitivesComplianceManagerComplianceRequirement>,
     [InputRequirement, Context]
@@ -40,7 +40,7 @@ describe('addAssetRequirement procedure', () => {
     dsMockUtils.initMocks();
     procedureMockUtils.initMocks();
     entityMockUtils.initMocks();
-    stringToAssetIdSpy = jest.spyOn(utilsConversionModule, 'stringToAssetId');
+    assetToMeshAssetIdSpy = jest.spyOn(utilsConversionModule, 'assetToMeshAssetId');
     requirementToComplianceRequirementSpy = jest.spyOn(
       utilsConversionModule,
       'requirementToComplianceRequirement'
@@ -78,8 +78,9 @@ describe('addAssetRequirement procedure', () => {
     );
 
     mockContext = dsMockUtils.getContextInstance();
+    rawAssetId = dsMockUtils.createMockAssetId(assetId);
 
-    when(stringToAssetIdSpy).calledWith(assetId, mockContext).mockReturnValue(rawAssetId);
+    when(assetToMeshAssetIdSpy).calledWith(asset, mockContext).mockReturnValue(rawAssetId);
   });
 
   afterEach(() => {

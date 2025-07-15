@@ -114,9 +114,12 @@ describe('createTransactionBatch procedure', () => {
         resolvers: [],
       });
 
-      const boundFunc = getAuthorization.bind<typeof proc, never, ProcedureAuthorization>(proc);
+      const boundFunc = (getAuthorization as (this: typeof proc) => ProcedureAuthorization).bind(
+        proc
+      );
+      const result = boundFunc();
 
-      expect(boundFunc()).toEqual({
+      expect(result).toEqual({
         permissions: {
           transactions: [...tags, TxTags.utility.BatchAll],
         },
@@ -164,11 +167,12 @@ describe('createTransactionBatch procedure', () => {
         ReturnValues,
         Storage
       >(mockContext);
-      const boundFunc = prepareStorage.bind<
-        typeof proc,
-        CreateTransactionBatchParams<ReturnValues>,
-        Storage
-      >(proc);
+      const boundFunc = (
+        prepareStorage as (
+          this: typeof proc,
+          args: CreateTransactionBatchParams<ReturnValues>
+        ) => Storage
+      ).bind(proc);
       const result = boundFunc({ transactions });
 
       expect(result).toEqual({
@@ -227,11 +231,12 @@ describe('createTransactionBatch procedure', () => {
       SingleReturnValues,
       Storage
     >(mockContext);
-    const boundFunc = prepareStorage.bind<
-      typeof proc,
-      CreateTransactionBatchParams<SingleReturnValues>,
-      Storage
-    >(proc);
+    const boundFunc = (
+      prepareStorage as (
+        this: typeof proc,
+        args: CreateTransactionBatchParams<SingleReturnValues>
+      ) => Storage
+    ).bind(proc);
     const result = boundFunc({ transactions });
 
     expect(result).toEqual({
@@ -271,11 +276,12 @@ describe('createTransactionBatch procedure', () => {
       SingleReturnValues,
       Storage
     >(mockContext);
-    const boundFunc = prepareStorage.bind<
-      typeof proc,
-      CreateTransactionBatchParams<SingleReturnValues>,
-      Storage
-    >(proc);
+    const boundFunc = (
+      prepareStorage as (
+        this: typeof proc,
+        args: CreateTransactionBatchParams<SingleReturnValues>
+      ) => Storage
+    ).bind(proc);
     const result = boundFunc({ transactions });
 
     expect(result).toEqual({
@@ -316,11 +322,12 @@ describe('createTransactionBatch procedure', () => {
       SingleReturnValues,
       Storage
     >(mockContext);
-    const boundFunc = prepareStorage.bind<
-      typeof proc,
-      CreateTransactionBatchParams<SingleReturnValues>,
-      Storage
-    >(proc);
+    const boundFunc = (
+      prepareStorage as (
+        this: typeof proc,
+        args: CreateTransactionBatchParams<SingleReturnValues>
+      ) => Storage
+    ).bind(proc);
     const result = boundFunc({ transactions });
 
     expect(result).toEqual({

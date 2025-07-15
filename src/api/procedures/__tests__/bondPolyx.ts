@@ -51,6 +51,9 @@ describe('bondPolyx procedure', () => {
     actingAccount = entityMockUtils.getAccountInstance({ address: DUMMY_ACCOUNT_ID });
     rawAccountId = dsMockUtils.createMockAccountId(actingAccount.address);
     rawAmount = dsMockUtils.createMockBalance(amount);
+    rewardDestination = dsMockUtils.createMockAccountId(
+      'someRewardDestination'
+    ) as unknown as PalletStakingRewardDestination;
 
     bigNumberToBalanceSpy = jest.spyOn(utilsConversionModule, 'bigNumberToBalance');
     stringToAccountIdSpy = jest.spyOn(utilsConversionModule, 'stringToAccountId');

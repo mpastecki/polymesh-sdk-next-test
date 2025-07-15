@@ -25,7 +25,7 @@ jest.mock(
 
 describe('modifyComplianceRequirement procedure', () => {
   let mockContext: Mocked<Context>;
-  let stringToAssetIdSpy: jest.SpyInstance<PolymeshPrimitivesAssetAssetId, [string, Context]>;
+  let assetToMeshAssetIdSpy: jest.SpyInstance<PolymeshPrimitivesAssetAssetId, [BaseAsset, Context]>;
   let requirementToComplianceRequirementSpy: jest.SpyInstance<
     Promise<PolymeshPrimitivesComplianceManagerComplianceRequirement>,
     [InputRequirement, Context]
@@ -41,7 +41,7 @@ describe('modifyComplianceRequirement procedure', () => {
     dsMockUtils.initMocks();
     procedureMockUtils.initMocks();
     entityMockUtils.initMocks();
-    stringToAssetIdSpy = jest.spyOn(utilsConversionModule, 'stringToAssetId');
+    assetToMeshAssetIdSpy = jest.spyOn(utilsConversionModule, 'assetToMeshAssetId');
     requirementToComplianceRequirementSpy = jest.spyOn(
       utilsConversionModule,
       'requirementToComplianceRequirement'
@@ -71,8 +71,7 @@ describe('modifyComplianceRequirement procedure', () => {
     );
 
     mockContext = dsMockUtils.getContextInstance();
-
-    when(stringToAssetIdSpy).calledWith(assetId, mockContext).mockReturnValue(rawAssetId);
+    rawAssetId = dsMockUtils.createMockAssetId(assetId);
 
     asset = entityMockUtils.getBaseAssetInstance({
       assetId,
@@ -86,6 +85,8 @@ describe('modifyComplianceRequirement procedure', () => {
         defaultTrustedClaimIssuers: [],
       },
     });
+
+    when(assetToMeshAssetIdSpy).calledWith(asset, mockContext).mockReturnValue(rawAssetId);
   });
 
   afterEach(() => {
