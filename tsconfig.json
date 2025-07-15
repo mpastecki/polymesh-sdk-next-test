@@ -15,12 +15,6 @@
         "node_modules/@polymeshassociation/polymesh-types/polkadot/types-lookup"
       ]
     },
-    "plugins": [
-      {
-        "transform": "@ovos-media/ts-transform-paths",
-        "exclude": ["*"]
-      }
-    ],
     "useUnknownInCatchVariables": false,
     "noImplicitOverride": true,
     "target": "es6",
