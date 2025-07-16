@@ -278,6 +278,7 @@ import {
   StakingNomination,
   StakingPayee,
   StakingUnlockingEntry,
+  StatClaimIssuer,
   StatClaimType,
   StatType,
   TargetTreatment,
@@ -312,7 +313,6 @@ import {
   PermissionGroupIdentifier,
   PolymeshTx,
   StatClaimInputType,
-  StatClaimIssuer,
 } from '~/types/internal';
 import { tuple } from '~/types/utils';
 import { hexToUuid } from '~/utils';
@@ -3506,9 +3506,20 @@ export async function nftMovementToPortfolioFund(
  * @hidden
  */
 export function claimTypeToMeshClaimType(
-  claimType: ClaimType,
+  claimType: ClaimType | TrustedFor,
   context: Context
 ): PolymeshPrimitivesIdentityClaimClaimType {
+  if (
+    typeof claimType === 'object' &&
+    claimType.type === ClaimType.Custom &&
+    claimType.customClaimTypeId
+  ) {
+    const customU32 = context.createType('u32', claimType.customClaimTypeId);
+    return context.createType('PolymeshPrimitivesIdentityClaimClaimType', {
+      Custom: customU32,
+    });
+  }
+
   return context.createType('PolymeshPrimitivesIdentityClaimClaimType', claimType);
 }
 
@@ -5976,12 +5987,23 @@ export function assetComplianceToTransferRestrictions(
 /**
  * @hidden
  */
-export function assetStatToStat(value: PolymeshPrimitivesStatisticsStatType): AssetStat {
-  const type = value.operationType.isCount ? StatType.Count : StatType.Balance;
+export function assetStatToStat(
+  value: PolymeshPrimitivesStatisticsStatType,
+  context: Context
+): AssetStat {
+  if (value.claimIssuer.isSome) {
+    const [rawClaimType, rawIssuer] = value.claimIssuer.unwrap();
+    const trustedFor = meshClaimTypeToClaimType(rawClaimType);
 
-  return {
-    type,
-  };
+    const type = value.operationType.isCount ? StatType.ScopedCount : StatType.ScopedBalance;
+    const claimIssuer = {
+      issuer: new Identity({ did: identityIdToString(rawIssuer) }, context),
+      claimType: trustedFor,
+    };
+    return { type, claimIssuer };
+  }
+  const type = value.operationType.isCount ? StatType.Count : StatType.Balance;
+  return { type };
 }
 
 /**

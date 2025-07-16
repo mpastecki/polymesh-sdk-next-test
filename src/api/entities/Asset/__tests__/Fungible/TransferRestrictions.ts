@@ -207,7 +207,33 @@ describe('TransferRestrictions class', () => {
   });
 
   describe('method: getStats', () => {
-    it('should return the active stats for the asset', async () => {
+    it('should return the active stats for the asset, including scoped and custom claims', async () => {
+      // Standard scoped stat types
+      const affiliateStat = dsMockUtils.createMockStatisticsStatType({
+        operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+        claimIssuer: dsMockUtils.createMockOption([
+          dsMockUtils.createMockClaimType(ClaimType.Affiliate),
+          dsMockUtils.createMockIdentityId('affiliateDid'),
+        ]),
+      });
+      const jurisdictionStat = dsMockUtils.createMockStatisticsStatType({
+        operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+        claimIssuer: dsMockUtils.createMockOption([
+          dsMockUtils.createMockClaimType(ClaimType.Jurisdiction),
+          dsMockUtils.createMockIdentityId('jurisdictionDid'),
+        ]),
+      });
+
+      // Custom claim type
+      const customClaimTypeId = new BigNumber(123);
+      const customStat = dsMockUtils.createMockStatisticsStatType({
+        operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+        claimIssuer: dsMockUtils.createMockOption([
+          dsMockUtils.createMockClaimType(ClaimType.Custom, customClaimTypeId),
+          dsMockUtils.createMockIdentityId('customDid'),
+        ]),
+      });
+
       dsMockUtils.createQueryMock('statistics', 'activeAssetStats', {
         returnValue: dsMockUtils.createMockBtreeSet([
           dsMockUtils.createMockStatisticsStatType({
@@ -218,12 +244,41 @@ describe('TransferRestrictions class', () => {
             operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
             claimIssuer: dsMockUtils.createMockOption(),
           }),
+          affiliateStat,
+          jurisdictionStat,
+          customStat,
         ]),
       });
 
       const result = await transferRestrictions.getStats();
 
-      expect(result).toEqual([{ type: StatType.Balance }, { type: StatType.Count }]);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: StatType.Balance }),
+          expect.objectContaining({ type: StatType.Count }),
+          expect.objectContaining({
+            type: StatType.ScopedCount,
+            claimIssuer: expect.objectContaining({
+              claimType: ClaimType.Affiliate,
+              issuer: expect.objectContaining({ did: 'affiliateDid' }),
+            }),
+          }),
+          expect.objectContaining({
+            type: StatType.ScopedBalance,
+            claimIssuer: expect.objectContaining({
+              claimType: ClaimType.Jurisdiction,
+              issuer: expect.objectContaining({ did: 'jurisdictionDid' }),
+            }),
+          }),
+          expect.objectContaining({
+            type: StatType.ScopedBalance,
+            claimIssuer: expect.objectContaining({
+              claimType: { type: ClaimType.Custom, customClaimTypeId },
+              issuer: expect.objectContaining({ did: 'customDid' }),
+            }),
+          }),
+        ])
+      );
     });
   });
 

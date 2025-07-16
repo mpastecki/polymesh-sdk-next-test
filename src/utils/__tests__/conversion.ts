@@ -5007,50 +5007,48 @@ describe('meshClaimTypeToClaimType and claimTypeToMeshClaimType', () => {
   });
 
   describe('claimTypeToMeshClaimType', () => {
-    it('should convert a ClaimType to a polkadot ClaimType', () => {
+    it('should convert different standard ClaimTypes to a polkadot ClaimType', () => {
       const context = dsMockUtils.getContextInstance();
-      const mockClaim = dsMockUtils.createMockClaimType(ClaimType.Accredited);
-      when(context.createType)
-        .calledWith('PolymeshPrimitivesIdentityClaimClaimType', ClaimType.Accredited)
-        .mockReturnValue(mockClaim);
+      const testCases = [
+        ClaimType.Affiliate,
+        ClaimType.BuyLockup,
+        ClaimType.SellLockup,
+        ClaimType.CustomerDueDiligence,
+        ClaimType.KnowYourCustomer,
+        ClaimType.Jurisdiction,
+        ClaimType.Exempted,
+        ClaimType.Blocked,
+      ];
 
-      const result = claimTypeToMeshClaimType(ClaimType.Accredited, context);
-      expect(result).toEqual(mockClaim);
+      testCases.forEach(claimType => {
+        const mockClaim = dsMockUtils.createMockClaimType(claimType);
+        when(context.createType)
+          .calledWith('PolymeshPrimitivesIdentityClaimClaimType', claimType)
+          .mockReturnValue(mockClaim);
+
+        const result = claimTypeToMeshClaimType(claimType, context);
+        expect(result).toEqual(mockClaim);
+      });
     });
-  });
-});
 
-describe('meshClaimTypeToClaimType', () => {
-  beforeAll(() => {
-    dsMockUtils.initMocks();
-  });
+    it('should convert a custom Claim object to a polkadot ClaimType', () => {
+      const context = dsMockUtils.getContextInstance();
+      const customClaimTypeId = new BigNumber(42);
+      const customClaim: { type: ClaimType.Custom; customClaimTypeId: BigNumber } = {
+        type: ClaimType.Custom,
+        customClaimTypeId,
+      };
+      const mockU32 = dsMockUtils.createMockU32(customClaimTypeId);
+      const mockCustomClaim = dsMockUtils.createMockClaimType(ClaimType.Custom);
 
-  afterEach(() => {
-    dsMockUtils.reset();
-  });
+      when(context.createType).calledWith('u32', customClaimTypeId).mockReturnValue(mockU32);
+      when(context.createType)
+        .calledWith('PolymeshPrimitivesIdentityClaimClaimType', { Custom: mockU32 })
+        .mockReturnValue(mockCustomClaim);
 
-  afterAll(() => {
-    dsMockUtils.cleanup();
-  });
-
-  it('should convert a statistics enabled ClaimType to a claimType', () => {
-    let fakeResult = ClaimType.Accredited;
-    let claimType = dsMockUtils.createMockClaimType(fakeResult);
-
-    let result = meshClaimTypeToClaimType(claimType);
-    expect(result).toEqual(fakeResult);
-
-    fakeResult = ClaimType.Affiliate;
-    claimType = dsMockUtils.createMockClaimType(fakeResult);
-
-    result = meshClaimTypeToClaimType(claimType);
-    expect(result).toEqual(fakeResult);
-
-    fakeResult = ClaimType.Jurisdiction;
-    claimType = dsMockUtils.createMockClaimType(fakeResult);
-
-    result = meshClaimTypeToClaimType(claimType);
-    expect(result).toEqual(fakeResult);
+      const result = claimTypeToMeshClaimType(customClaim, context);
+      expect(result).toEqual(mockCustomClaim);
+    });
   });
 });
 
@@ -12476,29 +12474,189 @@ describe('assetComplianceToTransferRestrictions', () => {
 });
 
 describe('assetStatToStat', () => {
-  it('should convert asset stat with Count operation to Count stat type', () => {
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+  });
+
+  afterEach(() => {
+    dsMockUtils.reset();
+  });
+
+  it('should convert asset stat with Count operation and no claim issuer to Count stat type', () => {
+    const context = dsMockUtils.getContextInstance();
     const mockStatType = dsMockUtils.createMockStatisticsStatType({
       operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
-      claimIssuer: dsMockUtils.createMockOption(),
+      claimIssuer: dsMockUtils.createMockOption(), // None
     });
 
-    const result = assetStatToStat(mockStatType);
+    const result = assetStatToStat(mockStatType, context);
 
     expect(result).toEqual({
       type: StatType.Count,
     });
   });
 
-  it('should convert asset stat with Balance operation to Balance stat type', () => {
+  it('should convert asset stat with Balance operation and no claim issuer to Balance stat type', () => {
+    const context = dsMockUtils.getContextInstance();
     const mockStatType = dsMockUtils.createMockStatisticsStatType({
       operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
-      claimIssuer: dsMockUtils.createMockOption(),
+      claimIssuer: dsMockUtils.createMockOption(), // None
     });
 
-    const result = assetStatToStat(mockStatType);
+    const result = assetStatToStat(mockStatType, context);
 
     expect(result).toEqual({
       type: StatType.Balance,
+    });
+  });
+
+  it('should convert asset stat with Count operation different standard claim types to ScopedCount stat type', () => {
+    const context = dsMockUtils.getContextInstance();
+    const did = 'testIdentityId';
+    const testCases = [
+      ClaimType.BuyLockup,
+      ClaimType.SellLockup,
+      ClaimType.CustomerDueDiligence,
+      ClaimType.KnowYourCustomer,
+      ClaimType.Jurisdiction,
+      ClaimType.Exempted,
+      ClaimType.Blocked,
+    ];
+
+    testCases.forEach(claimType => {
+      const mockClaimType = dsMockUtils.createMockClaimType(claimType);
+      const mockIdentityId = dsMockUtils.createMockIdentityId(did);
+      const claimIssuer = [mockClaimType, mockIdentityId] as [
+        typeof mockClaimType,
+        typeof mockIdentityId
+      ];
+      const mockClaimIssuer = dsMockUtils.createMockOption(claimIssuer);
+
+      const mockStatType = dsMockUtils.createMockStatisticsStatType({
+        operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+        claimIssuer: mockClaimIssuer,
+      });
+
+      const result = assetStatToStat(mockStatType, context);
+
+      expect(result).toEqual({
+        type: StatType.ScopedCount,
+        claimIssuer: {
+          issuer: expect.objectContaining({ did }),
+          claimType,
+        },
+      });
+    });
+  });
+
+  it('should convert asset stat with Balance operation different standard claim types to ScopedCount stat type', () => {
+    const context = dsMockUtils.getContextInstance();
+    const did = 'testIdentityId';
+    const testCases = [
+      ClaimType.BuyLockup,
+      ClaimType.SellLockup,
+      ClaimType.CustomerDueDiligence,
+      ClaimType.KnowYourCustomer,
+      ClaimType.Jurisdiction,
+      ClaimType.Exempted,
+      ClaimType.Blocked,
+    ];
+
+    testCases.forEach(claimType => {
+      const mockClaimType = dsMockUtils.createMockClaimType(claimType);
+      const mockIdentityId = dsMockUtils.createMockIdentityId(did);
+      const claimIssuer = [mockClaimType, mockIdentityId] as [
+        typeof mockClaimType,
+        typeof mockIdentityId
+      ];
+      const mockClaimIssuer = dsMockUtils.createMockOption(claimIssuer);
+
+      const mockStatType = dsMockUtils.createMockStatisticsStatType({
+        operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+        claimIssuer: mockClaimIssuer,
+      });
+
+      const result = assetStatToStat(mockStatType, context);
+
+      expect(result).toEqual({
+        type: StatType.ScopedBalance,
+        claimIssuer: {
+          issuer: expect.objectContaining({ did }),
+          claimType,
+        },
+      });
+    });
+  });
+
+  it('should convert asset stat with Count operation and custom claim issuer to ScopedCount stat type', () => {
+    const context = dsMockUtils.getContextInstance();
+    const did = 'customClaimDid';
+    const customClaimTypeId = new BigNumber(789);
+
+    const mockCustomClaimType = dsMockUtils.createMockClaimType(
+      ClaimType.Custom,
+      customClaimTypeId
+    );
+
+    const mockIdentityId = dsMockUtils.createMockIdentityId(did);
+    const claimIssuer = [mockCustomClaimType, mockIdentityId] as [
+      typeof mockCustomClaimType,
+      typeof mockIdentityId
+    ];
+    const mockClaimIssuer = dsMockUtils.createMockOption(claimIssuer);
+
+    const mockStatType = dsMockUtils.createMockStatisticsStatType({
+      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Count),
+      claimIssuer: mockClaimIssuer,
+    });
+
+    const result = assetStatToStat(mockStatType, context);
+
+    expect(result).toEqual({
+      type: StatType.ScopedCount,
+      claimIssuer: {
+        issuer: expect.objectContaining({ did }),
+        claimType: {
+          type: ClaimType.Custom,
+          customClaimTypeId,
+        },
+      },
+    });
+  });
+
+  it('should convert asset stat with Balance operation and custom claim issuer to ScopedBalance stat type', () => {
+    const context = dsMockUtils.getContextInstance();
+    const did = 'customBalanceDid';
+    const customClaimTypeId = new BigNumber(999);
+
+    const mockCustomClaimType = dsMockUtils.createMockClaimType(
+      ClaimType.Custom,
+      customClaimTypeId
+    );
+
+    const mockIdentityId = dsMockUtils.createMockIdentityId(did);
+    const claimIssuer = [mockCustomClaimType, mockIdentityId] as [
+      typeof mockCustomClaimType,
+      typeof mockIdentityId
+    ];
+    const mockClaimIssuer = dsMockUtils.createMockOption(claimIssuer);
+
+    const mockStatType = dsMockUtils.createMockStatisticsStatType({
+      operationType: dsMockUtils.createMockStatisticsOpType(StatType.Balance),
+      claimIssuer: mockClaimIssuer,
+    });
+
+    const result = assetStatToStat(mockStatType, context);
+
+    expect(result).toEqual({
+      type: StatType.ScopedBalance,
+      claimIssuer: {
+        issuer: expect.objectContaining({ did }),
+        claimType: {
+          type: ClaimType.Custom,
+          customClaimTypeId,
+        },
+      },
     });
   });
 });

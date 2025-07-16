@@ -81,6 +81,7 @@ import {
   ProcedureMethod,
   ProcedureOpts,
   Scope,
+  StatClaimIssuer,
   StatType,
   SubCallback,
   TransferRestrictionType,
@@ -95,7 +96,6 @@ import {
   MiddlewareV6Extrinsic,
   PolymeshTx,
   Queries,
-  StatClaimIssuer,
   TxWithArgs,
 } from '~/types/internal';
 import {

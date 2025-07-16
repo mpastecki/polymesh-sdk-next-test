@@ -159,7 +159,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
     const rawAssetId = stringToAssetId(parent.id, context);
     const rawStats = await statistics.activeAssetStats(rawAssetId);
 
-    const stats = [...rawStats].map(stat => assetStatToStat(stat));
+    const stats = [...rawStats].map(stat => assetStatToStat(stat, context));
 
     return stats;
   }

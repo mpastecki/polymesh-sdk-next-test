@@ -556,7 +556,7 @@ export interface AddCountStatInput {
 
 export interface StatClaimIssuer {
   issuer: Identity;
-  claimType: StatClaimType;
+  claimType: TrustedFor;
 }
 
 export type ClaimCountStatInput =
@@ -832,8 +832,3 @@ export type NonFungiblePortfolioMovement = {
 };
 
 export type PortfolioMovement = FungiblePortfolioMovement | NonFungiblePortfolioMovement;
-
-export type ActiveStats = {
-  isSet: boolean;
-  claims?: { claimType: ClaimType; issuer: Identity }[];
-};

@@ -34,7 +34,6 @@ import {
   Role,
   SignerValue,
   SimplePermissions,
-  StatClaimType,
   TxData,
 } from '~/types';
 
@@ -349,11 +348,6 @@ export type ExemptKey = {
 };
 
 export type StatClaimInputType = Omit<InputStatClaim, 'affiliate' | 'accredited'>;
-
-export interface StatClaimIssuer {
-  issuer: Identity;
-  claimType: StatClaimType;
-}
 
 export type MeshTickerOrAssetId =
   | {
