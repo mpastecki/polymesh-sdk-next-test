@@ -1,9 +1,8 @@
 import { QueryOptions } from '@apollo/client/core';
 import { ApiPromise } from '@polkadot/api';
 import { Signer as PolkadotSigner } from '@polkadot/types/types';
-import BigNumber from 'bignumber.js';
 // eslint-disable-next-line import/order
-import P from 'bluebird';
+import BigNumber from 'bignumber.js';
 // eslint-disable-next-line import/order
 import { EventEmitter } from 'events';
 import { when } from 'jest-when';
@@ -1637,11 +1636,13 @@ describe('Context class', () => {
       const mock = dsMockUtils.createRpcMock('chain', 'subscribeFinalizedHeads');
       const err = new Error('Foo');
       mock.mockImplementation(callback => {
-        setImmediate(() =>
+        setImmediate(() => {
           // eslint-disable-next-line n/no-callback-literal
-          callback({})
-        );
-        return P.delay(0).throw(err);
+          callback({});
+        });
+        return new Promise((_resolve, reject) => {
+          setImmediate(() => reject(err));
+        });
       });
 
       const context = await Context.create({

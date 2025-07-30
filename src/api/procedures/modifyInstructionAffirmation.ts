@@ -12,7 +12,6 @@ import {
   PolymeshMoment,
 } from '@polymeshassociation/polymesh-types/polkadot/polymesh';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import { assertInstructionValid } from '~/api/procedures/utils';
 import { Context, Identity, Instruction, PolymeshError, Procedure } from '~/internal';
@@ -22,7 +21,6 @@ import {
   DefaultPortfolio,
   ErrorCode,
   InstructionAffirmationOperation,
-  Leg,
   ModifyInstructionAffirmationParams,
   NumberedPortfolio,
   OffChainAffirmationReceipt,
@@ -734,29 +732,36 @@ export async function prepareStorage(
     settlementApi.getExecuteInstructionInfo(rawId),
   ]);
 
-  const [portfolios, senderLegAmount, offChainLegIndices] = await P.reduce<
-    Leg,
-    [(DefaultPortfolio | NumberedPortfolio)[], BigNumber, number[]]
-  >(
-    legs,
-    async (result, leg, index) => {
-      let [custodiedPortfolios, legAmount, offChainLegs] = result;
+  const legContributions = await Promise.all(
+    legs.map(async (leg, index) => {
       if (isOffChainLeg(leg)) {
-        offChainLegs.push(index);
+        return {
+          addedPortfolios: [] as (DefaultPortfolio | NumberedPortfolio)[],
+          deltaAmount: new BigNumber(0),
+          offChainIndex: index,
+        };
       } else {
         const { from, to } = leg;
-        [custodiedPortfolios, legAmount] = await assemblePortfolios(
-          tuple(custodiedPortfolios, legAmount),
+        const [addedPortfolios, deltaAmount] = await assemblePortfolios(
+          tuple([], new BigNumber(0)),
           from,
           to,
           signer.did,
           portfolioIdParams
         );
+        return { addedPortfolios, deltaAmount, offChainIndex: undefined };
       }
-      return tuple(custodiedPortfolios, legAmount, offChainLegs);
-    },
-    [[], new BigNumber(0), []]
+    })
   );
+
+  const portfolios = legContributions.flatMap(c => c.addedPortfolios);
+  const senderLegAmount = legContributions.reduce(
+    (sum, c) => sum.plus(c.deltaAmount),
+    new BigNumber(0)
+  );
+  const offChainLegIndices = legContributions
+    .filter(c => c.offChainIndex !== undefined)
+    .map(c => c.offChainIndex as number);
 
   const instructionInfo = executeInstructionInfo.unwrapOrDefault();
 

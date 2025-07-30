@@ -8,7 +8,6 @@ import {
 } from '@polkadot/types/lookup';
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 import { flatten, isEqual, union, unionWith } from 'lodash';
 
 import { assertPortfolioExists, assertValidCdd, assertVenueExists } from '~/api/procedures/utils';
@@ -530,6 +529,118 @@ type ErrIndexes = {
 /**
  * @hidden
  */
+async function validateInstruction(
+  instruction: AddInstructionParams,
+  index: number,
+  venueId: BigNumber | undefined,
+  context: Context
+): Promise<{
+  errors: Partial<ErrIndexes>;
+  legs: {
+    fungibleLegs: InstructionFungibleLeg[];
+    nftLegs: InstructionNftLeg[];
+    offChainLegs: InstructionOffChainLeg[];
+  };
+}> {
+  const { legs, tradeDate, valueDate } = instruction;
+  const errors: Partial<ErrIndexes> = {};
+
+  if (!legs.length) {
+    errors.legEmptyErrIndexes = [index];
+  }
+
+  if (legs.length > MAX_LEGS_LENGTH) {
+    errors.legLengthErrIndexes = [index];
+  }
+
+  const separatedLegs = await separateLegs(legs, context);
+
+  if (venueId === undefined && separatedLegs.offChainLegs.length > 0) {
+    errors.offChainNoVenueErrIndexes = [index];
+  }
+
+  const zeroAmountFungibleLegs = separatedLegs.fungibleLegs.filter(leg => leg.amount.isZero());
+  const zeroNftsNonFungible = separatedLegs.nftLegs.filter(leg => leg.nfts.length === 0);
+  const zeroAmountOffChainLegs = separatedLegs.offChainLegs.filter(leg =>
+    leg.offChainAmount.isZero()
+  );
+
+  if (
+    zeroAmountFungibleLegs.length ||
+    zeroNftsNonFungible.length ||
+    zeroAmountOffChainLegs.length
+  ) {
+    errors.legAmountErrIndexes = [index];
+  }
+
+  const sameIdentityLegs = legs.filter(leg => {
+    if (isOffChainLeg(leg)) {
+      return asDid(leg.from) === asDid(leg.to);
+    } else {
+      const { from, to } = leg;
+      const fromId = portfolioLikeToPortfolioId(from);
+      const toId = portfolioLikeToPortfolioId(to);
+      return fromId.did === toId.did;
+    }
+  });
+
+  if (sameIdentityLegs.length) {
+    errors.sameIdentityErrIndexes = [index];
+  }
+
+  if (tradeDate && valueDate && tradeDate > valueDate) {
+    errors.datesErrIndexes = [index];
+  }
+
+  return { errors, legs: separatedLegs };
+}
+
+/**
+ * @hidden
+ */
+function buildInstructionParams(
+  instruction: AddInstructionParams,
+  legs: {
+    fungibleLegs: InstructionFungibleLeg[];
+    nftLegs: InstructionNftLeg[];
+    offChainLegs: InstructionOffChainLeg[];
+  },
+  endCondition: InstructionEndCondition,
+  venueId: BigNumber | undefined,
+  context: Context
+): {
+  rawVenueId: u64 | null;
+  rawSettlementType: PolymeshPrimitivesSettlementSettlementType;
+  rawTradeDate: u64 | null;
+  rawValueDate: u64 | null;
+  rawLegs: PolymeshPrimitivesSettlementLeg[];
+  rawInstructionMemo: PolymeshPrimitivesMemo | null;
+  rawMediators: BTreeSet<PolymeshPrimitivesIdentityId>;
+} {
+  const { tradeDate, valueDate, memo, mediators } = instruction;
+
+  const rawVenueId = optionize(bigNumberToU64)(venueId, context);
+  const rawSettlementType = endConditionToSettlementType(endCondition, context);
+  const rawTradeDate = optionize(dateToMoment)(tradeDate, context);
+  const rawValueDate = optionize(dateToMoment)(valueDate, context);
+  const rawInstructionMemo = optionize(stringToMemo)(memo, context);
+  const mediatorIds = mediators?.map(mediator => asIdentity(mediator, context));
+  const rawMediators = identitiesToBtreeSet(mediatorIds ?? [], context);
+
+  return {
+    rawVenueId,
+    rawSettlementType,
+    rawTradeDate,
+    rawValueDate,
+    rawLegs: [],
+    rawInstructionMemo,
+    rawMediators,
+  };
+}
+
+/**
+ * @hidden
+ */
 async function getTxArgsAndErrors(
   instructions: AddInstructionParams[],
   portfoliosToAffirm: (DefaultPortfolio | NumberedPortfolio)[][],
@@ -555,53 +666,21 @@ async function getTxArgsAndErrors(
     mediatorErrIndexes: [],
   };
 
-  // eslint-disable-next-line complexity
-  await P.each(instructions, async (instruction, i) => {
-    const { legs, tradeDate, valueDate, memo, mediators } = instruction;
-    if (!legs.length) {
-      errIndexes.legEmptyErrIndexes.push(i);
-    }
+  for (const [i, instruction] of instructions.entries()) {
+    // Validate instruction and get separated legs
+    const { errors, legs } = await validateInstruction(instruction, i, venueId, context);
 
-    if (legs.length > MAX_LEGS_LENGTH) {
-      errIndexes.legLengthErrIndexes.push(i);
-    }
-
-    const { fungibleLegs, nftLegs, offChainLegs } = await separateLegs(legs, context);
-
-    if (venueId === undefined && offChainLegs.length > 0) {
-      errIndexes.offChainNoVenueErrIndexes.push(i);
-    }
-
-    const zeroAmountFungibleLegs = fungibleLegs.filter(leg => leg.amount.isZero());
-    if (zeroAmountFungibleLegs.length) {
-      errIndexes.legAmountErrIndexes.push(i);
-    }
-
-    const zeroNftsNonFungible = nftLegs.filter(leg => leg.nfts.length === 0);
-    if (zeroNftsNonFungible.length) {
-      errIndexes.legAmountErrIndexes.push(i);
-    }
-
-    const zeroAmountOffChainLegs = offChainLegs.filter(leg => leg.offChainAmount.isZero());
-    if (zeroAmountOffChainLegs.length) {
-      errIndexes.legAmountErrIndexes.push(i);
-    }
-
-    const sameIdentityLegs = legs.filter(leg => {
-      if (isOffChainLeg(leg)) {
-        return asDid(leg.from) === asDid(leg.to);
-      } else {
-        const { from, to } = leg;
-        const fromId = portfolioLikeToPortfolioId(from);
-        const toId = portfolioLikeToPortfolioId(to);
-        return fromId.did === toId.did;
+    // Merge validation errors
+    Object.entries(errors).forEach(([key, indexes]) => {
+      if (indexes && indexes.length > 0) {
+        const targetArray = (errIndexes as Record<string, number[]>)[key];
+        if (targetArray) {
+          targetArray.push(...indexes);
+        }
       }
     });
 
-    if (sameIdentityLegs.length) {
-      errIndexes.sameIdentityErrIndexes.push(i);
-    }
-
+    // Check end condition
     const { endCondition, errorEndBlockIndex, errorMediatorIndex } = getEndCondition(
       instruction,
       latestBlock,
@@ -616,23 +695,13 @@ async function getTxArgsAndErrors(
       errIndexes.mediatorErrIndexes.push(errorMediatorIndex);
     }
 
-    if (tradeDate && valueDate && tradeDate > valueDate) {
-      errIndexes.datesErrIndexes.push(i);
-    }
-
     if (checkAllErrorsAreEmpty(errIndexes)) {
-      const rawVenueId = optionize(bigNumberToU64)(venueId, context);
-      const rawSettlementType = endConditionToSettlementType(endCondition, context);
-      const rawTradeDate = optionize(dateToMoment)(tradeDate, context);
-      const rawValueDate = optionize(dateToMoment)(valueDate, context);
-      const rawInstructionMemo = optionize(stringToMemo)(memo, context);
-      const mediatorIds = mediators?.map(mediator => asIdentity(mediator, context));
-      const rawMediators = identitiesToBtreeSet(mediatorIds ?? [], context);
+      const baseParams = buildInstructionParams(instruction, legs, endCondition, venueId, context);
 
       const rawLegValues = await Promise.all([
-        ...fungibleLegs.map(async leg => await mapFungibleLeg(leg, context)),
-        ...nftLegs.map(async leg => await mapNftLeg(leg, context)),
-        ...offChainLegs.map(leg => mapOffChainLeg(leg, context)),
+        ...legs.fungibleLegs.map(async leg => await mapFungibleLeg(leg, context)),
+        ...legs.nftLegs.map(async leg => await mapNftLeg(leg, context)),
+        ...legs.offChainLegs.map(leg => mapOffChainLeg(leg, context)),
       ]);
 
       const rawLegs: PolymeshPrimitivesSettlementLeg[] = rawLegValues.flat();
@@ -642,28 +711,28 @@ async function getTxArgsAndErrors(
           portfolioIdToMeshPortfolioId(portfolioLikeToPortfolioId(portfolio), context)
         );
         addAndAffirmInstructionParams.push([
-          rawVenueId,
-          rawSettlementType,
-          rawTradeDate,
-          rawValueDate,
+          baseParams.rawVenueId,
+          baseParams.rawSettlementType,
+          baseParams.rawTradeDate,
+          baseParams.rawValueDate,
           rawLegs,
           portfolioIdsToBtreeSet(rawPortfolioIds, context),
-          rawInstructionMemo,
-          rawMediators,
+          baseParams.rawInstructionMemo,
+          baseParams.rawMediators,
         ]);
       } else {
         addInstructionParams.push([
-          rawVenueId,
-          rawSettlementType,
-          rawTradeDate,
-          rawValueDate,
+          baseParams.rawVenueId,
+          baseParams.rawSettlementType,
+          baseParams.rawTradeDate,
+          baseParams.rawValueDate,
           rawLegs,
-          rawInstructionMemo,
-          rawMediators,
+          baseParams.rawInstructionMemo,
+          baseParams.rawMediators,
         ]);
       }
     }
-  });
+  }
 
   return {
     errIndexes,
@@ -785,31 +854,35 @@ export async function prepareStorage(
 
   const identity = await context.getSigningIdentity();
 
-  const portfoliosToAffirm = await P.map(instructions, async ({ legs }) => {
-    const portfolios = await P.map(legs, async leg => {
-      const result = [];
-      if (!isOffChainLeg(leg)) {
-        const { from, to } = leg;
-        const fromPortfolio = portfolioLikeToPortfolio(from, context);
-        const toPortfolio = portfolioLikeToPortfolio(to, context);
+  const portfoliosToAffirm = await Promise.all(
+    instructions.map(async ({ legs }) => {
+      const portfolios = await Promise.all(
+        legs.map(async leg => {
+          const result = [];
+          if (!isOffChainLeg(leg)) {
+            const { from, to } = leg;
+            const fromPortfolio = portfolioLikeToPortfolio(from, context);
+            const toPortfolio = portfolioLikeToPortfolio(to, context);
 
-        const [fromCustodied, toCustodied] = await Promise.all([
-          fromPortfolio.isCustodiedBy({ identity }),
-          toPortfolio.isCustodiedBy({ identity }),
-        ]);
+            const [fromCustodied, toCustodied] = await Promise.all([
+              fromPortfolio.isCustodiedBy({ identity }),
+              toPortfolio.isCustodiedBy({ identity }),
+            ]);
 
-        if (fromCustodied) {
-          result.push(fromPortfolio);
-        }
+            if (fromCustodied) {
+              result.push(fromPortfolio);
+            }
 
-        if (toCustodied) {
-          result.push(toPortfolio);
-        }
-      }
-      return result;
-    });
-    return flatten(portfolios);
-  });
+            if (toCustodied) {
+              result.push(toPortfolio);
+            }
+          }
+          return result;
+        })
+      );
+      return flatten(portfolios);
+    })
+  );
 
   return {
     portfoliosToAffirm,

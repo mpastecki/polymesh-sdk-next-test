@@ -1,11 +1,9 @@
+/* eslint-disable simple-import-sort/imports */
+import { EventEmitter } from 'events';
+
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ISubmittableResult, Signer as PolkadotSigner } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
-/* eslint-disable import/order */
-import P from 'bluebird';
-import { EventEmitter } from 'events';
-/* eslint-enable import/order */
-import { range } from 'lodash';
 
 import {
   handleExtrinsicFailure,
@@ -291,6 +289,7 @@ export abstract class PolymeshTransactionBase<
       await this.assertFeesCovered();
 
       const receipt = await this.internalRun();
+
       this.receipt = receipt;
 
       const {
@@ -377,6 +376,7 @@ export abstract class PolymeshTransactionBase<
     const nonce = context.getNonce().toNumber();
 
     this.updateStatus(TransactionStatus.Unapproved);
+
     const txWithArgs = this.composeTx();
 
     if (context.supportsSubscription()) {
@@ -645,25 +645,11 @@ export abstract class PolymeshTransactionBase<
 
       const blockNumber = await context.getLatestBlock();
 
-      let done = false;
-
-      await P.each(range(6), async i => {
-        if (done) {
-          return;
-        }
-
-        try {
-          const processedBlock = await this.getLatestBlockFromMiddleware();
-          if (blockNumber.lte(processedBlock)) {
-            done = true;
-            emitter.emit(Event.ProcessedByMiddleware);
-            return;
-          }
-        } catch (err) {
-          /*
-           * query errors are swallowed because we wish to query again if we haven't reached the
-           * maximum amount of retries
-           */
+      for (let i = 0; i < 6; i++) {
+        const processedBlock = await this.getLatestBlockFromMiddleware();
+        if (blockNumber.lte(processedBlock)) {
+          emitter.emit(Event.ProcessedByMiddleware);
+          break;
         }
 
         if (i === 5) {
@@ -676,8 +662,8 @@ export abstract class PolymeshTransactionBase<
           );
         }
 
-        return delay(2000);
-      });
+        await delay(2000);
+      }
     } catch (err) {
       /* istanbul ignore next: extreme edge case */
       emitter.emit(

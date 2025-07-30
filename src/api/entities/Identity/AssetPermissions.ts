@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import {
   BaseAsset,
@@ -115,17 +114,19 @@ export class AssetPermissions extends Namespace<Identity> {
     const rawDid = stringToIdentityId(did, context);
     const assetEntries = await externalAgents.agentOf.entries(rawDid);
 
-    return P.map(assetEntries, async ([key]) => {
-      const assetId = assetIdToString(key.args[1]);
-      const asset = await asAsset(assetId, context);
+    return Promise.all(
+      assetEntries.map(async ([key]) => {
+        const assetId = assetIdToString(key.args[1]);
+        const asset = await asAsset(assetId, context);
 
-      const group = await this.getGroup({ asset });
+        const group = await this.getGroup({ asset });
 
-      return {
-        asset,
-        group,
-      };
-    });
+        return {
+          asset,
+          group,
+        };
+      })
+    );
   }
 
   /**

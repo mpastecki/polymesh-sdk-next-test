@@ -1,5 +1,4 @@
 import { u64 } from '@polkadot/types';
-import P from 'bluebird';
 import { forEach, mapValues } from 'lodash';
 
 import { assertAuthorizationRequestValid } from '~/api/procedures/utils';
@@ -123,7 +122,8 @@ export async function getAuthorization(
 
   const unexpiredRequests = authRequests.filter(request => !request.isExpired());
 
-  const authorized = await P.mapSeries(unexpiredRequests, async ({ target, issuer }) => {
+  const authorized = [];
+  for (const { target, issuer } of unexpiredRequests) {
     let condition;
 
     if (target instanceof Account) {
@@ -139,8 +139,8 @@ export async function getAuthorization(
       condition = condition || issuer.isEqual(identity);
     }
 
-    return condition;
-  });
+    authorized.push(condition);
+  }
 
   let transactions: TxTag[] = [TxTags.identity.RemoveAuthorization];
 

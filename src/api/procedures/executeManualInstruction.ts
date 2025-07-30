@@ -1,6 +1,5 @@
 import { PolymeshPrimitivesIdentityIdPortfolioId } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import { assertInstructionValidForManualExecution } from '~/api/procedures/utils';
 import {
@@ -10,13 +9,7 @@ import {
   PolymeshError,
   Procedure,
 } from '~/internal';
-import {
-  ErrorCode,
-  ExecuteManualInstructionParams,
-  InstructionDetails,
-  Leg,
-  TxTags,
-} from '~/types';
+import { ErrorCode, ExecuteManualInstructionParams, InstructionDetails, TxTags } from '~/types';
 import { ExtrinsicParams, ProcedureAuthorization, TransactionSpec } from '~/types/internal';
 import { tuple } from '~/types/utils';
 import { isOffChainLeg } from '~/utils';
@@ -152,38 +145,33 @@ export async function prepareStorage(
     instruction.detailsFromChain(),
   ]);
 
-  const [portfolios, offChainParties] = await P.reduce<
-    Leg,
-    [(DefaultPortfolio | NumberedPortfolio)[], Set<string>]
-  >(
-    legs,
-    async (data, leg) => {
-      const [custodiedPortfolios, offChainDids] = data;
+  const [portfolios, offChainParties] = await legs.reduce<
+    Promise<[(DefaultPortfolio | NumberedPortfolio)[], Set<string>]>
+  >(async (accPromise, leg) => {
+    const [custodiedPortfolios, offChainDids] = await accPromise;
 
-      if (isOffChainLeg(leg)) {
-        const { from, to } = leg;
-        offChainDids.add(from.did);
-        offChainDids.add(to.did);
-      } else {
-        const { from, to } = leg;
-        const [fromIsCustodied, toIsCustodied] = await Promise.all([
-          from.isCustodiedBy({ identity: did }),
-          to.isCustodiedBy({ identity: did }),
-        ]);
+    if (isOffChainLeg(leg)) {
+      const { from, to } = leg;
+      offChainDids.add(from.did);
+      offChainDids.add(to.did);
+    } else {
+      const { from, to } = leg;
+      const [fromIsCustodied, toIsCustodied] = await Promise.all([
+        from.isCustodiedBy({ identity: did }),
+        to.isCustodiedBy({ identity: did }),
+      ]);
 
-        if (fromIsCustodied) {
-          custodiedPortfolios.push(from);
-        }
-
-        if (toIsCustodied) {
-          custodiedPortfolios.push(to);
-        }
+      if (fromIsCustodied) {
+        custodiedPortfolios.push(from);
       }
 
-      return tuple(custodiedPortfolios, offChainDids);
-    },
-    [[], new Set<string>()]
-  );
+      if (toIsCustodied) {
+        custodiedPortfolios.push(to);
+      }
+    }
+
+    return tuple(custodiedPortfolios, offChainDids);
+  }, Promise.resolve(tuple([], new Set<string>())));
 
   return {
     portfolios,

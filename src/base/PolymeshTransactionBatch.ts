@@ -1,7 +1,6 @@
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import { handleExtrinsicFailure } from '~/base/utils';
 import { Context, PolymeshError, PolymeshTransaction, PolymeshTransactionBase } from '~/internal';
@@ -105,22 +104,22 @@ export class PolymeshTransactionBatch<
   /**
    * @hidden
    */
-  public getProtocolFees(): Promise<BigNumber> {
-    return P.reduce(
-      this.transactionData,
-      async (total, { tag, feeMultiplier = new BigNumber(1), fee }) => {
-        let fees = fee;
+  public async getProtocolFees(): Promise<BigNumber> {
+    let total = new BigNumber(0);
 
-        if (!fees) {
-          const [protocolFees] = await this.context.getProtocolFees({ tags: [tag] });
+    for (const { tag, feeMultiplier = new BigNumber(1), fee } of this.transactionData) {
+      let fees = fee;
 
-          fees = protocolFees!.fees;
-        }
+      if (!fees) {
+        const [protocolFees] = await this.context.getProtocolFees({ tags: [tag] });
 
-        return total.plus(fees.multipliedBy(feeMultiplier));
-      },
-      new BigNumber(0)
-    );
+        fees = protocolFees!.fees;
+      }
+
+      total = total.plus(fees.multipliedBy(feeMultiplier));
+    }
+
+    return total;
   }
 
   /**

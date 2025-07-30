@@ -1,7 +1,6 @@
 import { Option } from '@polkadot/types';
 import { PalletCorporateActionsDistribution } from '@polkadot/types/lookup';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 import { chunk, flatten, remove } from 'lodash';
 
 import {
@@ -586,7 +585,7 @@ export class DividendDistribution extends CorporateActionBase {
 
     const caId = corporateActionIdentifierToCaId({ localId, asset }, context);
 
-    await P.each(parallelCallChunks, async callChunk => {
+    for (const callChunk of parallelCallChunks) {
       const parallelMultiCalls = callChunk.map(participantChunk => {
         const multiParams = participantChunk.map(({ identity: { did } }) =>
           tuple(caId, stringToIdentityId(did, context))
@@ -598,7 +597,7 @@ export class DividendDistribution extends CorporateActionBase {
       const results = await Promise.all(parallelMultiCalls);
 
       paidStatuses = [...paidStatuses, ...flatten(results).map(paid => boolToBoolean(paid))];
-    });
+    }
 
     return paidStatuses;
   }

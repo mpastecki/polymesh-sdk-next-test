@@ -1,6 +1,5 @@
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import { assertPortfolioExists } from '~/api/procedures/utils';
 import { Context, FungibleAsset, Identity, Offering, PolymeshError, Procedure } from '~/internal';
@@ -89,14 +88,20 @@ export async function prepareLaunchOffering(
     const offeringPortfolioOwner = new Identity({ did: offeringPortfolioId.did }, context);
     const venues = await offeringPortfolioOwner.getVenues();
 
-    const offeringVenues = await P.filter(venues, async ownedVenue => {
-      const { type } = await ownedVenue.details();
+    const offeringVenues = await Promise.all(
+      venues.map(async ownedVenue => {
+        const { type } = await ownedVenue.details();
 
-      return type === VenueType.Sto;
-    });
-    if (offeringVenues.length) {
-      const firstVenue = offeringVenues[0];
-      venueId = firstVenue!.id;
+        return type === VenueType.Sto;
+      })
+    );
+
+    if (offeringVenues.some(Boolean)) {
+      const ownedVenue = venues.find(ownVenue => offeringVenues[venues.indexOf(ownVenue)]);
+
+      if (ownedVenue) {
+        ({ id: venueId } = ownedVenue);
+      }
     }
   }
 

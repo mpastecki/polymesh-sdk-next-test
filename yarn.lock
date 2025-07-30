@@ -2833,7 +2833,6 @@ __metadata:
     "@polymeshassociation/signing-manager-types": "npm:^3.0.0"
     "@polymeshassociation/typedoc-theme": "npm:^1.2.0"
     "@semantic-release/changelog": "npm:^6.0.3"
-    "@types/bluebird": "npm:^3.5.38"
     "@types/jest": "npm:^29.5.14"
     "@types/jest-when": "npm:^3.5.2"
     "@types/lodash": "npm:^4.14.197"
@@ -2845,7 +2844,6 @@ __metadata:
     assert: "npm:^2.0.0"
     babel-polyfill: "npm:^6.26.0"
     bignumber.js: "npm:9.0.1"
-    bluebird: "npm:^3.7.2"
     case-sensitive-paths-webpack-plugin: "npm:^2.4.0"
     cross-env: "npm:^7.0.3"
     cross-fetch: "npm:^4.0.0"
@@ -3333,13 +3331,6 @@ __metadata:
   dependencies:
     "@babel/types": "npm:^7.20.7"
   checksum: 10c0/5386f0af44f8746b063b87418f06129a814e16bb2686965a575e9d7376b360b088b89177778d8c426012abc43dd1a2d8ec3218bfc382280c898682746ce2ffbd
-  languageName: node
-  linkType: hard
-
-"@types/bluebird@npm:^3.5.38":
-  version: 3.5.42
-  resolution: "@types/bluebird@npm:3.5.42"
-  checksum: 10c0/ce752a5e277bbc0cdee3dee9c875ac093d1331905a8a5175665ccb8cb76b7b95a84836f92bc46076c2fd1e384a107866893eeeb20f6fb33427482663879faf93
   languageName: node
   linkType: hard
 
@@ -4920,13 +4911,6 @@ __metadata:
     inherits: "npm:^2.0.4"
     readable-stream: "npm:^3.4.0"
   checksum: 10c0/02847e1d2cb089c9dc6958add42e3cdeaf07d13f575973963335ac0fdece563a50ac770ac4c8fa06492d2dd276f6cc3b7f08c7cd9c7a7ad0f8d388b2a28def5f
-  languageName: node
-  linkType: hard
-
-"bluebird@npm:^3.7.2":
-  version: 3.7.2
-  resolution: "bluebird@npm:3.7.2"
-  checksum: 10c0/680de03adc54ff925eaa6c7bb9a47a0690e8b5de60f4792604aae8ed618c65e6b63a7893b57ca924beaf53eee69c5af4f8314148c08124c550fe1df1add897d2
   languageName: node
   linkType: hard
 

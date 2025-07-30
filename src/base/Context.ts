@@ -17,8 +17,7 @@ import {
 import { CallFunction, Codec, DetectCodec, Signer as PolkadotSigner } from '@polkadot/types/types';
 import { SigningManager } from '@polymeshassociation/signing-manager-types';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
-import { chunk, clone, flatMap, flatten, flattenDeep } from 'lodash';
+import { chunk, clone, flatten, flattenDeep } from 'lodash';
 import { gte } from 'semver';
 
 import { HistoricPolyxTransaction } from '~/api/entities/Account/types';
@@ -765,7 +764,7 @@ export class Context {
 
     const assetChunks = chunk(assets, MAX_CONCURRENT_REQUESTS);
 
-    await P.each(assetChunks, async assetChunk => {
+    for (const assetChunk of assetChunks) {
       const corporateActions = await Promise.all(
         assetChunk.map(assetValue =>
           corporateActionQuery.corporateActions.entries(assetToMeshAssetId(assetValue, this))
@@ -777,30 +776,31 @@ export class Context {
         return kind.isUnpredictableBenefit || kind.isPredictableBenefit;
       });
 
-      const corporateActionData = await P.map(
-        eligibleCas,
-        async ([
-          {
-            args: [rawAssetId, rawId],
-          },
-          corporateAction,
-        ]) => {
-          const localId = u32ToBigNumber(rawId);
-          const assetId = assetIdToString(rawAssetId);
-          const caId = corporateActionIdentifierToCaId(
-            { asset: new FungibleAsset({ assetId }, this), localId },
-            this
-          );
-          const details = await corporateActionQuery.details(caId);
-          const action = corporateAction.unwrap();
+      const corporateActionData = await Promise.all(
+        eligibleCas.map(
+          async ([
+            {
+              args: [rawAssetId, rawId],
+            },
+            corporateAction,
+          ]) => {
+            const localId = u32ToBigNumber(rawId);
+            const assetId = assetIdToString(rawAssetId);
+            const caId = corporateActionIdentifierToCaId(
+              { asset: new FungibleAsset({ assetId }, this), localId },
+              this
+            );
+            const details = await corporateActionQuery.details(caId);
+            const action = corporateAction.unwrap();
 
-          return {
-            assetId,
-            localId,
-            caId,
-            corporateAction: meshCorporateActionToCorporateActionParams(action, details, this),
-          };
-        }
+            return {
+              assetId,
+              localId,
+              caId,
+              corporateAction: meshCorporateActionToCorporateActionParams(action, details, this),
+            };
+          }
+        )
       );
 
       corporateActionData.forEach(({ assetId, localId, caId, corporateAction }) => {
@@ -809,18 +809,20 @@ export class Context {
         distributionsMultiParams.push(caId);
         corporateActionParams.push(corporateAction);
       });
-    });
+    }
 
     /*
      * Divide the requests to account for practical limits
      */
     const paramChunks = chunk(distributionsMultiParams, MAX_PAGE_SIZE.toNumber());
     const requestChunks = chunk(paramChunks, MAX_CONCURRENT_REQUESTS);
-    const distributions = await P.mapSeries(requestChunks, requestChunk =>
-      Promise.all(
+    const distributions = [];
+    for (const requestChunk of requestChunks) {
+      const innerResults = await Promise.all(
         requestChunk.map(paramChunk => capitalDistribution.distributions.multi(paramChunk))
-      )
-    );
+      );
+      distributions.push(innerResults);
+    }
 
     const result: DistributionWithDetails[] = [];
 
@@ -883,7 +885,7 @@ export class Context {
       includeExpired,
     } = args;
 
-    const claim1stKeys = flatMap(targets, target =>
+    const claim1stKeys = targets.flatMap(target =>
       claimTypes.map(claimType => {
         return {
           target: signerToString(target),
@@ -896,7 +898,7 @@ export class Context {
       signerToString(trustedClaimIssuer)
     );
 
-    const claimData = await P.map(claim1stKeys, async claim1stKey => {
+    const claimDataPromises = claim1stKeys.map(async claim1stKey => {
       const entries = await identity.claims.entries(claim1stKey);
       const data: ClaimData[] = [];
       entries.forEach(([key, optClaim]) => {
@@ -924,9 +926,11 @@ export class Context {
       return data;
     });
 
-    return flatten(claimData).filter(({ issuer }) =>
-      claimIssuerDids ? claimIssuerDids.includes(issuer.did) : true
-    );
+    const claimData = await Promise.all(claimDataPromises);
+
+    return claimData
+      .flat()
+      .filter(({ issuer }) => (claimIssuerDids ? claimIssuerDids.includes(issuer.did) : true));
   }
 
   /**

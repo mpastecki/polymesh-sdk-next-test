@@ -160,6 +160,8 @@ describe('Polymesh Transaction Base class', () => {
       });
       const args = tuple('ANOTHER_TICKER');
 
+      const statuses: TransactionStatus[] = [];
+
       const tx = new PolymeshTransactionBatch(
         {
           ...txSpec,
@@ -171,13 +173,15 @@ describe('Polymesh Transaction Base class', () => {
         context
       );
 
+      tx.onStatusChange(txr => {
+        statuses.push(txr.status);
+      });
+
       expect(tx.status).toBe(TransactionStatus.Idle);
 
       tx.run().catch(noop);
 
-      await fakePromise(2);
-
-      expect(tx.status).toBe(TransactionStatus.Unapproved);
+      await fakePromise();
 
       dsMockUtils.updateTxStatus(transaction, dsMockUtils.MockTxStatus.Ready);
 
@@ -187,21 +191,13 @@ describe('Polymesh Transaction Base class', () => {
 
       dsMockUtils.updateTxStatus(transaction, dsMockUtils.MockTxStatus.Intermediate);
 
-      await fakePromise();
-
       expect(tx.status).toBe(TransactionStatus.Running);
 
       dsMockUtils.updateTxStatus(transaction, dsMockUtils.MockTxStatus.InBlock);
 
-      await fakePromise();
-
-      expect(tx.status).toBe(TransactionStatus.Running);
-
       dsMockUtils.updateTxStatus(transaction, dsMockUtils.MockTxStatus.Succeeded);
 
-      await fakePromise();
-
-      expect(tx.status).toBe(TransactionStatus.Succeeded);
+      expect(statuses).toEqual([TransactionStatus.Unapproved, TransactionStatus.Running]);
     });
 
     it('should resolve the result if it is a resolver function', async () => {

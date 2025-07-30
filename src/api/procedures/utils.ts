@@ -1,6 +1,5 @@
 import { ISubmittableResult } from '@polkadot/types/types';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 import { isEqual } from 'lodash';
 
 import {
@@ -678,7 +677,7 @@ export async function getGroupFromPermissions(
   const { custom, known } = await asset.permissions.getGroups();
   const allGroups = [...custom, ...known];
 
-  const currentGroupPermissions = await P.map(allGroups, group => group.getPermissions());
+  const currentGroupPermissions = await Promise.all(allGroups.map(group => group.getPermissions()));
 
   const duplicatedGroupIndex = currentGroupPermissions.findIndex(
     ({ transactions: transactionPermissions }) => isEqual(transactionPermissions, permissions)

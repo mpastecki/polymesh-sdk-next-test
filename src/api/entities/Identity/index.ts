@@ -6,7 +6,6 @@ import {
 } from '@polkadot/types/lookup';
 import { CddStatus } from '@polymeshassociation/polymesh-types/polkadot/polymesh';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 import { chunk, differenceWith, flatten, intersectionWith, uniqBy } from 'lodash';
 
 import { AssetPermissions } from '~/api/entities/Identity/AssetPermissions';
@@ -479,11 +478,13 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
    * Check whether this Identity possesses all specified roles
    */
   public async checkRoles(roles: Role[]): Promise<CheckRolesResult> {
-    const missingRoles = await P.filter(roles, async role => {
-      const hasRole = await this.hasRole(role);
-
-      return !hasRole;
-    });
+    const roleChecks = await Promise.all(
+      roles.map(async role => {
+        const hasRole = await this.hasRole(role);
+        return { role, hasRole };
+      })
+    );
+    const missingRoles = roleChecks.filter(r => !r.hasRole).map(r => r.role);
 
     if (missingRoles.length) {
       return {
@@ -554,8 +555,17 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const ownedPortfolios = await portfolios.getPortfolios();
 
+    const ownedPortfolioChecks = await Promise.all(
+      ownedPortfolios.map(async portfolio => {
+        const isCustodied = await portfolio.isCustodiedBy({ identity: did });
+        return { portfolio, isCustodied };
+      })
+    );
+    const filteredOwnedPortfolios = ownedPortfolioChecks
+      .filter(r => r.isCustodied)
+      .map(r => r.portfolio);
     const [ownedCustodiedPortfolios, { data: custodiedPortfolios }] = await Promise.all([
-      P.filter(ownedPortfolios, portfolio => portfolio.isCustodiedBy({ identity: did })),
+      filteredOwnedPortfolios,
       this.portfolios.getCustodiedPortfolios(),
     ]);
 
@@ -593,13 +603,15 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
 
     const portfolioIds = portfolios.map(portfolioLikeToPortfolioId);
 
-    await P.map(portfolioIds, portfolioId => assertPortfolioExists(portfolioId, context));
+    await Promise.all(portfolioIds.map(portfolioId => assertPortfolioExists(portfolioId, context)));
 
     const portfolioIdChunks = chunk(portfolioIds, MAX_CONCURRENT_REQUESTS);
 
-    await P.each(portfolioIdChunks, async portfolioIdChunk => {
-      const auths = await P.map(portfolioIdChunk, portfolioId =>
-        settlement.userAffirmations.entries(portfolioIdToMeshPortfolioId(portfolioId, context))
+    for (const portfolioIdChunk of portfolioIdChunks) {
+      const auths = await Promise.all(
+        portfolioIdChunk.map(portfolioId =>
+          settlement.userAffirmations.entries(portfolioIdToMeshPortfolioId(portfolioId, context))
+        )
       );
 
       const uniqueEntries = uniqBy(
@@ -623,7 +635,7 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
           pending.push(instruction);
         }
       });
-    });
+    }
 
     return {
       affirmed,
@@ -762,25 +774,28 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
      *   - They have not begun
      *   - This Identity has already been paid
      */
-    return P.filter(distributions, async ({ distribution }): Promise<boolean> => {
-      const { expiryDate, asset, id: localId, paymentDate } = distribution;
+    const distributionChecks = await Promise.all(
+      distributions.map(async ({ distribution }) => {
+        const { expiryDate, asset, id: localId, paymentDate } = distribution;
 
-      const isExpired = expiryDate && expiryDate < now;
-      const hasNotStarted = paymentDate > now;
+        const isExpired = expiryDate && expiryDate < now;
+        const hasNotStarted = paymentDate > now;
 
-      if (isExpired || hasNotStarted) {
-        return false;
-      }
+        if (isExpired || hasNotStarted) {
+          return false;
+        }
 
-      const holderPaid = await context.polymeshApi.query.capitalDistribution.holderPaid(
-        tuple(
-          corporateActionIdentifierToCaId({ asset, localId }, context),
-          stringToIdentityId(did, context)
-        )
-      );
+        const holderPaid = await context.polymeshApi.query.capitalDistribution.holderPaid(
+          tuple(
+            corporateActionIdentifierToCaId({ asset, localId }, context),
+            stringToIdentityId(did, context)
+          )
+        );
 
-      return !boolToBoolean(holderPaid);
-    });
+        return !boolToBoolean(holderPaid);
+      })
+    );
+    return distributions.filter((_, i) => distributionChecks[i]);
   }
 
   /**

@@ -4,7 +4,6 @@ import {
 } from '@polkadot/types/lookup';
 import { hexAddPrefix, hexStripPrefix, stringToHex } from '@polkadot/util';
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import {
   AffirmationStatus,
@@ -990,10 +989,11 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
 
     const { data: legs } = await this.getLegs();
 
-    const assemblePortfolios = async (
-      involvedPortfolios: (DefaultPortfolio | NumberedPortfolio)[],
+    const getPortfoliosFromLeg = async (
       leg: Leg
     ): Promise<(DefaultPortfolio | NumberedPortfolio)[]> => {
+      const involvedPortfolios: (DefaultPortfolio | NumberedPortfolio)[] = [];
+
       if (!isOffChainLeg(leg)) {
         const { from, to } = leg;
         const [fromExists, toExists] = await Promise.all([from.exists(), to.exists()]);
@@ -1018,11 +1018,8 @@ export class Instruction extends Entity<UniqueIdentifiers, string> {
       return involvedPortfolios;
     };
 
-    const portfolios = await P.reduce<Leg, (DefaultPortfolio | NumberedPortfolio)[]>(
-      legs,
-      async (result, leg) => await assemblePortfolios(result, leg),
-      []
-    );
+    const allPortfoliosArrays = await Promise.all(legs.map(leg => getPortfoliosFromLeg(leg)));
+    const portfolios = allPortfoliosArrays.flat();
 
     return portfolios;
   }

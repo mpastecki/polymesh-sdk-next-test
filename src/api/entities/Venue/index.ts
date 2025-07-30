@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import P from 'bluebird';
 
 import { HistoricInstruction, VenueDetails } from '~/api/entities/Venue/types';
 import {
@@ -194,7 +193,9 @@ export class Venue extends Entity<UniqueIdentifiers, string> {
     const failed: Instruction[] = [];
     const pending: Instruction[] = [];
 
-    const details = await P.map(instructions, instruction => instruction.detailsFromChain());
+    const details = await Promise.all(
+      instructions.map(instruction => instruction.detailsFromChain())
+    );
 
     details.forEach(({ status }, index) => {
       const instruction = instructions[index];
