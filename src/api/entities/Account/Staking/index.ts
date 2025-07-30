@@ -27,7 +27,7 @@ export class Staking extends Namespace<Account> {
   /**
    * Fetch the ledger information for a stash account
    *
-   * @returns null unless the account is a controller
+   * @returns The staking ledger information or null if the account is not a controller
    */
   public async getLedger(): Promise<StakingLedger | null> {
     const {
@@ -51,10 +51,18 @@ export class Staking extends Namespace<Account> {
   /**
    * Fetch the payee that will receive a stash account's rewards
    *
-   * @note null is returned when the account is not a stash
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns The payee account or null if the account is not a stash
    */
   public async getPayee(): Promise<StakingPayee | null>;
+
+  /**
+   * Fetch the payee that will receive a stash account's rewards
+   *
+   * @param callback - Callback function that can be used to listen for changes to the staking payee
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns The payee account or null if the account is not a stash
+   */
   public async getPayee(callback: SubCallback<StakingPayee | null>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -111,10 +119,18 @@ export class Staking extends Namespace<Account> {
   /**
    * Fetch this account's current nominations
    *
-   * @note can be subscribed to, if connected to node using a web socket
-   * @returns null unless the account is a controller
+   * @returns The nomination details or null if the account is not a controller
    */
   public async getNomination(): Promise<StakingNomination | null>;
+
+  /**
+   * Fetch this account's current nominations
+   *
+   * @param callback - Callback function that can be used to listen for changes to the nominations
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns The nomination details or null if the account is not a controller
+   */
   public async getNomination(
     callback: SubCallback<StakingNomination | null>
   ): Promise<UnsubCallback>;
@@ -162,11 +178,20 @@ export class Staking extends Namespace<Account> {
   /**
    * Fetch the controller associated to this account if there is one
    *
-   * @note can be subscribed to, if connected to node using a web socket
    * @note a stash can be its own controller
-   * @returns null unless the account is a stash
+   * @returns The controller account or null if the account is not a stash
    */
   public async getController(): Promise<Account | null>;
+
+  /**
+   * Fetch the controller associated to this account if there is one
+   *
+   * @param callback - Callback function that can be used to listen for changes to the controller
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @note a stash can be its own controller
+   * @returns The controller account or null if the account is not a stash
+   */
   public async getController(callback: SubCallback<Account | null>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -211,7 +236,9 @@ export class Staking extends Namespace<Account> {
   }
 
   /**
-   * @returns null unless the account is seeking nominations as a validator
+   * Fetch the commission settings for this validator account
+   *
+   * @returns The commission details or null if the account is not seeking nominations as a validator
    */
   public async getCommission(): Promise<StakingCommission | null> {
     const {

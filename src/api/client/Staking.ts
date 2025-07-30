@@ -196,11 +196,21 @@ export class Staking {
   }
 
   /**
-   * Retrieve the current staking era
+   * Retrieve the current staking era information
+   *
+   * @returns Promise that resolves to the current era information
+   */
+  public async eraInfo(): Promise<StakingEraInfo>;
+
+  /**
+   * Retrieve the current staking era information (with subscription support)
+   *
+   * @param callback - Callback function that receives era information updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
    *
    * @note can be subscribed to, if connected to node using a web socket
    */
-  public async eraInfo(): Promise<StakingEraInfo>;
   public async eraInfo(callback: SubCallback<StakingEraInfo>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc

@@ -645,45 +645,44 @@ export interface SubsidizeAccountParams {
 export interface CreateAssetParams {
   name: string;
   /**
-   * amount of Asset tokens that will be minted on creation (optional, default doesn't mint)
+   * Amount of Asset tokens to be minted on creation (optional; by default, no tokens are minted).
    */
   initialSupply?: BigNumber;
   /**
-   * portfolio to which the Asset tokens will be issued on creation (optional, default is the default portfolio)
+   * Portfolio to which the Asset tokens will be issued on creation (optional; defaults to the default portfolio).
    */
   portfolioId?: BigNumber;
   /**
-   * whether a single Asset token can be divided into decimal parts
+   * Whether a single Asset token can be divided into decimal parts.
    */
   isDivisible: boolean;
   /**
-   * type of security that the Asset represents (e.g. Equity, Debt, Commodity). Common values are included in the
+   * Type of security that the Asset represents (e.g., Equity, Debt, Commodity). Common values are included in the
    *   {@link types!KnownAssetType} enum, but custom values can be used as well. Custom values must be registered on-chain the first time
-   *   they're used, requiring an additional transaction. They aren't tied to a specific Asset
-   *   if using a custom type, it can be provided as a string (representing name) or a BigNumber (representing the custom type ID)
+   *   they're used, requiring an additional transaction. They aren't tied to a specific Asset.
+   *   If using a custom type, it can be provided as a string (representing name) or a BigNumber (representing the custom type ID).
    */
   assetType: KnownAssetType | string | BigNumber;
   /**
-   * array of domestic or international alphanumeric security identifiers for the Asset (e.g. ISIN, CUSIP, FIGI)
+   * Array of domestic or international alphanumeric security identifiers for the Asset (e.g., ISIN, CUSIP, FIGI).
    */
   securityIdentifiers?: SecurityIdentifier[];
   /**
-   * (optional) funding round in which the Asset currently is (e.g. Series A, Series B)
+   * (Optional) funding round in which the Asset currently is (e.g., Series A, Series B).
    */
   fundingRound?: string;
   documents?: AssetDocument[];
 
   /**
-   * (optional) type of statistics that should be enabled for the Asset
+   * (Optional) type of statistics that should be enabled for the Asset.
    *
-   * Enabling statistics allows for TransferRestrictions to be made. For example the SEC requires registration for a company that
-   * has either more than 2000 investors, or more than 500 non accredited investors. To prevent crossing this limit two restrictions are
-   * needed, a `Count` of 2000, and a `ScopedCount` of non accredited with a maximum of 500. [source](https://www.sec.gov/info/smallbus/secg/jobs-act-section-12g-small-business-compliance-guide.htm)
+   * Enabling statistics allows for TransferRestrictions to be made. For example, the SEC requires registration for a company that
+   * has either more than 2000 investors or more than 500 non-accredited investors. To prevent crossing this limit, two restrictions are
+   * needed: a `Count` of 2000, and a `ScopedCount` of non-accredited with a maximum of 500. [source](https://www.sec.gov/info/smallbus/secg/jobs-act-section-12g-small-business-compliance-guide.htm)
    *
-   * These restrictions require a `Count` and `ScopedCount` statistic to be created. Although they an be created after the Asset is made, it is recommended to create statistics
+   * These restrictions require a `Count` and `ScopedCount` statistic to be created. Although they can be created after the Asset is made, it is recommended to create statistics
    * before the Asset is circulated. Count statistics made after Asset creation need their initial value set, so it is simpler to create them before investors hold the Asset.
-   * If you do need to create a stat for an Asset after creation, you can use the { @link api/entities/Asset/Fungible/TransferRestrictions/TransferRestrictionBase!TransferRestrictionBase.enableStat | enableStat } method in
-   * the appropriate namespace
+   * If you need to create a stat for an Asset after creation, you can use the {@link api/entities/Asset/Fungible/TransferRestrictions!TransferRestrictions.setStats | TransferRestrictions.setStats } method in the {@link api/entities/Asset/Fungible/TransferRestrictions!TransferRestrictions | TransferRestrictions} namespace.
    */
   initialStatistics?: InputStatType[];
 }

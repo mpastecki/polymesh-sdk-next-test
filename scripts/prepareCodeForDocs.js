@@ -76,7 +76,7 @@ const getTypeArgumentsFromProcedureMethod = typeString => {
 /**
  * Assemble a method signature according to the Procedure Method that is being replaced
  */
-const createReplacementSignature = (_, funcName, type) => {
+const createReplacementSignature = (fullMatch, funcName, type) => {
   const { methodArgs, returnValue, procedureReturnValue, kind } =
     getTypeArgumentsFromProcedureMethod(type);
   const returnValueString = `, ${returnValue || procedureReturnValue}`;
@@ -101,19 +101,26 @@ const createReplacementSignature = (_, funcName, type) => {
       : '';
 
   // NOTE @monitz87: we make the function return a type asserted value to avoid compilation errors
-  const implementation = ` {
-    return {} as ${returnType};
+  const implementation = ` { return {} as ${returnType}; }`;
+
+  // Create the replacement content first
+  const jsdocLine = `* @note this method is of type {@link types!${kind} | ${kind}}, which means you can call {@link types!${kind}.checkAuthorization | ${name}.checkAuthorization} on it to see whether the signing Account and Identity have the required roles and permissions to run it  */`;
+  const methodSignature = `  public ${funcName}${genericParams}${funcArgs}: ${returnType}${
+    isAbstract ? ';' : implementation
   }`;
 
-  return `*
-   * @note this method is of type {@link types!${kind} | ${kind}}, which means you can call {@link types!${kind}.checkAuthorization | ${name}.checkAuthorization}
-   *   on it to see whether the signing Account and Identity have the required roles and permissions to run it
-   */
-  public ${funcName}${genericParams}${funcArgs}: ${returnType}${isAbstract ? ';' : implementation}`;
+  // Count the lines in the original signature and the actual replacement to preserve line numbering
+  const originalLines = fullMatch.split('\n').length;
+  const replacementContent = jsdocLine + '\n' + methodSignature;
+  const actualReplacementLines = replacementContent.split('\n').length;
+  const blankLinesToAdd = Math.max(0, originalLines - actualReplacementLines);
+  const blankLines = '\n'.repeat(blankLinesToAdd);
+
+  return replacementContent + blankLines;
 };
 
 const createReplacementImport = (_, importStatement) =>
-  `${importStatement}import { CreateTransactionBatchParams, GenericPolymeshTransaction, ProcedureOpts } from '~/types';\n\n`;
+  `${importStatement}import { CreateTransactionBatchParams, GenericPolymeshTransaction, ProcedureOpts } from '~/types';\n`;
 
 const results = replace.sync({
   files: 'src/**/*.ts',

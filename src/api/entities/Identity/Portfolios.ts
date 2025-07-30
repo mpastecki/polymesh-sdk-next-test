@@ -56,6 +56,8 @@ export class Portfolios extends Namespace<Identity> {
 
   /**
    * Retrieve all the Portfolios owned by this Identity
+   *
+   * @returns An array where the first item is always the Default Portfolio, followed by any Numbered Portfolios owned by this Identity
    */
   public async getPortfolios(): Promise<[DefaultPortfolio, ...NumberedPortfolio[]]> {
     const {
@@ -83,9 +85,12 @@ export class Portfolios extends Namespace<Identity> {
 
   /**
    * Retrieve all Portfolios custodied by this Identity.
-   *   This only includes portfolios owned by a different Identity but custodied by this one.
-   *   To fetch Portfolios owned by this Identity, use {@link getPortfolios}
+   * This only includes portfolios owned by a different Identity but custodied by this one.
+   * To fetch Portfolios owned by this Identity, use {@link getPortfolios}
    *
+   * @param paginationOpts - Optional pagination options
+   *
+   * @returns A ResultSet of portfolios (Default or Numbered) and pagination metadata
    * @note supports pagination
    */
   public async getCustodiedPortfolios(
@@ -131,11 +136,18 @@ export class Portfolios extends Namespace<Identity> {
   }
 
   /**
-   * Retrieve a Numbered Portfolio or the Default Portfolio if Portfolio ID is not passed
+   * Retrieve the Default Portfolio for this Identity
    *
-   * @param args.portfolioId - optional, defaults to the Default Portfolio
+   * @returns Promise that resolves to the Default Portfolio
    */
   public async getPortfolio(): Promise<DefaultPortfolio>;
+
+  /**
+   * Retrieve a Numbered Portfolio by its ID
+   *
+   * @param args.portfolioId - ID of the Portfolio to retrieve
+   * @returns Promise that resolves to the requested Numbered Portfolio
+   */
   public async getPortfolio(args: { portfolioId: BigNumber }): Promise<NumberedPortfolio>;
 
   // eslint-disable-next-line require-jsdoc
@@ -169,6 +181,8 @@ export class Portfolios extends Namespace<Identity> {
   /**
    * Retrieve a Numbered Portfolio by its name
    *
+   * @param args.name - Name of the Portfolio to fetch
+   * @returns Promise that resolves to the Portfolio with the given name
    * @throws if no Portfolio exists with the given name
    */
   public async getPortfolioByName(args: { name: string }): Promise<NumberedPortfolio> {
@@ -203,8 +217,9 @@ export class Portfolios extends Namespace<Identity> {
   /**
    * Delete a Portfolio by ID
    *
-   * @note required role:
-   *   - Portfolio Custodian
+   * @note The calling Identity must be the custodian of the Portfolio
+   *
+   * @param args.portfolio - Portfolio instance or portfolio ID to delete
    */
   public delete: ProcedureMethod<{ portfolio: BigNumber | NumberedPortfolio }, void>;
 
@@ -213,7 +228,9 @@ export class Portfolios extends Namespace<Identity> {
    *
    * @param filters.account - Account involved in the settlement
    * @param filters.ticker - ticker involved in the transaction
+   * @param filters.assetId - Asset ID to filter by (overrides ticker if both provided)
    *
+   * @returns Promise that resolves to an array of historical settlements
    * @note uses the middlewareV2
    */
   public async getTransactionHistory(

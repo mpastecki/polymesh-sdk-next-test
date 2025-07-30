@@ -12,7 +12,7 @@
 
 ## Polymesh version
 
-This release is compatible with Polymesh v7.0, v7.1, v7.2
+This release is compatible with Polymesh v7.3
 
 ## Getting Started
 
@@ -22,7 +22,7 @@ The Polymesh SDK's main goal is to provide external developers with a set of too
 
 ### Technical Pre-requisites
 
-In order to use the Polymesh SDK, you must install [node](https://nodejs.org/) \(version 18+ recommended\) and [npm](https://www.npmjs.com/). The library is written in [typescript](https://www.typescriptlang.org/), but can also be used in plain javascript. This document will assume you are using typescript, but the translation to javascript is very simple.
+In order to use the Polymesh SDK, you must install [node](https://nodejs.org/) \(minimum version 20, version 22 recommended\) and [npm](https://www.npmjs.com/). The library is written in [typescript](https://www.typescriptlang.org/), but can also be used in plain javascript. This document will assume you are using typescript, but the translation to javascript is very simple.
 
 ### Documentation
 
@@ -46,7 +46,7 @@ Or, if using pnpm
 
 **NOTE** it is _highly_ recommended that you use one of these three package managers. This project uses package resolutions/overrides to pin certain problematic dependencies, and these are only supported by the aforementioned package managers. Using a different package manager may result in unexpected behavior
 
-**NOTE** if using TypeScript the compiler option "skipLibCheck" should be set to true in your tsconfig.json file
+**NOTE** if using TypeScript the compiler option "skipLibCheck" should be set to true in your tsconfig.json file to avoid type errors from third-party dependencies.
 
 #### Initializing the client
 

@@ -92,10 +92,16 @@ export class TickerReservation extends Entity<UniqueIdentifiers, string> {
 
   /**
    * Retrieve the Reservation's owner, expiry date and status
+   */
+  public details(): Promise<TickerReservationDetails>;
+
+  /**
+   * Retrieve the Reservation's owner, expiry date and status
+   *
+   * @param callback - Callback function that can be used to listen for changes to the reservation details
    *
    * @note can be subscribed to, if connected to node using a web socket
    */
-  public details(): Promise<TickerReservationDetails>;
   public details(callback: SubCallback<TickerReservationDetails>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -207,8 +213,8 @@ export class TickerReservation extends Entity<UniqueIdentifiers, string> {
    * Transfer ownership of the Ticker Reservation to another Identity. This generates an authorization request that must be accepted
    *   by the target
    *
-   * @note this will create {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create {@link AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
+   *   An {@link api/entities/Account!Account | Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    *
    * @note required role:

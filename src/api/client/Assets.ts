@@ -114,9 +114,22 @@ export class Assets {
   /**
    * Check if a ticker hasn't been reserved
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @param args.ticker - Ticker symbol to check availability for
+   *
+   * @returns Promise that resolves to true if ticker is available, false otherwise
    */
   public isTickerAvailable(args: { ticker: string }): Promise<boolean>;
+
+  /**
+   * Check if a ticker hasn't been reserved (with subscription support)
+   *
+   * @param args.ticker - Ticker symbol to check availability for
+   * @param callback - Callback function that receives availability status updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public isTickerAvailable(
     args: { ticker: string },
     callback: SubCallback<boolean>
@@ -144,12 +157,14 @@ export class Assets {
   }
 
   /**
-   * Retrieve all the ticker reservations currently owned by an Identity. This doesn't include Assets that
-   *   have already been launched
+   * Retrieve all the ticker reservations currently owned by an Identity. This doesn't include tickers already
+   * associated with an Asset
    *
-   * @param args.owner - defaults to the signing Identity
+   * @param args.owner - The identity whose reservations to return. Defaults to the signing Identity if omitted.
    *
-   * @note reservations with unreadable characters in their tickers will be left out
+   * @returns A list of active `TickerReservation` instances
+   *
+   * @note Reservations with unreadable ticker characters are excluded.
    */
   public async getTickerReservations(args?: {
     owner: string | Identity;
@@ -198,11 +213,21 @@ export class Assets {
   }
 
   /**
-   * Retrieve a FungibleAsset or NftCollection
+   * Retrieve a FungibleAsset or NftCollection by ticker
+   *
+   * @param args.ticker - Unique ticker of the Asset
    *
    * @note `getFungibleAsset` and `getNftCollection` are similar to this method, but return a more specific type
    */
   public async getAsset(args: { ticker: string }): Promise<Asset>;
+
+  /**
+   * Retrieve a FungibleAsset or NftCollection by Asset ID
+   *
+   * @param args.assetId - Unique identifier of the Asset
+   *
+   * @note `getFungibleAsset` and `getNftCollection` are similar to this method, but return a more specific type
+   */
   public async getAsset(args: { assetId: string }): Promise<Asset>;
   // eslint-disable-next-line require-jsdoc
   public async getAsset(args: { ticker?: string; assetId?: string }): Promise<Asset> {
@@ -267,22 +292,24 @@ export class Assets {
   }
 
   /**
-   * Retrieve a FungibleAsset
+   * Retrieve a FungibleAsset by Asset ID
    *
-   * @param args.assetId - Unique Id of the Fungible Asset (for spec version 6.x, this is same as ticker)
-   * @param args.ticker - Asset ticker
-   * @param args.skipExistsCheck - when true, method will not check if the Asset exists
+   * @param args.assetId - Unique identifier of the Fungible Asset
+   * @param args.skipExistsCheck - When true, method will not check if Asset exists before returning instance. Defaults to false
    */
   public async getFungibleAsset(args: {
     assetId: string;
     skipExistsCheck?: boolean;
   }): Promise<FungibleAsset>;
 
-  // eslint-disable-next-line require-jsdoc
-  public async getFungibleAsset(args: {
-    ticker: string;
-    skipExistsCheck?: boolean;
-  }): Promise<FungibleAsset>;
+  /**
+   * Retrieve a FungibleAsset by ticker
+   *
+   * @param args.ticker - Unique ticker of the Fungible Asset
+   *
+   * @note The Asset must exist on chain to be retrieved by ticker
+   */
+  public async getFungibleAsset(args: { ticker: string }): Promise<FungibleAsset>;
 
   // eslint-disable-next-line require-jsdoc
   public async getFungibleAsset(args: {
@@ -315,18 +342,20 @@ export class Assets {
   }
 
   /**
-   * Retrieve an NftCollection
+   * Retrieve an NftCollection by ticker
    *
-   * @param args.assetId - Unique Id of the NftCollection (for spec version 6.x, this is same as ticker)
-   * @param args.ticker - NftCollection ticker
-   * @param args.skipExistsCheck - when true, method will not check if the NftCollection exists
+   * @param args.ticker - Unique ticker of the NftCollection
+   *
+   * @note The NftCollection must exist on chain to be retrieved by ticker
    */
-  public async getNftCollection(args: {
-    ticker: string;
-    skipExistsCheck?: boolean;
-  }): Promise<NftCollection>;
+  public async getNftCollection(args: { ticker: string }): Promise<NftCollection>;
 
-  // eslint-disable-next-line require-jsdoc
+  /**
+   * Retrieve an NftCollection by Asset ID
+   *
+   * @param args.assetId - Unique identifier of the NftCollection (for spec version 6.x, this is same as ticker)
+   * @param args.skipExistsCheck - When true, method will not check if the NftCollection exists before returning instance. Defaults to false
+   */
   public async getNftCollection(args: {
     assetId: string;
     skipExistsCheck?: boolean;

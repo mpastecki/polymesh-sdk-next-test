@@ -44,7 +44,7 @@ export class Nft extends Entity<NftUniqueIdentifiers, HumanReadable> {
   public id: BigNumber;
 
   /**
-   * The {@link api/entities/Asset/NonFungible/NftCollection | NftCollection} this NFT belongs to
+   * The {@link NftCollection} this NFT belongs to
    */
   public collection: NftCollection;
 

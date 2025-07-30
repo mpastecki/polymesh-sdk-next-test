@@ -65,8 +65,8 @@ export class Permissions extends Namespace<BaseAsset> {
   /**
    * Invite an Identity to be an agent with permissions over this Asset
    *
-   * @note this will create an {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create an {@link AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
+   *   An {@link api/entities/Account!Account | Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    */
   public inviteAgent: ProcedureMethod<InviteExternalAgentParams, AuthorizationRequest>;
@@ -77,12 +77,23 @@ export class Permissions extends Namespace<BaseAsset> {
   public removeAgent: ProcedureMethod<RemoveExternalAgentParams, void>;
 
   /**
-   * Retrieve a single Permission Group by its ID (or type). Passing an ID will fetch a Custom Permission Group,
-   *   while passing a type will fetch a Known Permission Group
+   * Retrieve a Custom Permission Group by its ID
+   *
+   * @param args.id - Permission Group identifier
+   *
+   * @returns Promise that resolves to the Custom Permission Group
    *
    * @throws if there is no Permission Group with the passed ID
    */
   public async getGroup(args: { id: BigNumber }): Promise<CustomPermissionGroup>;
+
+  /**
+   * Retrieve a Known Permission Group by its type
+   *
+   * @param args.type - The Known Permission Group type
+   *
+   * @returns Promise that resolves to the Known Permission Group
+   */
   public async getGroup(args: { type: PermissionGroupType }): Promise<KnownPermissionGroup>;
 
   // eslint-disable-next-line require-jsdoc

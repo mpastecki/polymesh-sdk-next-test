@@ -109,7 +109,7 @@ export class MultiSig extends Account {
   }
 
   /**
-   * Given an ID, fetch a { @link api/entities/MultiSigProposal!MultiSigProposal } for this MultiSig
+   * Given an ID, fetch a {@link MultiSigProposal} for this MultiSig
    *
    * @throws if the MultiSigProposal is not found
    */
@@ -131,7 +131,7 @@ export class MultiSig extends Account {
   }
 
   /**
-   * Return all active { @link api/entities/MultiSigProposal!MultiSigProposal } for this MultiSig Account
+   * Return all active {@link MultiSigProposal | MultiSig Proposals} for this MultiSig Account
    */
   public async getProposals(): Promise<MultiSigProposal[]> {
     const {
@@ -191,7 +191,7 @@ export class MultiSig extends Account {
   }
 
   /**
-   * Return a set of { @link api/entities/MultiSigProposal!MultiSigProposal | MultiSigProposal } for this MultiSig Account
+   * Return a set of {@link MultiSigProposal} for this MultiSig Account
    *
    * @note uses the middlewareV2
    */

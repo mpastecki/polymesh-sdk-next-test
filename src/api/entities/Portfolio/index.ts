@@ -204,7 +204,7 @@ export abstract class Portfolio extends Entity<UniqueIdentifiers, HumanReadable>
   /**
    * Retrieve the NFTs held in this portfolio
    *
-   *  @param args.assets - array of NftCollection (or tickers) for which to fetch holdings (optional, all holdings are retrieved if not passed)
+   *  @param args.collections - array of NftCollection (or tickers) for which to fetch holdings (optional, all holdings are retrieved if not passed)
    */
   public async getCollections(args?: {
     collections: (string | NftCollection)[];

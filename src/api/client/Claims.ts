@@ -137,7 +137,6 @@ export class Claims {
    * @note required roles:
    *   - Customer Due Diligence Provider: if there is at least one CDD claim in the arguments
    */
-
   public editClaims: ProcedureMethod<Pick<ModifyClaimsParams, 'claims'>, void>;
 
   /**

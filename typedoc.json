@@ -4,7 +4,6 @@
     "src/api/client",
     "src/api/entities",
     "src/api/procedures/types.ts",
-    "src/generated/types.ts",
     "src/types/index.ts",
     "src/types/utils",
     "src/base"
@@ -12,7 +11,6 @@
   "entryPointStrategy": "expand",
   "out": "docs",
   "plugin": ["typedoc-github-wiki-theme", "typedoc-plugin-markdown"],
-  "theme": "github-wiki",
   "exclude": [
     "src/internal.ts",
     "**/{__tests__,polkadot,testUtils}/**/*",
@@ -27,5 +25,11 @@
   ],
   "excludeExternals": true,
   "excludePrivate": true,
-  "excludeProtected": true
+  "excludeProtected": true,
+  "blockTags": ["@param", "@remarks", "@returns", "@note", "@example", "@throws", "@see"],
+  "parametersFormat": "table",
+  "outputFileStrategy": "modules",
+  "membersWithOwnFile": ["Class", "Enum", "Interface"],
+  "mergeReadme": true,
+  "entryFileName": "README.md"
 }

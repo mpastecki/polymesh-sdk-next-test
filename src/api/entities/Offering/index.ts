@@ -114,9 +114,19 @@ export class Offering extends Entity<UniqueIdentifiers, HumanReadable> {
   /**
    * Retrieve the Offering's details
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the Offering details
    */
   public details(): Promise<OfferingDetails>;
+
+  /**
+   * Retrieve the Offering's details (with subscription support)
+   *
+   * @param callback - Callback function that receives offering detail updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public details(callback: SubCallback<OfferingDetails>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
