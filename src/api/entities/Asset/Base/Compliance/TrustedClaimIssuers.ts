@@ -91,9 +91,18 @@ export class TrustedClaimIssuers extends Namespace<BaseAsset> {
   /**
    * Retrieve the current Default Trusted Claim Issuers of the Asset
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the list of default trusted claim issuers
    */
   public get(): Promise<TrustedClaimIssuer<true>[]>;
+
+  /**
+   * Retrieve the current Default Trusted Claim Issuers of the Asset
+   *
+   * @param callback - Callback function that receives trusted claim issuers updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public get(callback: SubCallback<TrustedClaimIssuer<true>[]>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc

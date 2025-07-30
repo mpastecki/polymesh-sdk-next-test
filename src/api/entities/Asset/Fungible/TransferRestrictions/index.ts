@@ -50,7 +50,7 @@ import {
 import { createProcedureMethod, requestMulti } from '~/utils/internal';
 
 /**
- * Handles all Transfer Restriction related functionality
+ * Handles all Transfer Restriction related functionality.
  */
 export class TransferRestrictions extends Namespace<FungibleAsset> {
   /**
@@ -125,7 +125,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
   }
 
   /**
-   * Get all current restrictions for this asset
+   * Get all current restrictions for this asset.
    */
   public async getRestrictions(): Promise<ActiveTransferRestrictions> {
     const {
@@ -145,7 +145,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
   }
 
   /**
-   * Returns active asset stats
+   * Return active asset stats.
    */
   public async getStats(): Promise<AssetStat[]> {
     const {
@@ -427,7 +427,7 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
   }
 
   /**
-   * Returns identities with exemptions
+   * Return identities with exemptions.
    */
   public async getExemptions(): Promise<TransferRestrictionExemption[]> {
     const {
@@ -458,38 +458,40 @@ export class TransferRestrictions extends Namespace<FungibleAsset> {
   }
 
   /**
-   * Sets all Transfer Restrictions on this Asset
+   * Set all Transfer Restrictions on this Asset.
    *
    * Transfer Restrictions control ownership requirements based on investor statistics.
-   * For example TransferRestrictionType.Count can limit the number of investors.
+   * For example, TransferRestrictionType.Count can limit the number of investors.
    * TransferRestrictionType.Percentage can limit the maximum percentage an individual investor may hold.
    *
-   * @note the relevant stat must be enabled before the restriction can be created
-   *
+   * @note The relevant stat must be enabled by including it in setStats before the restriction can be created.
    */
   public setRestrictions: ProcedureMethod<TransferRestrictionParams, void>;
 
   /**
-   * Enables statistics on an Asset.
+   * Set the enabled statistics for an Asset.
    *
    * Transfer Restrictions require the relevant stat to be enabled before they can be set.
+   * Calling this method will override the currently enabled stats with the provided set,
+   * which means it can also be used to remove previously enabled stats.
    *
-   * @note Count based stats must be given an initial value. The counter is only updated automatically with each transfer of tokens after the stat has been enabled.
-   * As such the initial value for the stat should be passed in, which can be fetched with {@link api/entities/Asset/Fungible/TransferRestrictions/Count!Count.investorCount | Count.investorCount }
+   * @note If you attempt to remove a stat that is currently required by an active transfer restriction,
+   * the chain will throw an error.
    *
+   * @note Count-based stats must be given an initial value. The counter is only updated automatically with each transfer of tokens after the stat has been enabled.
+   * As such, the initial value for the stat should be passed in, which can be fetched with {@link api/entities/Asset/Fungible!FungibleAsset.investorCount | FungibleAsset.investorCount }.
    */
   public setStats: ProcedureMethod<SetTransferRestrictionStatParams, void>;
 
   /**
-   * Exempt identities from Transfer Restrictions. These identities will not be subject
-   * to Transfer Restriction rules
+   * Exempt identities from Transfer Restrictions. These identities will not be subject to Transfer Restriction rules.
    */
   public addExemptions: ProcedureMethod<TransferRestrictionExemptionParams, void>;
 
   /**
-   * Remove identities from Transfer Restriction exemptions
+   * Remove identities from Transfer Restriction exemptions.
    *
-   * Given identities will no longer be exempt from Transfer Restrictions
+   * The given identities will no longer be exempt from Transfer Restrictions.
    */
   public removeExemptions: ProcedureMethod<TransferRestrictionExemptionParams, void>;
 }

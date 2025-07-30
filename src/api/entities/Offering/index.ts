@@ -134,9 +134,19 @@ export class Offering extends Entity<UniqueIdentifiers, HumanReadable> {
   /**
    * Retrieve the Offering's details
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the Offering details
    */
   public details(): Promise<OfferingDetails>;
+
+  /**
+   * Retrieve the Offering's details (with subscription support)
+   *
+   * @param callback - Callback function that receives offering detail updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public details(callback: SubCallback<OfferingDetails>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -342,13 +352,25 @@ export class Offering extends Entity<UniqueIdentifiers, HumanReadable> {
   }
 
   /**
-   * Generate an offchain affirmation receipt for a specific leg and UID
+   * Generate an off-chain funding receipt for this offering
    *
-   * @param args.legId index of the offchain leg in this instruction
-   * @param args.uid UID of the receipt
-   * @param args.metadata (optional) metadata to be associated with the receipt
-   * @param args.signer (optional) Signer to be used to generate receipt signature. Defaults to signing Account associated with the SDK
-   * @param args.signerKeyRingType (optional) keyring type of the signer. Defaults to 'Sr25519'
+   * @param args.uid - unique receipt ID (UID) for this off-chain funding transaction
+   * @param args.offChainTicker - ticker symbol of the off-chain asset being transferred (e.g., 'BTC', 'ETH')
+   * @param args.amount - equivalent investment amount in the raising asset (calculated from the off-chain asset value based on STO tier pricing)
+   * @param args.sender - Identity or DID of the investor providing the off-chain funding
+   * @param args.metadata - (optional) additional metadata to be associated with the receipt
+   * @param args.signer - (optional) authorized venue receipt signer to generate the cryptographic signature. Defaults to signing Account associated with the SDK
+   * @param args.signerKeyRingType - (optional) keyring type for signature generation. Defaults to 'Sr25519'. Supported types: SR25519, ED25519, ECDSA
+   * 
+   * @note The generated receipt contains SCALE-encoded data wrapped with `<Bytes>` tags, including:
+   * - Receipt UID
+   * - Fundraiser ID  
+   * - Sender's DID (investor)
+   * - Receiver's DID (raising portfolio owner)
+   * - Off-chain asset ticker
+   * - Equivalent investment amount in raising asset (calculated from STO tier pricing)
+   * 
+   * @note The amount must represent the exact investment cost as calculated by the STO's blended pricing mechanism
    */
   public async generateOffChainFundingReceipt(args: {
     uid: BigNumber;

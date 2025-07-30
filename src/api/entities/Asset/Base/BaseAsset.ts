@@ -90,8 +90,8 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
    * Transfer ownership of the Asset to another Identity. This generates an authorization request that must be accepted
    *   by the recipient
    *
-   * @note this will create {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create {@link AuthorizationRequest | Authorization Request} which has to be accepted by the `target` Identity.
+   *   An {@link api/entities/Account!Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    */
   public transferOwnership: ProcedureMethod<TransferAssetOwnershipParams, AuthorizationRequest>;
@@ -236,9 +236,18 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
   /**
    * Retrieve the Asset's identifiers list
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the list of security identifiers
    */
   public getIdentifiers(): Promise<SecurityIdentifier[]>;
+
+  /**
+   * Retrieve the Asset's identifiers list
+   *
+   * @param callback - Callback function that receives identifier updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public getIdentifiers(callback?: SubCallback<SecurityIdentifier[]>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -275,9 +284,18 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
   /**
    * Check whether transfers are frozen for the Asset
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to true if transfers are frozen, false otherwise
    */
   public isFrozen(): Promise<boolean>;
+
+  /**
+   * Check whether transfers are frozen for the Asset
+   *
+   * @param callback - Callback function that receives frozen status updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public isFrozen(callback: SubCallback<boolean>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -309,9 +327,18 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
   /**
    * Retrieve the Asset's data
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the Asset details
    */
   public details(): Promise<AssetDetails>;
+
+  /**
+   * Retrieve the Asset's data
+   *
+   * @param callback - Callback function that receives Asset details updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public details(callback: SubCallback<AssetDetails>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -467,9 +494,18 @@ export class BaseAsset extends Entity<UniqueIdentifiers, string> {
   /**
    * Retrieve the Asset's funding round
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the current funding round name or null if not set
    */
   public currentFundingRound(): Promise<string | null>;
+
+  /**
+   * Retrieve the Asset's funding round
+   *
+   * @param callback - Callback function that receives funding round updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public currentFundingRound(callback: SubCallback<string | null>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc

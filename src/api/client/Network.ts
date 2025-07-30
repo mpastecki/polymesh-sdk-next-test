@@ -122,9 +122,19 @@ export class Network {
   /**
    * Get the Treasury POLYX balance
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the current Treasury balance
    */
   public getTreasuryBalance(): Promise<BigNumber>;
+
+  /**
+   * Get the Treasury POLYX balance (with subscription support)
+   *
+   * @param callback - Callback function that receives balance updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getTreasuryBalance(callback: SubCallback<BigNumber>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -534,7 +544,7 @@ export class Network {
   /**
    * Returns if functions can be subscribed.
    *
-   * @return `true` if connected over ws(s)://, otherwise `false`
+   * @returns `true` if connected over ws(s)://, otherwise `false`
    */
   public supportsSubscription(): boolean {
     const { context } = this;

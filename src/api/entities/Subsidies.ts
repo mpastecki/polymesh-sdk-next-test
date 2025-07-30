@@ -54,11 +54,19 @@ export class Subsidies extends Namespace<Account> {
 
   /**
    * Get the Subsidy relationship along with the subsidized amount for this Account is the beneficiary.
-   * If this Account isn't being subsidized, return null
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns the Subsidy relationship, or null if this Account isn't being subsidized
    */
   public getSubsidizer(): Promise<SubsidyWithAllowance | null>;
+
+  /**
+   * Get the Subsidy relationship along with the subsidized amount for this Account is the beneficiary.
+   *
+   * @param callback - Callback function that can be used to listen for changes to the subsidy relationship
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns the Subsidy relationship, or null if this Account isn't being subsidized
+   */
   public getSubsidizer(callback: SubCallback<SubsidyWithAllowance | null>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc

@@ -2060,7 +2060,7 @@ export async function getAccount(
  *
  * Used for querying middleware which stores asset ID in hex format
  *
- * @return assetId in hex format
+ * @returns assetId in hex format
  */
 export async function getAssetIdForMiddleware(
   assetIdOrTicker: string | BaseAsset,

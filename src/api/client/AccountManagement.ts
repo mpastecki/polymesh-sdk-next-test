@@ -165,8 +165,8 @@ export class AccountManagement {
   /**
    * Send an invitation to an Account to join the signing Identity as a secondary Account
    *
-   * @note this will create an {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} which has to be accepted by the `targetAccount`.
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create an {@link AuthorizationRequest | Authorization Request} which has to be accepted by the `targetAccount`.
+   *   An {@link Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    */
   public inviteAccount: ProcedureMethod<InviteAccountParams, AuthorizationRequest>;
@@ -184,8 +184,8 @@ export class AccountManagement {
   /**
    * Send an Authorization Request to an Account to subsidize its transaction fees
    *
-   * @note this will create an {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} which has to be accepted by the `beneficiary` Account.
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create an {@link AuthorizationRequest | Authorization Request} which has to be accepted by the `beneficiary` Account.
+   *   An {@link Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    */
   public subsidizeAccount: ProcedureMethod<SubsidizeAccountParams, AuthorizationRequest>;
@@ -193,8 +193,8 @@ export class AccountManagement {
   /**
    * Create a MultiSig Account
    *
-   * @note this will create an {@link api/entities/AuthorizationRequest!AuthorizationRequest | Authorization Request} for each signing Account which will have to be accepted before they can approve transactions. None of the signing Accounts can be associated with an Identity when accepting the Authorization
-   *   An {@link api/entities/Account!Account} or {@link api/entities/Identity!Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
+   * @note this will create an {@link AuthorizationRequest | Authorization Request} for each signing Account which will have to be accepted before they can approve transactions. None of the signing Accounts can be associated with an Identity when accepting the Authorization
+   *   An {@link Account} or {@link Identity} can fetch its pending Authorization Requests by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getReceived | authorizations.getReceived}.
    *   Also, an Account or Identity can directly fetch the details of an Authorization Request by calling {@link api/entities/common/namespaces/Authorizations!Authorizations.getOne | authorizations.getOne}
    */
   public createMultiSigAccount: ProcedureMethod<CreateMultiSigParams, MultiSig>;
@@ -202,12 +202,29 @@ export class AccountManagement {
   /**
    * Get the free/locked POLYX balance of an Account
    *
-   * @param args.account - defaults to the signing Account
-   *
+   * @param args.account - The account to get balance for (defaults to the signing Account)
+   * @returns The account's POLYX balance information
    * @note can be subscribed to, if connected to node using a web socket
    */
   public getAccountBalance(args?: { account: string | Account }): Promise<AccountBalance>;
+
+  /**
+   * Get the free/locked POLYX balance of the signing Account (with subscription)
+   *
+   * @param callback - Callback function to receive balance updates
+   * @returns An unsubscribe function
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getAccountBalance(callback: SubCallback<AccountBalance>): Promise<UnsubCallback>;
+
+  /**
+   * Get the free/locked POLYX balance of an Account (with subscription)
+   *
+   * @param args.account - The account to get balance for
+   * @param callback - Callback function to receive balance updates
+   * @returns An unsubscribe function
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getAccountBalance(
     args: { account: string | Account },
     callback: SubCallback<AccountBalance>
@@ -252,7 +269,7 @@ export class AccountManagement {
   }
 
   /**
-   * Return an Account instance from an address. If the Account has multiSig signers, the returned value will be a {@link api/entities/Account/MultiSig!MultiSig} instance
+   * Return an Account instance from an address. If the Account has multiSig signers, the returned value will be a {@link MultiSig} instance
    */
   public getAccount(args: { address: string }): Promise<Account | MultiSig> {
     return getAccount(args, this.context);

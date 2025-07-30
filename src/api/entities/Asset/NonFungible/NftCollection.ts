@@ -106,9 +106,18 @@ export class NftCollection extends BaseAsset {
   /**
    * Retrieve the NftCollection's data
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the NftCollection details
    */
   public override details(): Promise<AssetDetails>;
+
+  /**
+   * Retrieve the NftCollection's data
+   *
+   * @param callback - Callback function that receives NftCollection details updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public override details(callback: SubCallback<AssetDetails>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc

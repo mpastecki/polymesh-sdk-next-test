@@ -194,17 +194,48 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
   }
 
   /**
-   * Retrieve the balance of a particular Asset
+   * Retrieve the balance of a particular Asset by ticker
+   *
+   * @param args.ticker - Asset ticker
+   *
+   * @returns Promise that resolves to the Asset balance
+   */
+  public getAssetBalance(args: { ticker: string }): Promise<BigNumber>;
+
+  /**
+   * Retrieve the balance of a particular Asset by Asset ID
+   *
+   * @param args.assetId - Asset identifier
+   *
+   * @returns Promise that resolves to the Asset balance
+   */
+  public getAssetBalance(args: { assetId: string }): Promise<BigNumber>;
+
+  /**
+   * Retrieve the balance of a particular Asset by ticker (with subscription support)
+   *
+   * @param args.ticker - Asset ticker
+   * @param callback - Callback function that receives balance updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
    *
    * @note can be subscribed to, if connected to node using a web socket
    */
-  public getAssetBalance(args: { ticker: string }): Promise<BigNumber>;
-  public getAssetBalance(args: { assetId: string }): Promise<BigNumber>;
   public getAssetBalance(
     args: { ticker: string },
     callback: SubCallback<BigNumber>
   ): Promise<UnsubCallback>;
 
+  /**
+   * Retrieve the balance of a particular Asset by Asset ID (with subscription support)
+   *
+   * @param args.assetId - Asset identifier
+   * @param callback - Callback function that receives balance updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getAssetBalance(
     args: { assetId: string },
     callback: SubCallback<BigNumber>
@@ -306,9 +337,19 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
   /**
    * Retrieve the primary Account associated with the Identity
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the primary Account information
    */
   public async getPrimaryAccount(): Promise<PermissionedAccount>;
+
+  /**
+   * Retrieve the primary Account associated with the Identity (with subscription support)
+   *
+   * @param callback - Callback function that receives primary Account updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public async getPrimaryAccount(
     callback: SubCallback<PermissionedAccount>
   ): Promise<UnsubCallback>;
@@ -707,9 +748,19 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
   /**
    * Check whether secondary Accounts are frozen
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to true if secondary accounts are frozen, false otherwise
    */
   public areSecondaryAccountsFrozen(): Promise<boolean>;
+
+  /**
+   * Check whether secondary Accounts are frozen (with subscription support)
+   *
+   * @param callback - Callback function that receives frozen status updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public areSecondaryAccountsFrozen(callback: SubCallback<boolean>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -801,17 +852,40 @@ export class Identity extends Entity<UniqueIdentifiers, string> {
   /**
    * Get the list of secondary Accounts related to the Identity
    *
+   * @param paginationOpts - Options for pagination
+   *
+   * @returns Promise that resolves to a paginated result of secondary accounts
+   *
    * @note supports pagination
-   * @note can be subscribed to, if connected to node using a web socket
    */
   public async getSecondaryAccounts(
     paginationOpts?: PaginationOptions
   ): Promise<ResultSet<PermissionedAccount>>;
 
+  /**
+   * Get the list of secondary Accounts related to the Identity (with subscription support)
+   *
+   * @param callback - Callback function that receives secondary account updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public async getSecondaryAccounts(
     callback: SubCallback<PermissionedAccount[]>
   ): Promise<UnsubCallback>;
 
+  /**
+   * Get the list of secondary Accounts related to the Identity (with pagination and subscription support)
+   *
+   * @param paginationOpts - Options for pagination
+   * @param callback - Callback function that receives secondary account updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note supports pagination
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getSecondaryAccounts(
     paginationOpts: PaginationOptions,
     callback: SubCallback<PermissionedAccount[]>

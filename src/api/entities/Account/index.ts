@@ -120,9 +120,19 @@ export class Account extends Entity<UniqueIdentifiers, string> {
   /**
    * Get the free/locked POLYX balance of the Account
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the Account's POLYX balance information
    */
   public getBalance(): Promise<AccountBalance>;
+
+  /**
+   * Get the free/locked POLYX balance of the Account (with subscription support)
+   *
+   * @param callback - Callback function that receives balance updates
+   *
+   * @returns Promise that resolves to an unsubscribe function
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   */
   public getBalance(callback: SubCallback<AccountBalance>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
@@ -360,7 +370,7 @@ export class Account extends Entity<UniqueIdentifiers, string> {
   /**
    * Check if this Account possesses certain Permissions to act on behalf of its corresponding Identity
    *
-   * @return which permissions the Account is missing (if any) and the final result
+   * @returns which permissions the Account is missing (if any) and the final result
    */
   public async checkPermissions(
     permissions: SimplePermissions

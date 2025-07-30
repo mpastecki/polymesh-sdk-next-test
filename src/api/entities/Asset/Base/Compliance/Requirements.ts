@@ -103,9 +103,18 @@ export class Requirements extends Namespace<BaseAsset> {
   /**
    * Retrieve all of the Asset's compliance requirements, together with the Default Trusted Claim Issuers
    *
-   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to the compliance requirements and trusted claim issuers
    */
   public get(): Promise<ComplianceRequirements>;
+
+  /**
+   * Retrieve all of the Asset's compliance requirements, together with the Default Trusted Claim Issuers
+   *
+   * @param callback - Callback function that receives compliance requirements updates
+   *
+   * @note can be subscribed to, if connected to node using a web socket
+   * @returns Promise that resolves to an unsubscribe function
+   */
   public get(callback: SubCallback<ComplianceRequirements>): Promise<UnsubCallback>;
 
   // eslint-disable-next-line require-jsdoc
