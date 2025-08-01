@@ -1908,3 +1908,10 @@ export type InitiateCorporateActionParams = {
    */
   defaultTaxWithholding: BigNumber | null;
 };
+
+export interface EnableOffChainFundingParams {
+  /**
+   * The ticker of the off-chain asset
+   */
+  offChainTicker: string;
+}
