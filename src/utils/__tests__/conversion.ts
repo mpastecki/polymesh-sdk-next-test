@@ -161,6 +161,7 @@ import {
   NftLeg,
   NonFungiblePortfolioMovement,
   OffChainAffirmationReceipt,
+  OffChainFundingReceipt,
   OffChainLeg,
   OfferingBalanceStatus,
   OfferingSaleStatus,
@@ -325,6 +326,7 @@ import {
   nftInputToNftMetadataVec,
   nftMovementToPortfolioFund,
   nftToMeshNft,
+  offChainFundingReceiptDetailsToMeshReceiptDetails,
   offChainMetadataToMeshReceiptMetadata,
   offeringTierToPriceTier,
   percentageToPermill,
@@ -12729,5 +12731,40 @@ describe('exemptionToTransferExemption', () => {
       opType: StatType.Count,
       claimType: ClaimType.Jurisdiction,
     });
+  });
+});
+
+describe('offChainFundingReceiptDetailsToMeshReceiptDetails', () => {
+  beforeAll(() => {
+    dsMockUtils.initMocks();
+  });
+
+  afterEach(() => {
+    dsMockUtils.reset();
+  });
+
+  it('should convert off chain funding receipt details to mesh receipt details', () => {
+    const context = dsMockUtils.getContextInstance();
+    jest.spyOn(utilsInternalModule, 'assertAddressValid').mockImplementation();
+
+    const fakeResult = 'fakeResult' as unknown as PolymeshPrimitivesStoFundraiserReceiptDetails;
+
+    when(context.createType)
+      .calledWith('PolymeshPrimitivesStoFundraiserReceiptDetails', expect.any(Object))
+      .mockReturnValue(fakeResult);
+
+    const mockReceiptDetails: OffChainFundingReceipt = {
+      uid: new BigNumber(1),
+      signer: 'someSigner',
+      signature: {
+        type: SignerKeyRingType.Sr25519,
+        value: '0xsignature',
+      },
+      metadata: 'testMetadata',
+    };
+
+    const result = offChainFundingReceiptDetailsToMeshReceiptDetails(mockReceiptDetails, context);
+
+    expect(result).toEqual(fakeResult);
   });
 });
