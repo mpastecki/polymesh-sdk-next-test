@@ -64,6 +64,16 @@ export function prepareCreateCheckpointSchedule(
     });
   }
 
+  // Check for duplicate points
+  const uniquePoints = new Set(points.map(point => point.getTime()));
+
+  if (uniquePoints.size !== points.length) {
+    throw new PolymeshError({
+      code: ErrorCode.ValidationError,
+      message: 'Schedule points must be unique',
+    });
+  }
+
   const rawAssetId = assetToMeshAssetId(asset, context);
 
   const checkpointSchedule = datesToScheduleCheckpoints(points, context);

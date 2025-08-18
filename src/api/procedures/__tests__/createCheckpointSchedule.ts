@@ -73,6 +73,18 @@ describe('createCheckpointSchedule procedure', () => {
     ).toThrow('Schedule points must be in the future');
   });
 
+  it('should throw an error if the points are not unique', () => {
+    const proc = procedureMockUtils.getInstance<Params, CheckpointSchedule>(mockContext);
+    const point = new Date(new Date().getTime() + 10000);
+
+    return expect(() =>
+      prepareCreateCheckpointSchedule.call(proc, {
+        asset,
+        points: [point, point],
+      })
+    ).toThrow('Schedule points must be unique');
+  });
+
   it('should return a create checkpoint schedule transaction spec', async () => {
     const proc = procedureMockUtils.getInstance<Params, CheckpointSchedule>(mockContext);
 
