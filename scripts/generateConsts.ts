@@ -58,7 +58,7 @@ const istanbulIgnore = '/* istanbul ignore file */';
 const utilsFile = `${istanbulIgnore}
 
 import { PolymeshPrimitivesJurisdictionCountryCode } from '@polkadot/types/lookup';
-import { CountryCode } from '@polymeshassociation/polymesh-types/generated/types';
+import { CountryCode } from '~/types';
 
 import { Context } from '~/internal';
 
