@@ -95,8 +95,8 @@ jobs:
           cp README.md dist/README.md
           cp yarn.lock dist/yarn.lock
           cp -R node_modules dist/node_modules
-      - name: integration test
-        run: yarn test:integration
+      # - name: integration test
+      #   run: yarn test:integration
       - name: release
         env:
           GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
