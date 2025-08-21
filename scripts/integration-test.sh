@@ -5,6 +5,7 @@ TEST_DIR="$DEV_ENV_DIR/tests"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SDK_DIR="$SCRIPT_DIR/.."
+SDK_DIST_DIR="$SDK_DIR/dist"
 COMPOSE_ENV="../envs/latest"
 
 echo "[SDK] cloning dev env"
@@ -27,15 +28,11 @@ cd "$SDK_DIR"
 # Enable corepack to use correct Yarn version
 corepack enable
 
-# Install SDK packages and link it
+# Build the SDK
 yarn
 yarn build:ts
 
 cp package.json dist/package.json
-
-# Link the built version
-cd dist
-yarn link
 
 cd "$TEST_DIR"
 
@@ -44,11 +41,11 @@ corepack enable
 
 # Link the built SDK version
 echo "[SDK] Linking built SDK version"
-yarn link @polymeshassociation/polymesh-sdk
+yarn link "$SDK_DIST_DIR"
 
 # Install integration test packages
 echo "[SDK] Installing dependencies"
-yarn install --force
+yarn install
 
 # Run the tests and capture the exit code
 echo "[SDK] Running tests"
