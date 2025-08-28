@@ -15,13 +15,13 @@ import {
   claimsQuery,
   customClaimTypeQuery,
 } from '~/middleware/queries/claims';
-import { ClaimsOrderBy, ClaimTypeEnum, Query } from '~/middleware/types';
+import { ClaimsOrderBy, Query } from '~/middleware/types';
 import {
   CddClaim,
   ClaimData,
   ClaimOperation,
   ClaimScope,
-  ClaimType,
+  ClaimTypeInput,
   CustomClaim,
   CustomClaimType,
   CustomClaimTypeWithDid,
@@ -42,6 +42,7 @@ import { DEFAULT_GQL_PAGE_SIZE } from '~/utils/constants';
 import {
   bigNumberToU32,
   bytesToString,
+  claimTypeInputToMiddlewareClaimTypeDetails,
   identityIdToString,
   meshClaimToClaim,
   momentToDate,
@@ -197,7 +198,7 @@ export class Claims {
       targets?: (string | Identity)[];
       trustedClaimIssuers?: (string | Identity)[];
       scope?: Scope;
-      claimTypes?: ClaimType[];
+      claimTypes?: ClaimTypeInput[];
       includeExpired?: boolean;
       size?: BigNumber;
       start?: BigNumber;
@@ -222,8 +223,8 @@ export class Claims {
       trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
         signerToString(trustedClaimIssuer)
       ),
-      claimTypes: Array.isArray(claimTypes) ? claimTypes.map(ct => ClaimTypeEnum[ct]) : undefined,
       includeExpired,
+      ...claimTypeInputToMiddlewareClaimTypeDetails(claimTypes),
     };
 
     if (!targets) {
@@ -293,7 +294,6 @@ export class Claims {
     if (isMiddlewareAvailable) {
       const { data, count, next } = await this.getIdentitiesWithClaims({
         targets: [did],
-        claimTypes: [ClaimType.Custom],
         includeExpired: false,
         size,
         start: new BigNumber(0),
@@ -331,7 +331,6 @@ export class Claims {
           promises.push(
             this.getIdentitiesWithClaims({
               targets: [did],
-              claimTypes: [ClaimType.Custom],
               includeExpired: false,
               start,
               size,
@@ -355,16 +354,6 @@ export class Claims {
 
     const identityClaimsFromChain = await context.getIdentityClaimsFromChain({
       targets: [did],
-      claimTypes: [
-        ClaimType.Accredited,
-        ClaimType.Affiliate,
-        ClaimType.Blocked,
-        ClaimType.BuyLockup,
-        ClaimType.Exempted,
-        ClaimType.Jurisdiction,
-        ClaimType.KnowYourCustomer,
-        ClaimType.SellLockup,
-      ],
       includeExpired: true,
     });
 

@@ -313,9 +313,11 @@ export interface ClaimScope {
   assetId?: string | undefined;
 }
 
-export type TrustedFor =
-  | Exclude<ClaimType, ClaimType.Custom>
-  | { type: ClaimType.Custom; customClaimTypeId: BigNumber };
+export type CustomClaimWithTypeId = { type: ClaimType.Custom; customClaimTypeId: BigNumber };
+
+export type TrustedFor = Exclude<ClaimType, ClaimType.Custom> | CustomClaimWithTypeId;
+
+export type ClaimTypeInput = TrustedFor;
 
 /**
  * @param IsDefault - whether the Identity is a default trusted claim issuer for an asset or just

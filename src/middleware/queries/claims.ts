@@ -19,15 +19,12 @@ function createClaimsFilters(variables: ClaimsQueryFilter): {
   filter: string;
 } {
   const args = ['$size: Int, $start: Int'];
-  const filters = ['revokeDate: { isNull: true }'];
-  const { dids, claimTypes, trustedClaimIssuers, scope, includeExpired } = variables;
+  let filters = ['revokeDate: { isNull: true }'];
+  const { dids, claimTypes, trustedClaimIssuers, scope, includeExpired, customClaimTypeIds } =
+    variables;
   if (dids?.length) {
     args.push('$dids: [String!]');
     filters.push('targetId: { in: $dids }');
-  }
-  if (claimTypes) {
-    args.push('$claimTypes: [ClaimTypeEnum!]!');
-    filters.push('type: { in: $claimTypes }');
   }
   if (trustedClaimIssuers?.length) {
     args.push('$trustedClaimIssuers: [String!]');
@@ -39,10 +36,25 @@ function createClaimsFilters(variables: ClaimsQueryFilter): {
   }
   if (!includeExpired) {
     args.push('$expiryTimestamp: BigFloat');
-    filters.push(
-      'or: [{ filterExpiry: { lessThan: $expiryTimestamp } }, { expiry: { isNull: true } }]'
-    );
+    filters.push('filterExpiry: { lessThan: $expiryTimestamp } , expiry: { isNull: true }');
   }
+
+  if (claimTypes && !customClaimTypeIds) {
+    args.push('$claimTypes: [ClaimTypeEnum!]!');
+    filters.push('type: { in: $claimTypes }');
+  }
+  if (!claimTypes && customClaimTypeIds) {
+    args.push('$customClaimTypeIds: [String!]!');
+    filters.push('customClaimTypeId: { in: $customClaimTypeIds }');
+  }
+  if (claimTypes && customClaimTypeIds) {
+    filters = [
+      `or: [ { ${filters.join()}, type: { in: $claimTypes } }, { ${filters.join()}, customClaimTypeId: { in: $customClaimTypeIds } } ]`,
+    ];
+    args.push('$claimTypes: [ClaimTypeEnum!]!');
+    args.push('$customClaimTypeIds: [String!]!');
+  }
+
   return {
     args: `(${args.join()})`,
     filter: `filter: { ${filters.join()} },`,
@@ -56,6 +68,7 @@ export interface ClaimsQueryFilter {
   claimTypes?: ClaimTypeEnum[] | undefined;
   includeExpired?: boolean | undefined;
   expiryTimestamp?: number | undefined;
+  customClaimTypeIds?: string[] | undefined;
 }
 /**
  * @hidden

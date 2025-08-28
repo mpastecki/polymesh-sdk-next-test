@@ -109,7 +109,7 @@ describe('Claims Class', () => {
       jest.useRealTimers();
     });
 
-    it('should return a list of Identities with claims associated to them', async () => {
+    it('should return a list2 of Identities with claims associated to them', async () => {
       const targetDid = 'someTargetDid';
       const issuerDid = 'someIssuerDid';
       const date = 1589816265000;
@@ -171,6 +171,7 @@ describe('Claims Class', () => {
           trustedClaimIssuers: [issuerDid],
           claimTypes: [ClaimTypeEnum.CustomerDueDiligence],
           includeExpired: false,
+          scope: undefined,
         }),
         {
           claims: claimsQueryResponse,
@@ -583,7 +584,6 @@ describe('Claims Class', () => {
       when(getIdentitiesWithClaimsSpy)
         .calledWith({
           targets: [target],
-          claimTypes: [ClaimType.Custom],
           includeExpired: false,
           start: new BigNumber(0),
           size: new BigNumber(DEFAULT_GQL_PAGE_SIZE),
@@ -655,7 +655,6 @@ describe('Claims Class', () => {
       when(getIdentitiesWithClaimsSpy)
         .calledWith({
           targets: [target],
-          claimTypes: [ClaimType.Custom],
           includeExpired: false,
           start: next,
           size: new BigNumber(DEFAULT_GQL_PAGE_SIZE),

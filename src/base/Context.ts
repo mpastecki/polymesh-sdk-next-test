@@ -34,12 +34,14 @@ import {
 import { claimsQuery } from '~/middleware/queries/claims';
 import { heartbeatQuery, metadataQuery } from '~/middleware/queries/common';
 import { polyxTransactionsQuery } from '~/middleware/queries/polyxTransactions';
-import { ClaimTypeEnum, Query } from '~/middleware/types';
+import { Query } from '~/middleware/types';
 import {
   AccountBalance,
   ClaimData,
   ClaimType,
+  ClaimTypeInput,
   CorporateActionParams,
+  CustomClaimWithTypeId,
   DistributionWithDetails,
   ErrorCode,
   MiddlewareMetadata,
@@ -67,6 +69,7 @@ import {
   balanceToBigNumber,
   bigNumberToU32,
   boolToBoolean,
+  claimTypeInputToMiddlewareClaimTypeDetails,
   claimTypeToMeshClaimType,
   corporateActionIdentifierToCaId,
   distributionToDividendDistributionParams,
@@ -868,7 +871,7 @@ export class Context {
    */
   public async getIdentityClaimsFromChain(args: {
     targets: (string | Identity)[];
-    claimTypes?: ClaimType[] | undefined;
+    claimTypes?: ClaimTypeInput[] | undefined;
     trustedClaimIssuers?: (string | Identity)[] | undefined;
     includeExpired: boolean;
   }): Promise<ClaimData[]> {
@@ -878,15 +881,27 @@ export class Context {
       },
     } = this;
 
-    const {
-      targets,
-      claimTypes = Object.values(ClaimType),
-      trustedClaimIssuers,
-      includeExpired,
-    } = args;
+    const { targets, claimTypes, trustedClaimIssuers, includeExpired } = args;
+
+    let claimTypesInput: ClaimTypeInput[];
+
+    if (claimTypes) {
+      claimTypesInput = claimTypes;
+    } else {
+      const customClaimTypes = await identity.customClaims.entries();
+      claimTypesInput = [
+        ...Object.values(ClaimType).filter(claimType => claimType !== ClaimType.Custom),
+        ...customClaimTypes.map(entry => {
+          return {
+            type: ClaimType.Custom,
+            customClaimTypeId: u32ToBigNumber(entry[0].args[0]),
+          } as CustomClaimWithTypeId;
+        }),
+      ];
+    }
 
     const claim1stKeys = targets.flatMap(target =>
-      claimTypes.map(claimType => {
+      claimTypesInput.map(claimType => {
         return {
           target: signerToString(target),
           claimType: claimTypeToMeshClaimType(claimType, this),
@@ -939,7 +954,7 @@ export class Context {
   public async getIdentityClaimsFromMiddleware(args: {
     targets?: (string | Identity)[] | undefined;
     trustedClaimIssuers?: (string | Identity)[] | undefined;
-    claimTypes?: ClaimType[] | undefined;
+    claimTypes?: ClaimTypeInput[] | undefined;
     includeExpired?: boolean | undefined;
     size?: BigNumber | undefined;
     start?: BigNumber | undefined;
@@ -965,7 +980,7 @@ export class Context {
           trustedClaimIssuers: trustedClaimIssuers?.map(trustedClaimIssuer =>
             signerToString(trustedClaimIssuer)
           ),
-          claimTypes: claimTypes?.map(ct => ClaimTypeEnum[ct]),
+          ...claimTypeInputToMiddlewareClaimTypeDetails(claimTypes),
           includeExpired,
         },
         size,
@@ -1004,7 +1019,7 @@ export class Context {
     opts: {
       targets?: (string | Identity)[];
       trustedClaimIssuers?: (string | Identity)[];
-      claimTypes?: ClaimType[];
+      claimTypes?: ClaimTypeInput[];
       includeExpired?: boolean;
       size?: BigNumber;
       start?: BigNumber;

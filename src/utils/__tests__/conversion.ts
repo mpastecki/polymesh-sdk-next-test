@@ -147,6 +147,7 @@ import {
   CorporateActionKind,
   CorporateActionParams,
   CountryCode,
+  CustomClaimWithTypeId,
   DividendDistributionParams,
   ErrorCode,
   FungibleLeg,
@@ -187,6 +188,7 @@ import {
   TransferRestrictionType,
   TransferStatus,
   TrustedClaimIssuer,
+  TrustedFor,
   TxGroup,
   TxTags,
   VenueType,
@@ -195,6 +197,7 @@ import { InstructionStatus, PermissionGroupIdentifier } from '~/types/internal';
 import { tuple } from '~/types/utils';
 import { hexToUuid, uuidToHex } from '~/utils';
 import { DUMMY_ACCOUNT_ID, MAX_BALANCE, MAX_DECIMALS, MAX_TICKER_LENGTH } from '~/utils/constants';
+import * as utilsConversionModule from '~/utils/conversion';
 import {
   accountIdToString,
   activeEraStakingToActiveEraInfo,
@@ -233,6 +236,7 @@ import {
   claimCountStatInputToStatUpdates,
   claimCountToClaimCountRestrictionValue,
   claimToMeshClaim,
+  claimTypeInputToMiddlewareClaimTypeDetails,
   claimTypeToMeshClaimType,
   coerceHexToString,
   collectionKeysToMetadataKeys,
@@ -406,7 +410,6 @@ import {
   u128ToStatValue,
   venueTypeToMeshVenueType,
 } from '~/utils/conversion';
-import * as utilsConversionModule from '~/utils/conversion';
 import * as utilsInternalModule from '~/utils/internal';
 import { padString } from '~/utils/internal';
 
@@ -4994,10 +4997,10 @@ describe('meshClaimTypeToClaimType and claimTypeToMeshClaimType', () => {
       result = meshClaimTypeToClaimType(claimType);
       expect(result).toEqual(fakeResult);
 
-      claimType = dsMockUtils.createMockClaimType(ClaimType.Custom);
+      claimType = dsMockUtils.createMockClaimType(ClaimType.Custom, new BigNumber(1));
 
       result = meshClaimTypeToClaimType(claimType);
-      expect(result).toEqual({ type: ClaimType.Custom, customClaimTypeId: new BigNumber(0) });
+      expect(result).toEqual({ type: ClaimType.Custom, customClaimTypeId: new BigNumber(1) });
     });
 
     it('should throw an error if it un-parses an unknown type', () => {
@@ -5019,6 +5022,7 @@ describe('meshClaimTypeToClaimType and claimTypeToMeshClaimType', () => {
         ClaimType.Jurisdiction,
         ClaimType.Exempted,
         ClaimType.Blocked,
+        ClaimType.Accredited,
       ];
 
       testCases.forEach(claimType => {
@@ -5035,14 +5039,16 @@ describe('meshClaimTypeToClaimType and claimTypeToMeshClaimType', () => {
     it('should convert a custom Claim object to a polkadot ClaimType', () => {
       const context = dsMockUtils.getContextInstance();
       const customClaimTypeId = new BigNumber(42);
-      const customClaim: { type: ClaimType.Custom; customClaimTypeId: BigNumber } = {
+      const customClaim: CustomClaimWithTypeId = {
         type: ClaimType.Custom,
         customClaimTypeId,
       };
       const mockU32 = dsMockUtils.createMockU32(customClaimTypeId);
       const mockCustomClaim = dsMockUtils.createMockClaimType(ClaimType.Custom);
 
-      when(context.createType).calledWith('u32', customClaimTypeId).mockReturnValue(mockU32);
+      when(context.createType)
+        .calledWith('u32', customClaimTypeId.toString())
+        .mockReturnValue(mockU32);
       when(context.createType)
         .calledWith('PolymeshPrimitivesIdentityClaimClaimType', { Custom: mockU32 })
         .mockReturnValue(mockCustomClaim);
@@ -12766,5 +12772,83 @@ describe('offChainFundingReceiptDetailsToMeshReceiptDetails', () => {
     const result = offChainFundingReceiptDetailsToMeshReceiptDetails(mockReceiptDetails, context);
 
     expect(result).toEqual(fakeResult);
+  });
+});
+
+describe('claimTypeInputToMiddlewareClaimTypeDetails', () => {
+  it('should return empty object when claimTypes is undefined or empty array', () => {
+    let result = claimTypeInputToMiddlewareClaimTypeDetails();
+    expect(result).toEqual({});
+    result = claimTypeInputToMiddlewareClaimTypeDetails([]);
+    expect(result).toEqual({});
+  });
+
+  it('should handle standard claim types', () => {
+    const claimTypes: TrustedFor[] = [
+      ClaimType.Accredited,
+      ClaimType.Affiliate,
+      ClaimType.Blocked,
+      ClaimType.BuyLockup,
+      ClaimType.CustomerDueDiligence,
+      ClaimType.Exempted,
+      ClaimType.Jurisdiction,
+      ClaimType.KnowYourCustomer,
+      ClaimType.SellLockup,
+    ];
+
+    const result = claimTypeInputToMiddlewareClaimTypeDetails(claimTypes);
+
+    expect(result).toEqual({
+      claimTypes: [
+        ClaimTypeEnum.Accredited,
+        ClaimTypeEnum.Affiliate,
+        ClaimTypeEnum.Blocked,
+        ClaimTypeEnum.BuyLockup,
+        ClaimTypeEnum.CustomerDueDiligence,
+        ClaimTypeEnum.Exempted,
+        ClaimTypeEnum.Jurisdiction,
+        ClaimTypeEnum.KnowYourCustomer,
+        ClaimTypeEnum.SellLockup,
+      ],
+    });
+    expect(result.customClaimTypeIds).toBeUndefined();
+  });
+
+  it('should handle custom claim types', () => {
+    const customClaimTypeId1 = new BigNumber(123);
+    const customClaimTypeId2 = new BigNumber(456);
+
+    const claimTypes: TrustedFor[] = [
+      { type: ClaimType.Custom, customClaimTypeId: customClaimTypeId1 },
+      { type: ClaimType.Custom, customClaimTypeId: customClaimTypeId2 },
+    ];
+
+    const result = claimTypeInputToMiddlewareClaimTypeDetails(claimTypes);
+
+    expect(result).toEqual({
+      customClaimTypeIds: ['123', '456'],
+    });
+    expect(result.claimTypes).toBeUndefined();
+  });
+
+  it('should handle duplicate claim types by removing duplicates', () => {
+    const customClaimTypeId = new BigNumber(123);
+
+    const claimTypes: TrustedFor[] = [
+      ClaimType.Accredited,
+      ClaimType.Accredited,
+      ClaimType.Blocked,
+      ClaimType.Blocked,
+      { type: ClaimType.Custom, customClaimTypeId },
+      { type: ClaimType.Custom, customClaimTypeId },
+      { type: ClaimType.Custom, customClaimTypeId: new BigNumber(1000) },
+    ];
+
+    const result = claimTypeInputToMiddlewareClaimTypeDetails(claimTypes);
+
+    expect(result).toEqual({
+      claimTypes: [ClaimTypeEnum.Accredited, ClaimTypeEnum.Blocked],
+      customClaimTypeIds: ['123', '1000'],
+    });
   });
 });

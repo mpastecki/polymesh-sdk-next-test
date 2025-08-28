@@ -1260,6 +1260,8 @@ describe('Context class', () => {
       const cddId = 'someCddId';
       const date = 1589816265000;
       const customerDueDiligenceType = ClaimTypeEnum.CustomerDueDiligence;
+      const customClaimType = ClaimTypeEnum.Custom;
+      const customClaimTypeId = new BigNumber(1);
       const claim = {
         target: expect.objectContaining({ did: targetDid }),
         issuer: expect.objectContaining({ did: issuerDid }),
@@ -1279,8 +1281,9 @@ describe('Context class', () => {
           ...claim,
           expiry: null,
           claim: {
-            type: customerDueDiligenceType,
-            id: cddId,
+            type: customClaimType,
+            customClaimTypeId,
+            scope: {},
           },
         },
       ];
@@ -1302,7 +1305,9 @@ describe('Context class', () => {
           {
             ...commonClaimData,
             expiry: null,
-            type: customerDueDiligenceType,
+            type: customClaimType,
+            customClaimTypeId,
+            scope: undefined,
           },
         ],
       };
@@ -1313,7 +1318,8 @@ describe('Context class', () => {
           {
             dids: [targetDid],
             trustedClaimIssuers: [targetDid],
-            claimTypes: [ClaimTypeEnum.Accredited],
+            claimTypes: [ClaimTypeEnum.CustomerDueDiligence],
+            customClaimTypeIds: [customClaimTypeId.toString()],
             includeExpired: true,
           },
           new BigNumber(2),
@@ -1327,7 +1333,13 @@ describe('Context class', () => {
       let result = await context.issuedClaims({
         targets: [targetDid],
         trustedClaimIssuers: [targetDid],
-        claimTypes: [ClaimType.Accredited],
+        claimTypes: [
+          ClaimType.CustomerDueDiligence,
+          {
+            type: ClaimType.Custom,
+            customClaimTypeId,
+          },
+        ],
         includeExpired: true,
         size: new BigNumber(2),
         start: new BigNumber(0),
@@ -1493,6 +1505,17 @@ describe('Context class', () => {
       });
 
       expect(result.data.length).toEqual(0);
+
+      const customClaimTypeId = new BigNumber(1);
+
+      dsMockUtils.createQueryMock('identity', 'customClaims', {
+        entries: [
+          tuple(
+            [dsMockUtils.createMockU32(customClaimTypeId), dsMockUtils.createMockOption()],
+            dsMockUtils.createMockOption(dsMockUtils.createMockBytes('custom Claim'))
+          ),
+        ],
+      });
 
       result = await context.issuedClaims({
         targets: [targetDid],

@@ -170,6 +170,7 @@ import {
   Block,
   CallIdEnum,
   Claim as MiddlewareClaim,
+  ClaimTypeEnum,
   CustomClaimType as MiddlewareCustomClaimType,
   Instruction as MiddlewareInstruction,
   InstructionStatusEnum,
@@ -3476,9 +3477,8 @@ export function claimTypeToMeshClaimType(
     claimType.type === ClaimType.Custom &&
     claimType.customClaimTypeId
   ) {
-    const customU32 = context.createType('u32', claimType.customClaimTypeId);
     return context.createType('PolymeshPrimitivesIdentityClaimClaimType', {
-      Custom: customU32,
+      Custom: bigNumberToU32(claimType.customClaimTypeId, context),
     });
   }
 
@@ -6170,4 +6170,40 @@ export function offChainFundingReceiptDetailsToMeshReceiptDetails(
     signature: signatureToMeshRuntimeMultiSignature(signature.type, signature.value, context),
     metadata: optionize(offChainMetadataToMeshReceiptMetadata)(metadata, context),
   });
+}
+
+/**
+ * @hidden
+ */
+export function claimTypeInputToMiddlewareClaimTypeDetails(claimTypes?: TrustedFor[]): {
+  claimTypes?: ClaimTypeEnum[] | undefined;
+  customClaimTypeIds?: string[] | undefined;
+} {
+  const result: {
+    claimTypes?: ClaimTypeEnum[] | undefined;
+    customClaimTypeIds?: string[] | undefined;
+  } = {};
+
+  if (Array.isArray(claimTypes)) {
+    const claimTypesSet = new Set<ClaimTypeEnum>();
+    const customClaimTypeIdsSet = new Set<string>();
+
+    claimTypes.forEach(ct => {
+      if (typeof ct !== 'string') {
+        // case when custom claim type is provided
+        customClaimTypeIdsSet.add(ct.customClaimTypeId.toString());
+      } else {
+        claimTypesSet.add(ClaimTypeEnum[ct]);
+      }
+    });
+
+    if (claimTypesSet.size > 0) {
+      result.claimTypes = Array.from(claimTypesSet);
+    }
+    if (customClaimTypeIdsSet.size > 0) {
+      result.customClaimTypeIds = Array.from(customClaimTypeIdsSet);
+    }
+  }
+
+  return result;
 }

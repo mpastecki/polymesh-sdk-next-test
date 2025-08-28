@@ -36,6 +36,7 @@ describe('claimsQuery', () => {
       scope: { type: ClaimScopeTypeEnum.Asset, value: '0x12341234123412341234123412341234' },
       trustedClaimIssuers: ['someTrustedClaim'],
       claimTypes: [ClaimTypeEnum.Accredited],
+      customClaimTypeIds: ['123', '456'],
       includeExpired: true,
       size: DEFAULT_GQL_PAGE_SIZE,
       start: 0,
@@ -64,11 +65,12 @@ describe('claimsQuery', () => {
   });
 
   it('should not include undefined values in the variables', () => {
-    const result = claimsQuery(false, { includeExpired: true });
+    const result = claimsQuery(false, { includeExpired: true, customClaimTypeIds: ['123', '456'] });
     expect(result.variables).toEqual({
       includeExpired: true,
       size: DEFAULT_GQL_PAGE_SIZE,
       start: 0,
+      customClaimTypeIds: ['123', '456'],
     });
   });
 });
