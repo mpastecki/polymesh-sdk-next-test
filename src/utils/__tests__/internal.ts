@@ -135,7 +135,7 @@ jest.mock(
   '~/api/entities/Account',
   require('~/testUtils/mocks/entities').mockAccountModule('~/api/entities/Account')
 );
-jest.mock('websocket', require('~/testUtils/mocks/dataSources').mockWebSocketModule());
+jest.mock('ws', require('~/testUtils/mocks/dataSources').mockWebSocketModule());
 
 jest.mock('cross-fetch', () => {
   return {
@@ -1325,7 +1325,7 @@ describe('assertExpectedChainVersion', () => {
 
   it('should resolve if it receives both expected RPC node and chain spec version', () => {
     const signal = assertExpectedChainVersion('ws://example.com');
-    client.onopen();
+    client.on('open', () => {});
     client.sendSpecVersion(getSpecVersion(SUPPORTED_SPEC_SEMVER));
     client.sendIsPrivateSupported(false);
 
@@ -1334,7 +1334,7 @@ describe('assertExpectedChainVersion', () => {
 
   it('should resolve if it receives both expected RPC node and chain spec version for a private node', () => {
     const signal = assertExpectedChainVersion('ws://example.com');
-    client.onopen();
+    client.on('open', () => {});
     client.sendSpecVersion(getSpecVersion(PRIVATE_SUPPORTED_SPEC_SEMVER));
     client.sendIsPrivateSupported(true);
 
@@ -1361,7 +1361,7 @@ describe('assertExpectedChainVersion', () => {
       code: ErrorCode.FatalError,
       message: 'Unsupported Polymesh chain spec version. Please upgrade the SDK',
     });
-    return expect(signal).rejects.toThrowError(expectedError);
+    return expect(signal).rejects.toThrow(expectedError);
   });
 
   it('should resolve even with a patch chain spec version mismatch', async () => {
@@ -1380,7 +1380,7 @@ describe('assertExpectedChainVersion', () => {
       message: 'Could not connect to the Polymesh node at ws://example.com',
     });
     client.triggerError(new Error('could not connect'));
-    return expect(signal).rejects.toThrowError(expectedError);
+    return expect(signal).rejects.toThrow(expectedError);
   });
 });
 

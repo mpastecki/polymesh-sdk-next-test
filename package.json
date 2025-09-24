@@ -54,8 +54,8 @@
     "@babel/plugin-transform-modules-commonjs": "7.22.11",
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
-    "@graphql-codegen/cli": "5.0.0",
-    "@graphql-codegen/typescript": "4.0.1",
+    "@graphql-codegen/cli": "6.0.0",
+    "@graphql-codegen/typescript": "5.0.0",
     "@polkadot/dev-ts": "^0.79.3",
     "@polkadot/typegen": "11.2.1",
     "@polymeshassociation/local-signing-manager": "^3.0.1",
@@ -66,7 +66,7 @@
     "@types/lodash": "^4.14.197",
     "@types/node": "^20.19.8",
     "@types/semver": "^7.5.1",
-    "@types/websocket": "^1.0.6",
+    "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "6.5.0",
     "@typescript-eslint/parser": "6.5.0",
     "assert": "^2.0.0",
@@ -95,7 +95,7 @@
     "prettier-eslint": "15.0.1",
     "prettier-eslint-cli": "7.1.0",
     "replace-in-file": "^7.0.1",
-    "semantic-release": "22.0.12",
+    "semantic-release": "24.2.9",
     "stream-browserify": "^3.0.0",
     "ts-jest": "^29.4.0",
     "ts-loader": "9.4.4",
@@ -109,8 +109,7 @@
     "typescript": "5.8.3",
     "webpack": "5.94.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.1",
-    "websocket-as-promised": "^2.0.1"
+    "webpack-dev-server": "^5.2.1"
   },
   "config": {
     "commitizen": {
@@ -136,7 +135,7 @@
     "lodash": "^4.17.21",
     "semver": "^7.5.4",
     "ts-morph": "^25.0.1",
-    "websocket": "^1.0.34"
+    "ws": "^8.18.3"
   },
   "resolutions": {
     "@polkadot/keyring": "12.6.2",
@@ -154,7 +153,8 @@
     "@polkadot/util": "12.6.2",
     "@polkadot/networks": "12.6.2",
     "@polkadot/util-crypto": "12.6.2",
-    "@polkadot/x-bigint": "12.6.2"
+    "@polkadot/x-bigint": "12.6.2",
+    "safe-buffer": "5.2.1"
   },
   "overrides": {
     "@polkadot/keyring": "12.6.2",
@@ -172,7 +172,8 @@
     "@polkadot/util": "12.6.2",
     "@polkadot/networks": "12.6.2",
     "@polkadot/util-crypto": "12.6.2",
-    "@polkadot/x-bigint": "12.6.2"
+    "@polkadot/x-bigint": "12.6.2",
+    "safe-buffer": "5.2.1"
   },
   "pnpm": {
     "overrides": {
@@ -191,7 +192,8 @@
       "@polkadot/util": "12.6.2",
       "@polkadot/networks": "12.6.2",
       "@polkadot/util-crypto": "12.6.2",
-      "@polkadot/x-bigint": "12.6.2"
+      "@polkadot/x-bigint": "12.6.2",
+      "safe-buffer": "5.2.1"
     }
   },
   "packageManager": "yarn@4.9.2+sha512.1fc009bc09d13cfd0e19efa44cbfc2b9cf6ca61482725eb35bbc5e257e093ebf4130db6dfe15d604ff4b79efd8e1e8e99b25fa7d0a6197c9f9826358d4d65c3c"
