@@ -68,8 +68,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.name "Release Bot"
-          git config --global user.email "release-bot@polymesh.network"
+          git config --global user.name "Polymesh Bot"
+          git config --global user.email "bot@polymesh.network"
 
       - name: Install dependencies
         run: |
