@@ -339,6 +339,7 @@ jobs:
           cp yarn.lock dist/yarn.lock
 
           # Create release config with exact branch name (not glob pattern)
+          echo "Creating release config for branch: $INTEGRATION_BRANCH"
           cat > dist/release.config.js << EOF
           module.exports = {
             repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
@@ -379,6 +380,8 @@ jobs:
           EOF
 
           echo "✅ Package prepared for semantic-release with branch: $INTEGRATION_BRANCH"
+          echo "Generated config:"
+          cat dist/release.config.js
 
           # Add to GitHub Step Summary
           echo "## 📦 Package Preparation" >> $GITHUB_STEP_SUMMARY
@@ -394,6 +397,10 @@ jobs:
           git push origin "$INTEGRATION_BRANCH"
 
           echo "✅ Ephemeral branch pushed to remote"
+
+          # Verify the branch exists on remote
+          echo "Verifying branch on remote:"
+          git ls-remote --heads origin "$INTEGRATION_BRANCH"
 
       - name: Release with semantic-release
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
