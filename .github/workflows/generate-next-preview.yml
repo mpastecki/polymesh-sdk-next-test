@@ -384,6 +384,17 @@ jobs:
           echo "## 📦 Package Preparation" >> $GITHUB_STEP_SUMMARY
           echo "Package prepared for semantic-release with next-major configuration" >> $GITHUB_STEP_SUMMARY
 
+      - name: Push ephemeral branch to remote
+        if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
+        run: |
+          echo "📤 Pushing ephemeral integration branch to remote..."
+          echo "Branch: $INTEGRATION_BRANCH"
+
+          # Push the ephemeral branch (semantic-release requires it on remote)
+          git push origin "$INTEGRATION_BRANCH"
+
+          echo "✅ Ephemeral branch pushed to remote"
+
       - name: Release with semantic-release
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         id: publish
