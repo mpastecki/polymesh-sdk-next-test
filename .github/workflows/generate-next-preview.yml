@@ -407,7 +407,15 @@ jobs:
         run: |
           echo "📝 Semantic-release has automatically created the GitHub release"
           echo "Additional breaking change metadata:"
-          echo "${{ env.BREAKING_CHANGE_METADATA || 'No breaking changes detected in commit metadata.' }}"
+
+          # Use printf to safely output multi-line content
+          METADATA="${{ env.BREAKING_CHANGE_METADATA }}"
+          if [[ -n "$METADATA" ]]; then
+            printf "%s\n" "$METADATA"
+          else
+            echo "No breaking changes detected in commit metadata."
+          fi
+
           echo ""
           echo "Integrated branches: ${{ env.SUCCESSFUL_BRANCHES }}"
           echo "Total commits integrated: ${{ env.TOTAL_COMMITS }}"

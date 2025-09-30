@@ -1,5 +1,5 @@
 module.exports = {
-  repositoryUrl: 'https://github.com/PolymeshAssociation/polymesh-sdk.git',
+  repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
   branches: [
     {
       name: 'ephemeral-integration-*',
