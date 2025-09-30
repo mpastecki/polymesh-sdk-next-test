@@ -414,6 +414,10 @@ jobs:
           # Debug: Check git context from dist directory
           echo "Git remote from dist directory:"
           git remote -v
+          echo "Current branch:"
+          git branch --show-current
+          echo "Current commit:"
+          git rev-parse HEAD
           echo "Testing git ls-remote from dist:"
           git ls-remote --heads origin "$INTEGRATION_BRANCH" || echo "FAILED to ls-remote from dist/"
 
