@@ -14,6 +14,11 @@ module.exports = {
       name: 'v26',
       range: '26.x',
     },
+    {
+      name: 'ephemeral-integration-*',
+      prerelease: 'next-major',
+      channel: 'next-major'
+    },
   ],
   /*
    * In this order the **prepare** step of @semantic-release/npm will run first

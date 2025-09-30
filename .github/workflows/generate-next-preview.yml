@@ -337,54 +337,9 @@ jobs:
           sed 's|dist/|./|' package.json > dist/package.json
           cp README.md dist/README.md
           cp yarn.lock dist/yarn.lock
+          cp release.config.js dist/
 
-          # Create release config with exact branch name (not glob pattern)
-          # Note: semantic-release requires at least one release branch (like master)
-          # Our ephemeral branch is a prerelease branch, so we include master as well
-          echo "Creating release config for branch: $INTEGRATION_BRANCH"
-          cat > dist/release.config.js << EOF
-          module.exports = {
-            repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
-            branches: [
-              'master',
-              {
-                name: '$INTEGRATION_BRANCH',
-                prerelease: 'next-major',
-                channel: 'next-major'
-              }
-            ],
-            tagFormat: 'v\${version}',
-            plugins: [
-              '@semantic-release/commit-analyzer',
-              '@semantic-release/release-notes-generator',
-              [
-                '@semantic-release/changelog',
-                {
-                  changelogFile: 'CHANGELOG-NEXT-MAJOR.md',
-                }
-              ],
-              [
-                '@semantic-release/npm',
-                {
-                  npmPublish: false,
-                  tarballDir: 'npm-package/',
-                }
-              ],
-              [
-                '@semantic-release/github',
-                {
-                  assets: ['CHANGELOG-NEXT-MAJOR.md'],
-                  addReleases: 'bottom',
-                  releasedLabels: ['Status: Released in Next Major Preview']
-                }
-              ],
-            ],
-          };
-          EOF
-
-          echo "✅ Package prepared for semantic-release with branch: $INTEGRATION_BRANCH"
-          echo "Generated config:"
-          cat dist/release.config.js
+          echo "✅ Package prepared for semantic-release"
 
           # Add to GitHub Step Summary
           echo "## 📦 Package Preparation" >> $GITHUB_STEP_SUMMARY
@@ -427,9 +382,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release with debug mode
-          echo "Running semantic-release with debug mode..."
-          DEBUG=semantic-release:* yarn semantic-release --branches "$INTEGRATION_BRANCH"
+          # Run semantic-release (will auto-detect ephemeral branch from config)
+          yarn semantic-release
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
