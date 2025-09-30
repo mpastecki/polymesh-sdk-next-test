@@ -376,8 +376,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release (will use release.config.js automatically)
-          yarn semantic-release
+          # Run semantic-release with specific branch to avoid conflicts with old ephemeral branches
+          yarn semantic-release --branches "{\"name\":\"$INTEGRATION_BRANCH\",\"prerelease\":\"next-major\",\"channel\":\"next-major\"}"
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
