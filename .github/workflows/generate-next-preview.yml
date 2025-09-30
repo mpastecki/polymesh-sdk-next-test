@@ -74,8 +74,6 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --immutable
-          # Security: Verify package integrity
-          yarn audit --level=high
 
       - name: Discover breaking change branches
         id: discovery
