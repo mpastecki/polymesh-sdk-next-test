@@ -339,11 +339,14 @@ jobs:
           cp yarn.lock dist/yarn.lock
 
           # Create release config with exact branch name (not glob pattern)
+          # Note: semantic-release requires at least one release branch (like master)
+          # Our ephemeral branch is a prerelease branch, so we include master as well
           echo "Creating release config for branch: $INTEGRATION_BRANCH"
           cat > dist/release.config.js << EOF
           module.exports = {
             repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
             branches: [
+              'master',
               {
                 name: '$INTEGRATION_BRANCH',
                 prerelease: 'next-major',
