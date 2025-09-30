@@ -225,11 +225,11 @@ jobs:
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
           # Create temporary integration branch from latest develop
-          INTEGRATION_BRANCH="ephemeral-integration-$(date +%Y%m%d%H%M%S)"
+          INTEGRATION_BRANCH="next-$(date +%Y%m%d%H%M%S)"
           echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
 
           git checkout -b "$INTEGRATION_BRANCH" origin/develop
-          echo "📝 Created ephemeral integration branch: $INTEGRATION_BRANCH"
+          echo "📝 Created integration branch: $INTEGRATION_BRANCH"
 
       - name: Cherry-pick breaking changes
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'

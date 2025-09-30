@@ -15,8 +15,8 @@ module.exports = {
       range: '26.x',
     },
     {
-      name: 'ephemeral-integration-*',
-      prerelease: 'next-major',
+      name: 'next-*',
+      prerelease: true,
       channel: 'next-major'
     },
   ],
