@@ -346,7 +346,10 @@ jobs:
           module.exports = {
             repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
             branches: [
-              'master',
+              {
+                name: 'master',
+                range: '29.x'
+              },
               {
                 name: '$INTEGRATION_BRANCH',
                 prerelease: 'next-major',
