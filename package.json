@@ -8,13 +8,13 @@
   },
   "author": "Polymesh Association",
   "license": "ISC",
-  "homepage": "https://github.com/PolymeshAssociation/polymesh-sdk/wiki",
+  "homepage": "https://github.com/mpastecki/polymesh-sdk-next-test/wiki",
   "bugs": {
-    "url": "https://github.com/PolymeshAssociation/polymesh-sdk/issues"
+    "url": "https://github.com/mpastecki/polymesh-sdk-next-test/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/PolymeshAssociation/polymesh-sdk"
+    "url": "https://github.com/mpastecki/polymesh-sdk-next-test"
   },
   "keywords": [
     "polymesh",

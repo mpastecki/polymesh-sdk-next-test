@@ -290,8 +290,8 @@ jobs:
                 if [[ -n "$AFFECTS" ]]; then
                   BC_ENTRY="${BC_ENTRY}- **Affects**: ${AFFECTS}\n"
                 fi
-                BC_ENTRY="${BC_ENTRY}- **Branch**: \`${branch}\`\n"
-                BC_ENTRY="${BC_ENTRY}- **Commit**: \`${commit:0:7}\`\n"
+                BC_ENTRY="${BC_ENTRY}- **Branch**: ${branch}\n"
+                BC_ENTRY="${BC_ENTRY}- **Commit**: ${commit:0:7}\n"
                 BC_ENTRY="${BC_ENTRY}- **Author**: ${COMMIT_AUTHOR}\n\n"
 
                 BREAKING_CHANGE_METADATA="${BREAKING_CHANGE_METADATA}${BC_ENTRY}"
