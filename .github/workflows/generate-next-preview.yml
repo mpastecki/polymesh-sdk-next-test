@@ -346,10 +346,7 @@ jobs:
           module.exports = {
             repositoryUrl: 'https://github.com/mpastecki/polymesh-sdk-next-test.git',
             branches: [
-              {
-                name: 'master',
-                range: '29.x'
-              },
+              'master',
               {
                 name: '$INTEGRATION_BRANCH',
                 prerelease: 'next-major',
@@ -432,7 +429,7 @@ jobs:
 
           # Run semantic-release with debug mode
           echo "Running semantic-release with debug mode..."
-          DEBUG=semantic-release:* yarn semantic-release
+          DEBUG=semantic-release:* yarn semantic-release --branches "$INTEGRATION_BRANCH"
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
