@@ -18,11 +18,6 @@ on:
         required: false
         default: false
         type: boolean
-      cleanup_ephemeral_branch:
-        description: 'Delete remote ephemeral branch after release'
-        required: false
-        default: false
-        type: boolean
   # schedule:
     # Optional: Run weekly on Sundays at 2 AM UTC
     # - cron: '0 2 * * 0'
@@ -350,20 +345,6 @@ jobs:
           echo "## 📦 Package Preparation" >> $GITHUB_STEP_SUMMARY
           echo "Package prepared for semantic-release with next-major configuration" >> $GITHUB_STEP_SUMMARY
 
-      - name: Push ephemeral branch for semantic-release
-        if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
-        run: |
-          echo "📤 Pushing ephemeral integration branch to remote..."
-
-          # Verify we're on the correct branch
-          CURRENT_BRANCH=$(git branch --show-current)
-          echo "Current branch: $CURRENT_BRANCH"
-
-          # Push the ephemeral branch to remote (semantic-release needs it)
-          git push origin "$INTEGRATION_BRANCH"
-
-          echo "✅ Ephemeral branch pushed to remote"
-
       - name: Release with semantic-release
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         id: publish
@@ -376,8 +357,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release with specific branch to avoid conflicts with old ephemeral branches
-          yarn semantic-release --branches "{\"name\":\"$INTEGRATION_BRANCH\",\"prerelease\":\"next-major\",\"channel\":\"next-major\"}"
+          # Run semantic-release (will use release.config.js automatically)
+          yarn semantic-release
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
@@ -625,15 +606,7 @@ jobs:
           # Clean up temporary files
           rm -f validation_conflicts.txt
 
-          # Delete remote ephemeral branch if it exists and cleanup is enabled
-          if [[ -n "${INTEGRATION_BRANCH:-}" ]] && [[ "${{ github.event.inputs.cleanup_ephemeral_branch }}" == "true" ]]; then
-            echo "Deleting remote ephemeral branch: $INTEGRATION_BRANCH"
-            git push origin --delete "$INTEGRATION_BRANCH" 2>/dev/null || true
-          elif [[ -n "${INTEGRATION_BRANCH:-}" ]]; then
-            echo "Keeping remote ephemeral branch: $INTEGRATION_BRANCH (cleanup disabled)"
-          fi
-
-          # Reset to original state (ephemeral branch will be garbage collected)
+          # Reset to original state (local ephemeral branch will be garbage collected)
           git checkout develop 2>/dev/null || git checkout ${{ github.ref_name }}
 
           # Delete local ephemeral branch
