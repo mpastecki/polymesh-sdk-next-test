@@ -342,7 +342,7 @@ jobs:
           sed 's|dist/|./|' package.json > dist/package.json
           cp README.md dist/README.md
           cp yarn.lock dist/yarn.lock
-          cp release.config.next-major.js dist/
+          cp release.config.next-major.js dist/release.config.js
 
           echo "✅ Package prepared for semantic-release"
 
@@ -376,8 +376,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release with next-major configuration
-          yarn semantic-release --extends ./release.config.next-major.js
+          # Run semantic-release (will use release.config.js automatically)
+          yarn semantic-release
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")

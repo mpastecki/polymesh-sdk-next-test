@@ -1180,7 +1180,6 @@ Add these scripts to your `package.json`:
   "scripts": {
     "preview:generate": "gh workflow run generate-next-preview.yml",
     "preview:validate": "bash scripts/validate-bc-branches.sh",
-    "semantic-release-next": "semantic-release --extends ./release.config.next-major.js"
   }
 }
 ```
