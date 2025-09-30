@@ -1,10 +1,10 @@
 name: Docs
 
-on:
+# on:
   push:
     branches: [master]
-  release:
-    types: [released]
+#   release:
+#     types: [released]
 
 jobs:
   docs:

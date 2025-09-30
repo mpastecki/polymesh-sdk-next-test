@@ -411,6 +411,12 @@ jobs:
           # Change to dist directory where the built package is
           cd dist
 
+          # Debug: Check git context from dist directory
+          echo "Git remote from dist directory:"
+          git remote -v
+          echo "Testing git ls-remote from dist:"
+          git ls-remote --heads origin "$INTEGRATION_BRANCH" || echo "FAILED to ls-remote from dist/"
+
           # Install dependencies for the built package
           yarn install --immutable
 
