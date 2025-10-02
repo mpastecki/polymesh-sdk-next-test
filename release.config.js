@@ -15,7 +15,7 @@ module.exports = {
       range: '26.x',
     },
     {
-      name: 'next-major-*',
+      name: 'next-bc',
       prerelease: 'next',
       channel: 'next-major'
     },

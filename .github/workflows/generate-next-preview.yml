@@ -75,36 +75,30 @@ jobs:
         run: |
           yarn install --immutable
 
-      - name: Cleanup old ephemeral branches
+      - name: Cleanup old next-bc branch
         run: |
-          echo "🧹 Cleaning up old next-major-* branches from previous runs..."
+          echo "🧹 Cleaning up old next-bc branch from previous run..."
 
           # Fetch all branches to ensure we see remote branches
           git fetch --all --prune
 
-          # Delete all remote next-major-* branches
-          REMOTE_BRANCHES=$(git branch -r | grep -E 'origin/next-major-' | sed 's/origin\///' | sed 's/^[[:space:]]*//' || true)
-
-          if [[ -n "$REMOTE_BRANCHES" ]]; then
-            echo "Found old remote ephemeral branches to delete:"
-            echo "$REMOTE_BRANCHES"
-            echo "$REMOTE_BRANCHES" | while read branch; do
-              echo "Deleting remote branch: $branch"
-              git push origin --delete "$branch" || echo "⚠️ Failed to delete $branch (may already be deleted)"
-            done
+          # Delete remote next-bc branch if it exists
+          if git ls-remote --heads origin next-bc | grep -q next-bc; then
+            echo "Deleting remote next-bc branch..."
+            git push origin --delete next-bc || echo "⚠️ Failed to delete next-bc (may already be deleted)"
           else
-            echo "No old remote ephemeral branches found"
+            echo "No remote next-bc branch found"
           fi
 
-          # Delete all local next-major-* branches
-          LOCAL_BRANCHES=$(git branch | grep -E 'next-major-' | sed 's/^[[:space:]]*//' || true)
-
-          if [[ -n "$LOCAL_BRANCHES" ]]; then
-            echo "Deleting local ephemeral branches:"
-            echo "$LOCAL_BRANCHES" | xargs -r git branch -D 2>/dev/null || true
+          # Delete local next-bc branch if it exists
+          if git branch --list next-bc | grep -q next-bc; then
+            echo "Deleting local next-bc branch..."
+            git branch -D next-bc 2>/dev/null || true
+          else
+            echo "No local next-bc branch found"
           fi
 
-          echo "✅ Cleanup completed - ready for new ephemeral branch"
+          echo "✅ Cleanup completed - ready for new next-bc branch"
 
       - name: Discover breaking change branches
         id: discovery
@@ -252,11 +246,11 @@ jobs:
             echo "Conflicted branches:$CONFLICTED_BRANCHES" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Create ephemeral integration branch
+      - name: Create integration branch
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
-          # Create temporary integration branch from latest develop
-          INTEGRATION_BRANCH="next-major-$(date +%Y%m%d%H%M%S)"
+          # Create integration branch from latest develop
+          INTEGRATION_BRANCH="next-bc"
           echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
 
           git checkout -b "$INTEGRATION_BRANCH" origin/develop
@@ -662,18 +656,10 @@ jobs:
           # Clean up temporary files
           rm -f validation_conflicts.txt
 
-          # Reset to original state (local ephemeral branch will be garbage collected)
+          # Reset to original state
           git checkout develop 2>/dev/null || git checkout ${{ github.ref_name }}
 
-          # Delete remote ephemeral branch first (if it was pushed)
-          if [[ -n "${INTEGRATION_BRANCH:-}" ]]; then
-            echo "Deleting remote ephemeral branch: $INTEGRATION_BRANCH"
-            git push origin --delete "$INTEGRATION_BRANCH" 2>/dev/null || echo "Remote branch already deleted or never pushed"
-          fi
-
-          # Delete local ephemeral branch
-          if [[ -n "${INTEGRATION_BRANCH:-}" ]]; then
-            git branch -D "$INTEGRATION_BRANCH" 2>/dev/null || true
-          fi
+          # Note: We keep the next-bc branch on remote for debugging purposes
+          # It will be cleaned up at the start of the next workflow run
 
           echo "✅ Cleanup completed"
