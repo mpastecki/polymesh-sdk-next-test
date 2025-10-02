@@ -3,16 +3,6 @@ name: Generate Next Major Preview
 on:
   workflow_dispatch:
     inputs:
-      release_type:
-        description: 'Preview release type for semantic-release'
-        required: false
-        default: 'next-major'
-        type: choice
-        options:
-          - next-major
-          - alpha-major
-          - beta-major
-          - rc-major
       debug_mode:
         description: 'Enable debug logging'
         required: false
@@ -395,14 +385,23 @@ jobs:
         run: |
           echo "🚀 Running semantic-release for preview package..."
 
+          # Ensure we're on the next-bc branch before running semantic-release
+          echo "Current branch before semantic-release:"
+          git branch --show-current
+
+          if [ "$(git branch --show-current)" != "$INTEGRATION_BRANCH" ]; then
+            echo "⚠️ Not on $INTEGRATION_BRANCH, checking out..."
+            git checkout "$INTEGRATION_BRANCH"
+          fi
+
           # Change to dist directory where the built package is
           cd dist
 
           # Debug: Check git context from dist directory
           echo "Git remote from dist directory:"
           git remote -v
-          echo "Current branch:"
-          git branch --show-current
+          echo "Current branch from parent repo:"
+          git -C .. branch --show-current
           echo "Current commit:"
           git rev-parse HEAD
           echo "Testing git ls-remote from dist:"
@@ -411,8 +410,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release with explicit branch override
-          yarn semantic-release --branches next-bc
+          # Run semantic-release
+          yarn semantic-release
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
