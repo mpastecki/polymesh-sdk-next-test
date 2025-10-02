@@ -33,6 +33,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    env:
+      INTEGRATION_BRANCH: next-bc
+
     outputs:
       preview_version: ${{ steps.publish.outputs.preview_version }}
       breaking_changes_found: ${{ steps.discovery.outputs.found }}
@@ -43,6 +46,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.INTEGRATION_BRANCH }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
