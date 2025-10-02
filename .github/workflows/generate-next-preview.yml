@@ -253,7 +253,11 @@ jobs:
           INTEGRATION_BRANCH="next-bc"
           echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
 
-          git checkout -b "$INTEGRATION_BRANCH" origin/develop
+          # Delete remote branch (clean slate)
+          git push origin --delete "$INTEGRATION_BRANCH" 2>/dev/null || true
+
+          # Create/reset local branch from develop
+          git checkout -B "$INTEGRATION_BRANCH" origin/develop
           echo "📝 Created integration branch: $INTEGRATION_BRANCH"
 
       - name: Cherry-pick breaking changes
