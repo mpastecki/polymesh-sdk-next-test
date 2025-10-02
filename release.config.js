@@ -6,17 +6,17 @@ module.exports = {
       name: 'develop',
       prerelease: 'beta',
     },
-    {
-      name: 'next',
-      prerelease: true,
-    },
+    // {
+    //   name: 'next',
+    //   prerelease: true,
+    // },
     {
       name: 'v26',
       range: '26.x',
     },
     {
-      name: 'next-*',
-      prerelease: true,
+      name: 'next-major-*',
+      prerelease: 'next',
       channel: 'next-major'
     },
   ],

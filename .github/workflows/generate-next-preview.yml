@@ -75,6 +75,37 @@ jobs:
         run: |
           yarn install --immutable
 
+      - name: Cleanup old ephemeral branches
+        run: |
+          echo "🧹 Cleaning up old next-major-* branches from previous runs..."
+
+          # Fetch all branches to ensure we see remote branches
+          git fetch --all --prune
+
+          # Delete all remote next-major-* branches
+          REMOTE_BRANCHES=$(git branch -r | grep -E 'origin/next-major-' | sed 's/origin\///' | sed 's/^[[:space:]]*//' || true)
+
+          if [[ -n "$REMOTE_BRANCHES" ]]; then
+            echo "Found old remote ephemeral branches to delete:"
+            echo "$REMOTE_BRANCHES"
+            echo "$REMOTE_BRANCHES" | while read branch; do
+              echo "Deleting remote branch: $branch"
+              git push origin --delete "$branch" || echo "⚠️ Failed to delete $branch (may already be deleted)"
+            done
+          else
+            echo "No old remote ephemeral branches found"
+          fi
+
+          # Delete all local next-major-* branches
+          LOCAL_BRANCHES=$(git branch | grep -E 'next-major-' | sed 's/^[[:space:]]*//' || true)
+
+          if [[ -n "$LOCAL_BRANCHES" ]]; then
+            echo "Deleting local ephemeral branches:"
+            echo "$LOCAL_BRANCHES" | xargs -r git branch -D 2>/dev/null || true
+          fi
+
+          echo "✅ Cleanup completed - ready for new ephemeral branch"
+
       - name: Discover breaking change branches
         id: discovery
         run: |
@@ -225,7 +256,7 @@ jobs:
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
           # Create temporary integration branch from latest develop
-          INTEGRATION_BRANCH="next-$(date +%Y%m%d%H%M%S)"
+          INTEGRATION_BRANCH="next-major-$(date +%Y%m%d%H%M%S)"
           echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
 
           git checkout -b "$INTEGRATION_BRANCH" origin/develop
@@ -633,6 +664,12 @@ jobs:
 
           # Reset to original state (local ephemeral branch will be garbage collected)
           git checkout develop 2>/dev/null || git checkout ${{ github.ref_name }}
+
+          # Delete remote ephemeral branch first (if it was pushed)
+          if [[ -n "${INTEGRATION_BRANCH:-}" ]]; then
+            echo "Deleting remote ephemeral branch: $INTEGRATION_BRANCH"
+            git push origin --delete "$INTEGRATION_BRANCH" 2>/dev/null || echo "Remote branch already deleted or never pushed"
+          fi
 
           # Delete local ephemeral branch
           if [[ -n "${INTEGRATION_BRANCH:-}" ]]; then
