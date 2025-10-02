@@ -411,8 +411,8 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release (will auto-detect ephemeral branch from config)
-          yarn semantic-release
+          # Run semantic-release with explicit branch override
+          yarn semantic-release --branches next-bc
 
           # Capture version for output
           RELEASED_VERSION=$(node -p "require('./package.json').version")
