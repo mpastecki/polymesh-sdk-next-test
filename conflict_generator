@@ -1,18 +1,20 @@
-// Conflict Generator File
-// This file is used to test conflict detection in the integration workflow
+export interface IConflictGenerator {
+  getId(): number;
+  processData(): Promise<string>;
+}
 
-export class ConflictGenerator {
-  private version: string;
+export class ConflictGenerator implements IConflictGenerator {
+  private id: number;
 
-  constructor() {
-    this.version = '1.0.0';
+  constructor(id: number) {
+    this.id = id;
   }
 
-  public getVersion(): string {
-    return this.version;
+  public getId(): number {
+    return this.id;
   }
 
-  public generateData(): string {
-    return 'Data from develop branch';
+  public async processData(): Promise<string> {
+    return `Processed data for ID ${this.id} from bc-3 branch`;
   }
 }
