@@ -1,0 +1,18 @@
+// Conflict Generator File
+// This file is used to test conflict detection in the integration workflow
+
+export class ConflictGenerator {
+  private version: string;
+
+  constructor() {
+    this.version = '1.0.0';
+  }
+
+  public getVersion(): string {
+    return this.version;
+  }
+
+  public generateData(): string {
+    return 'Data from develop branch';
+  }
+}
