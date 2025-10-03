@@ -33,9 +33,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    env:
-      INTEGRATION_BRANCH: next-bc
-
     outputs:
       preview_version: ${{ steps.publish.outputs.preview_version }}
       breaking_changes_found: ${{ steps.discovery.outputs.found }}
@@ -48,20 +45,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Validate workflow branch
-        run: |
-          EXPECTED_REF="refs/heads/$INTEGRATION_BRANCH"
-          CURRENT_REF="${{ github.ref }}"
-
-          if [[ "$CURRENT_REF" != "$EXPECTED_REF" ]]; then
-            echo "❌ ERROR: This workflow can only be run from the '$INTEGRATION_BRANCH' branch"
-            echo "Current branch: $CURRENT_REF"
-            echo "Expected branch: $EXPECTED_REF"
-            exit 1
-          fi
-
-          echo "✅ Workflow running from correct branch: $INTEGRATION_BRANCH"
 
       - name: Enable Corepack (for Yarn)
         run: corepack enable
@@ -258,16 +241,6 @@ jobs:
 
           echo "✅ Created integration branch: $INTEGRATION_BRANCH"
 
-          # Restore the preserved tag if it exists
-          if [[ -n "${PRESERVED_TAG:-}" ]]; then
-            echo "📌 Restoring preserved tag: $PRESERVED_TAG"
-            # Create annotated tag on the current commit (HEAD of new next-bc branch)
-            git tag -f -a "$PRESERVED_TAG" HEAD -m "Restored tag for version history"
-            echo "✅ Tag $PRESERVED_TAG restored on new branch"
-          else
-            echo "No tag to restore (first run or no previous tags)"
-          fi
-
       - name: Cherry-pick breaking changes
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         id: integration
@@ -409,15 +382,6 @@ jobs:
         id: publish
         run: |
           echo "🚀 Running semantic-release for preview package..."
-
-          # Ensure we're on the next-bc branch before running semantic-release
-          echo "Current branch before semantic-release:"
-          git branch --show-current
-
-          if [ "$(git branch --show-current)" != "$INTEGRATION_BRANCH" ]; then
-            echo "⚠️ Not on $INTEGRATION_BRANCH, checking out..."
-            git checkout "$INTEGRATION_BRANCH"
-          fi
 
           # Change to dist directory where the built package is
           cd dist
