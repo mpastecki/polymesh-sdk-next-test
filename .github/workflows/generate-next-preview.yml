@@ -78,54 +78,29 @@ jobs:
           git config --global user.name "Polymesh Bot"
           git config --global user.email "bot@polymesh.network"
 
-      - name: Install dependencies
+      - name: Determine next branch number
         run: |
-          yarn install --immutable
+          echo "🔢 Determining next integration branch number..."
 
-      - name: Cleanup old next-bc branch
-        run: |
-          echo "🧹 Cleaning up old next-bc branch from previous run..."
-
-          # Fetch all branches and tags to ensure we see everything
+          # Fetch all branches to ensure we see remote branches
           git fetch --all --prune --tags
 
-          # Save the last tag from next-bc branch before deleting it
-          LAST_TAG=""
-          if git ls-remote --heads origin next-bc | grep -q next-bc; then
-            echo "📌 Checking for tags on next-bc branch..."
-            # Checkout the remote next-bc branch temporarily
-            git checkout -B next-bc origin/next-bc 2>/dev/null || true
-            # Get the most recent tag reachable from this branch
-            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-            if [[ -n "$LAST_TAG" ]]; then
-              echo "Found last tag: $LAST_TAG"
-              echo "PRESERVED_TAG=$LAST_TAG" >> "$GITHUB_ENV"
-            else
-              echo "No tags found on next-bc branch"
-              echo "PRESERVED_TAG=" >> "$GITHUB_ENV"
-            fi
+          # Find all existing next-bc-* branches and extract numbers
+          EXISTING_BRANCHES=$(git branch -r | grep -E 'origin/next-bc-[0-9]+$' | sed 's/.*next-bc-//' | sed 's/^[[:space:]]*//' || echo "")
+
+          if [[ -z "$EXISTING_BRANCHES" ]]; then
+            echo "No existing next-bc-* branches found"
+            NEXT_NUMBER=1
           else
-            echo "No remote next-bc branch found, no tags to preserve"
-            echo "PRESERVED_TAG=" >> "$GITHUB_ENV"
+            # Find the maximum number
+            MAX_NUMBER=$(echo "$EXISTING_BRANCHES" | sort -n | tail -1)
+            NEXT_NUMBER=$((MAX_NUMBER + 1))
+            echo "Found existing branches up to next-bc-$MAX_NUMBER"
           fi
 
-          # Delete remote next-bc branch if it exists
-          if git ls-remote --heads origin next-bc | grep -q next-bc; then
-            echo "Deleting remote next-bc branch..."
-            git push origin --delete next-bc || echo "⚠️ Failed to delete next-bc (may already be deleted)"
-          else
-            echo "No remote next-bc branch found"
-          fi
-
-          # Delete local next-bc branch if it exists
-          if git branch --list next-bc | grep -q next-bc; then
-            echo "Deleting local next-bc branch..."
-            git branch -D next-bc 2>/dev/null || true
-          else
-            echo "No local next-bc branch found"
-          fi
-
-          echo "✅ Cleanup completed - ready for new next-bc branch"
+          INTEGRATION_BRANCH="next-bc-$NEXT_NUMBER"
+          echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
+          echo "✅ Will create branch: $INTEGRATION_BRANCH"
 
       - name: Discover breaking change branches
         id: discovery
@@ -276,16 +251,12 @@ jobs:
       - name: Create integration branch
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
-          # Create integration branch from latest develop
-          INTEGRATION_BRANCH="next-bc"
-          echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
+          echo "🌿 Creating new integration branch: $INTEGRATION_BRANCH"
 
-          # Delete remote branch (clean slate)
-          git push origin --delete "$INTEGRATION_BRANCH" 2>/dev/null || true
+          # Create new branch from develop
+          git checkout -b "$INTEGRATION_BRANCH" origin/develop
 
-          # Create/reset local branch from develop
-          git checkout -B "$INTEGRATION_BRANCH" origin/develop
-          echo "📝 Created integration branch: $INTEGRATION_BRANCH"
+          echo "✅ Created integration branch: $INTEGRATION_BRANCH"
 
           # Restore the preserved tag if it exists
           if [[ -n "${PRESERVED_TAG:-}" ]]; then
@@ -379,6 +350,13 @@ jobs:
       #     yarn test
       #     echo "✅ Tests passed successfully"
 
+      - name: Install dependencies
+        if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
+        run: |
+          echo "📦 Installing dependencies on integrated branch..."
+          yarn install --immutable
+          echo "✅ Dependencies installed successfully"
+
       - name: Build integrated codebase
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
@@ -411,16 +389,16 @@ jobs:
           echo "## 📦 Package Preparation" >> $GITHUB_STEP_SUMMARY
           echo "Package prepared for semantic-release with next-major configuration" >> $GITHUB_STEP_SUMMARY
 
-      - name: Push ephemeral branch to remote
+      - name: Push integration branch to remote
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
-          echo "📤 Pushing ephemeral integration branch to remote..."
+          echo "📤 Pushing integration branch to remote..."
           echo "Branch: $INTEGRATION_BRANCH"
 
-          # Push the ephemeral branch (semantic-release requires it on remote)
-          git push origin "$INTEGRATION_BRANCH"
+          # Push the integration branch (semantic-release requires it on remote)
+          git push -u origin "$INTEGRATION_BRANCH"
 
-          echo "✅ Ephemeral branch pushed to remote"
+          echo "✅ Integration branch pushed to remote"
 
           # Verify the branch exists on remote
           echo "Verifying branch on remote:"
@@ -457,7 +435,7 @@ jobs:
           # Install dependencies for the built package
           yarn install --immutable
 
-          # Run semantic-release
+          # Run semantic-release (will match next-bc-* pattern from config)
           yarn semantic-release
 
           # Capture version for output
@@ -482,6 +460,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.ASSOCIATION_NPM_TOKEN }}
+          # Override GITHUB_REF to match the actual checked-out branch
+          GITHUB_REF: refs/heads/${{ env.INTEGRATION_BRANCH }}
 
       - name: Update release with additional metadata
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
@@ -698,10 +678,10 @@ jobs:
               labels: ['breaking-changes', 'maintenance', 'stale-branches']
             });
 
-      - name: Cleanup ephemeral resources
+      - name: Cleanup temporary resources
         if: always()
         run: |
-          echo "🧹 Cleaning up ephemeral resources..."
+          echo "🧹 Cleaning up temporary resources..."
 
           # Clean up temporary files
           rm -f validation_conflicts.txt
@@ -709,7 +689,7 @@ jobs:
           # Reset to original state
           git checkout develop 2>/dev/null || git checkout ${{ github.ref_name }}
 
-          # Note: We keep the next-bc branch on remote for debugging purposes
-          # It will be cleaned up at the start of the next workflow run
+          # Note: Integration branches (next-bc-*) are kept permanently for version history
+          # Each workflow run creates a new numbered branch (next-bc-1, next-bc-2, etc.)
 
           echo "✅ Cleanup completed"
