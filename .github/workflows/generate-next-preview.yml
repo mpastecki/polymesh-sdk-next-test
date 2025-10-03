@@ -406,10 +406,6 @@ jobs:
           
           echo "🔍 DEBUG: Git state:"
           echo "Current branch: $(git branch --show-current)"
-          
-          echo "🔍 DEBUG: What env-ci detects:"
-          node -e "const envCi = require('env-ci'); console.log(JSON.stringify(envCi(), null, 2));"
-    
 
           # Install dependencies for the built package
           yarn install --immutable
