@@ -386,6 +386,9 @@ jobs:
           # Change to dist directory where the built package is
           cd dist
 
+          # Override GITHUB_REF to match the actual checked-out branch
+          export GITHUB_REF="refs/heads/$INTEGRATION_BRANCH"
+
           # Debug: Check git context from dist directory
           echo "Git remote from dist directory:"
           git remote -v
@@ -436,8 +439,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.ASSOCIATION_NPM_TOKEN }}
-          # Override GITHUB_REF to match the actual checked-out branch
-          GITHUB_REF: refs/heads/${{ env.INTEGRATION_BRANCH }}
 
       - name: Update release with additional metadata
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
