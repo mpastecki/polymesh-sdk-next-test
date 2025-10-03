@@ -49,6 +49,20 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Validate workflow branch
+        run: |
+          EXPECTED_REF="refs/heads/$INTEGRATION_BRANCH"
+          CURRENT_REF="${{ github.ref }}"
+
+          if [[ "$CURRENT_REF" != "$EXPECTED_REF" ]]; then
+            echo "❌ ERROR: This workflow can only be run from the '$INTEGRATION_BRANCH' branch"
+            echo "Current branch: $CURRENT_REF"
+            echo "Expected branch: $EXPECTED_REF"
+            exit 1
+          fi
+
+          echo "✅ Workflow running from correct branch: $INTEGRATION_BRANCH"
+
       - name: Enable Corepack (for Yarn)
         run: corepack enable
 
@@ -72,8 +86,28 @@ jobs:
         run: |
           echo "🧹 Cleaning up old next-bc branch from previous run..."
 
-          # Fetch all branches to ensure we see remote branches
-          git fetch --all --prune
+          # Fetch all branches and tags to ensure we see everything
+          git fetch --all --prune --tags
+
+          # Save the last tag from next-bc branch before deleting it
+          LAST_TAG=""
+          if git ls-remote --heads origin next-bc | grep -q next-bc; then
+            echo "📌 Checking for tags on next-bc branch..."
+            # Checkout the remote next-bc branch temporarily
+            git checkout -B next-bc origin/next-bc 2>/dev/null || true
+            # Get the most recent tag reachable from this branch
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [[ -n "$LAST_TAG" ]]; then
+              echo "Found last tag: $LAST_TAG"
+              echo "PRESERVED_TAG=$LAST_TAG" >> "$GITHUB_ENV"
+            else
+              echo "No tags found on next-bc branch"
+              echo "PRESERVED_TAG=" >> "$GITHUB_ENV"
+            fi
+          else
+            echo "No remote next-bc branch found, no tags to preserve"
+            echo "PRESERVED_TAG=" >> "$GITHUB_ENV"
+          fi
 
           # Delete remote next-bc branch if it exists
           if git ls-remote --heads origin next-bc | grep -q next-bc; then
@@ -252,6 +286,16 @@ jobs:
           # Create/reset local branch from develop
           git checkout -B "$INTEGRATION_BRANCH" origin/develop
           echo "📝 Created integration branch: $INTEGRATION_BRANCH"
+
+          # Restore the preserved tag if it exists
+          if [[ -n "${PRESERVED_TAG:-}" ]]; then
+            echo "📌 Restoring preserved tag: $PRESERVED_TAG"
+            # Create annotated tag on the current commit (HEAD of new next-bc branch)
+            git tag -f -a "$PRESERVED_TAG" HEAD -m "Restored tag for version history"
+            echo "✅ Tag $PRESERVED_TAG restored on new branch"
+          else
+            echo "No tag to restore (first run or no previous tags)"
+          fi
 
       - name: Cherry-pick breaking changes
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
