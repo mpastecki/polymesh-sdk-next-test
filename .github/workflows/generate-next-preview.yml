@@ -396,6 +396,18 @@ jobs:
           echo "Testing git ls-remote from dist:"
           git ls-remote --heads origin "$INTEGRATION_BRANCH" || echo "FAILED to ls-remote from dist/"
 
+          echo "🔍 DEBUG: Environment variables:"
+          echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_REF (should be)=refs/heads/$INTEGRATION_BRANCH"
+          
+          echo "🔍 DEBUG: Git state:"
+          echo "Current branch: $(git branch --show-current)"
+          
+          echo "🔍 DEBUG: What env-ci detects:"
+          node -e "const envCi = require('env-ci'); console.log(JSON.stringify(envCi(), null, 2));"
+    
+
           # Install dependencies for the built package
           yarn install --immutable
 
