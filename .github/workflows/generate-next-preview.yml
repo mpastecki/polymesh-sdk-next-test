@@ -61,29 +61,16 @@ jobs:
           git config --global user.name "Polymesh Bot"
           git config --global user.email "bot@polymesh.network"
 
-      - name: Determine next branch number
+      - name: Determine integration branch name
         run: |
-          echo "🔢 Determining next integration branch number..."
+          echo "🔢 Generating integration branch name with timestamp..."
 
-          # Fetch all branches to ensure we see remote branches
-          git fetch --all --prune --tags
+          # Generate timestamp: YYYYMMDDHHMM (UTC)
+          TIMESTAMP=$(date -u +"%Y%m%d%H%M")
+          INTEGRATION_BRANCH="next-bc-${TIMESTAMP}"
 
-          # Find all existing next-bc-* branches and extract numbers
-          EXISTING_BRANCHES=$(git branch -r | grep -E 'origin/next-bc-[0-9]+$' | sed 's/.*next-bc-//' | sed 's/^[[:space:]]*//' || echo "")
-
-          if [[ -z "$EXISTING_BRANCHES" ]]; then
-            echo "No existing next-bc-* branches found"
-            NEXT_NUMBER=1
-          else
-            # Find the maximum number
-            MAX_NUMBER=$(echo "$EXISTING_BRANCHES" | sort -n | tail -1)
-            NEXT_NUMBER=$((MAX_NUMBER + 1))
-            echo "Found existing branches up to next-bc-$MAX_NUMBER"
-          fi
-
-          INTEGRATION_BRANCH="next-bc-$NEXT_NUMBER"
           echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH" >> "$GITHUB_ENV"
-          echo "✅ Will create branch: $INTEGRATION_BRANCH"
+          echo "✅ Will create branch: $INTEGRATION_BRANCH (timestamp: $TIMESTAMP UTC)"
 
       - name: Discover breaking change branches
         id: discovery
@@ -247,7 +234,6 @@ jobs:
         run: |
           echo "🚀 Cherry-picking breaking changes (all branches pre-validated as conflict-free)..."
 
-          BREAKING_CHANGE_METADATA=""
           INTEGRATED_COMMITS=""
           TOTAL_COMMITS=0
 
@@ -265,8 +251,6 @@ jobs:
             # Cherry-pick each commit in chronological order
             for commit in $COMMITS; do
               COMMIT_MSG=$(git log -1 --format="%s" "$commit")
-              COMMIT_BODY=$(git log -1 --format="%b" "$commit")
-              COMMIT_AUTHOR=$(git log -1 --format="%an <%ae>" "$commit")
               echo "Applying commit: $commit ($COMMIT_MSG)"
 
               # Cherry-pick will succeed since we pre-validated
@@ -274,33 +258,6 @@ jobs:
               INTEGRATED_COMMITS="$INTEGRATED_COMMITS $commit"
               TOTAL_COMMITS=$((TOTAL_COMMITS + 1))
               echo "✅ Successfully applied: $commit"
-
-              # Parse breaking change metadata if this is a breaking change commit
-              if [[ "$COMMIT_MSG" == *"!"* ]] && [[ "$COMMIT_BODY" == *"BREAKING CHANGE:"* ]]; then
-                # Extract structured metadata
-                CATEGORY=$(echo "$COMMIT_BODY" | grep "Breaking-Change-Category:" | cut -d: -f2- | xargs || echo "")
-                IMPACT=$(echo "$COMMIT_BODY" | grep "Breaking-Change-Impact:" | cut -d: -f2- | xargs || echo "")
-                MIGRATION=$(echo "$COMMIT_BODY" | grep "Breaking-Change-Migration:" | cut -d: -f2- | xargs || echo "")
-                AFFECTS=$(echo "$COMMIT_BODY" | grep "Breaking-Change-Affects:" | cut -d: -f2- | xargs || echo "")
-                DESCRIPTION=$(echo "$COMMIT_BODY" | sed -n '/BREAKING CHANGE:/,/^$/p' | sed '1s/BREAKING CHANGE: *//' | head -n 1)
-
-                # Build metadata entry for release notes
-                BC_ENTRY="### ${COMMIT_MSG}\n"
-                BC_ENTRY="${BC_ENTRY}- **Category**: ${CATEGORY:-Unknown}\n"
-                BC_ENTRY="${BC_ENTRY}- **Impact**: ${IMPACT:-Unknown}\n"
-                BC_ENTRY="${BC_ENTRY}- **Description**: ${DESCRIPTION:-No description}\n"
-                if [[ -n "$MIGRATION" ]]; then
-                  BC_ENTRY="${BC_ENTRY}- **Migration**: ${MIGRATION}\n"
-                fi
-                if [[ -n "$AFFECTS" ]]; then
-                  BC_ENTRY="${BC_ENTRY}- **Affects**: ${AFFECTS}\n"
-                fi
-                BC_ENTRY="${BC_ENTRY}- **Branch**: ${branch}\n"
-                BC_ENTRY="${BC_ENTRY}- **Commit**: ${commit:0:7}\n"
-                BC_ENTRY="${BC_ENTRY}- **Author**: ${COMMIT_AUTHOR}\n\n"
-
-                BREAKING_CHANGE_METADATA="${BREAKING_CHANGE_METADATA}${BC_ENTRY}"
-              fi
             done
           done
 
@@ -309,9 +266,6 @@ jobs:
             echo "SUCCESSFUL_BRANCHES=$BC_BRANCHES"
             echo "INTEGRATED_COMMITS=$INTEGRATED_COMMITS"
             echo "TOTAL_COMMITS=$TOTAL_COMMITS"
-            echo "BREAKING_CHANGE_METADATA<<EOF"
-            echo -e "$BREAKING_CHANGE_METADATA"
-            echo "EOF"
           } >> "$GITHUB_ENV"
           echo "✅ All breaking changes applied successfully ($TOTAL_COMMITS commits integrated)"
 
@@ -389,24 +343,6 @@ jobs:
           # Override GITHUB_REF to match the actual checked-out branch
           export GITHUB_REF="refs/heads/$INTEGRATION_BRANCH"
 
-          # Debug: Check git context from dist directory
-          echo "Git remote from dist directory:"
-          git remote -v
-          echo "Current branch from parent repo:"
-          git -C .. branch --show-current
-          echo "Current commit:"
-          git rev-parse HEAD
-          echo "Testing git ls-remote from dist:"
-          git ls-remote --heads origin "$INTEGRATION_BRANCH" || echo "FAILED to ls-remote from dist/"
-
-          echo "🔍 DEBUG: Environment variables:"
-          echo "INTEGRATION_BRANCH=$INTEGRATION_BRANCH"
-          echo "GITHUB_REF=$GITHUB_REF"
-          echo "GITHUB_REF (should be)=refs/heads/$INTEGRATION_BRANCH"
-          
-          echo "🔍 DEBUG: Git state:"
-          echo "Current branch: $(git branch --show-current)"
-
           # Install dependencies for the built package
           yarn install --immutable
 
@@ -436,21 +372,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ASSOCIATION_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.ASSOCIATION_NPM_TOKEN }}
 
-      - name: Update release with additional metadata
+      - name: Release summary
         if: steps.discovery.outputs.found == 'true' && steps.validation.outputs.all_clean == 'true'
         run: |
           echo "📝 Semantic-release has automatically created the GitHub release"
-          echo "Additional breaking change metadata:"
-
-          # Use printf to safely output multi-line content
-          METADATA="${{ env.BREAKING_CHANGE_METADATA }}"
-          if [[ -n "$METADATA" ]]; then
-            printf "%s\n" "$METADATA"
-          else
-            echo "No breaking changes detected in commit metadata."
-          fi
-
-          echo ""
           echo "Integrated branches: ${{ env.SUCCESSFUL_BRANCHES }}"
           echo "Total commits integrated: ${{ env.TOTAL_COMMITS }}"
 
@@ -460,6 +385,9 @@ jobs:
           echo "- Automated version calculation based on conventional commits" >> $GITHUB_STEP_SUMMARY
           echo "- Generated release notes from commit messages" >> $GITHUB_STEP_SUMMARY
           echo "- NPM package publication with next-major tag" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Integrated branches:** ${{ env.SUCCESSFUL_BRANCHES }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total commits:** ${{ env.TOTAL_COMMITS }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Check for stale branches
         if: steps.discovery.outputs.found == 'true'

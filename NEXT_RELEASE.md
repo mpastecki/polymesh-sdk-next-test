@@ -63,14 +63,14 @@ git commit -m "feat!: remove legacy Widget class
 
 BREAKING CHANGE: Removed the deprecated Widget.legacy() method
 
-Breaking-Change-Category: API
-Breaking-Change-Impact: High
-Breaking-Change-Migration: Replace Widget.legacy() with Widget.current()
-Breaking-Change-Affects: All applications using Widget.legacy()
-
 The old Widget.legacy() method has been removed as part of the v3.0
 modernization. Applications should migrate to Widget.current() which
-provides the same functionality with improved performance."
+provides the same functionality with improved performance.
+
+Migration:
+Replace Widget.legacy() with Widget.current()
+
+Affects: All applications using Widget.legacy()"
 ```
 
 ### Step 4: Push the Branch
@@ -86,12 +86,7 @@ git push origin bc-3-remove-legacy-widget
 
 BREAKING CHANGE: <summary>
 
-Breaking-Change-Category: <category>
-Breaking-Change-Impact: <impact-level>
-Breaking-Change-Migration: <migration-instructions>
-Breaking-Change-Affects: <affected-components>
-
-[Optional detailed explanation]
+[Optional: Additional details, migration guide, code examples, etc.]
 ```
 
 ### Required Elements
@@ -104,42 +99,18 @@ Breaking-Change-Affects: <affected-components>
 
 #### 2. BREAKING CHANGE Footer
 ```
-BREAKING CHANGE: <brief description of what breaks>
+BREAKING CHANGE: <clear description of what breaks and why>
 ```
 
-#### 3. Structured Metadata
-```
-Breaking-Change-Category: API|Interface|Types|Behavior|Dependencies
-Breaking-Change-Impact: Low|Medium|High|Critical
-Breaking-Change-Migration: <clear migration instructions>
-Breaking-Change-Affects: <what components/users are affected>
-```
+### Optional: Additional Details
 
-### Metadata Guidelines
+You can include any additional information after the BREAKING CHANGE line:
+- Migration instructions with code examples
+- What components are affected
+- Links to documentation
+- Reasoning behind the change
 
-#### Categories
-- **API**: Public API changes (method signatures, new/removed methods)
-- **Interface**: TypeScript interface changes
-- **Types**: Type definition changes
-- **Behavior**: Changed runtime behavior
-- **Dependencies**: Dependency changes affecting consumers
-
-#### Impact Levels
-- **Low**: Affects edge cases or rarely used features
-- **Medium**: Affects common use cases, straightforward migration
-- **High**: Affects core functionality, requires code changes
-- **Critical**: Major architectural changes, complex migration
-
-#### Migration Instructions
-- Be specific and actionable
-- Include code examples when helpful
-- Reference documentation if available
-- Mention automated migration tools if they exist
-
-#### Affected Components
-- Specify which parts of the SDK are affected
-- Mention if it affects specific user types
-- Include version compatibility notes
+Use plain text or markdown formatting for readability
 
 ### Example Commit Messages
 
@@ -149,13 +120,13 @@ feat!: remove deprecated Polymesh.connect() method
 
 BREAKING CHANGE: Removed Polymesh.connect() in favor of Polymesh.create()
 
-Breaking-Change-Category: API
-Breaking-Change-Impact: Medium
-Breaking-Change-Migration: Replace Polymesh.connect(config) with Polymesh.create(config)
-Breaking-Change-Affects: Applications using the old connection method
-
 The deprecated connect() method has been removed. The create() method
 provides the same functionality with better error handling and type safety.
+
+Migration:
+Replace Polymesh.connect(config) with Polymesh.create(config)
+
+Affects: Applications using the old connection method
 ```
 
 #### Interface Changes
@@ -164,13 +135,15 @@ feat!: make Asset methods async
 
 BREAKING CHANGE: Asset methods now return Promises instead of synchronous values
 
-Breaking-Change-Category: Interface
-Breaking-Change-Impact: High
-Breaking-Change-Migration: Add await keyword and handle Promise rejections
-Breaking-Change-Affects: All Asset method calls
-
 Methods like asset.getName() now return Promise<string> instead of string.
 Update your code to use async/await or .then() to handle the promises.
+
+Example migration:
+// Before
+const name = asset.getName();
+
+// After
+const name = await asset.getName();
 ```
 
 #### Type Changes
@@ -179,13 +152,10 @@ refactor!: update Portfolio interface
 
 BREAKING CHANGE: Portfolio.assets property is now readonly
 
-Breaking-Change-Category: Types
-Breaking-Change-Impact: Low
-Breaking-Change-Migration: Remove direct assignments to Portfolio.assets
-Breaking-Change-Affects: TypeScript code that modifies Portfolio.assets
-
 The assets property is now readonly to prevent accidental mutations.
 Use Portfolio.addAsset() and Portfolio.removeAsset() methods instead.
+
+This change only affects TypeScript code that directly modifies Portfolio.assets.
 ```
 
 ## 🔄 Integration Process
